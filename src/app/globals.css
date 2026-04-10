@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #0f172a;
+  --primary: #004d40; /* Teal branding */
+  --secondary: #880e4f;
+  --accent: #0ea5e9; /* Sky Blue for tech feel */
+  --highlight: #f59e0b; /* Amber for AI */
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
+  --color-highlight: var(--highlight);
+  --font-sans: var(--font-inter), var(--font-geist-sans), ui-sans-serif, system-ui;
+  --font-mono: var(--font-geist-mono);
+  
+  --animate-fade-in: fade-in 0.6s ease-out;
+  --animate-fade-in-up: fade-in-up 0.8s ease-out;
+  --animate-bounce-slow: bounce-slow 3s infinite ease-in-out;
+
+  @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes fade-in-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes bounce-slow {
+    0%, 100% { transform: translateY(-5%); }
+    50% { transform: translateY(0); }
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter), var(--font-geist-sans), sans-serif;
+  @apply antialiased tracking-tight;
+}
+
+.btn-primary {
+  @apply rounded-xl bg-primary px-6 py-3 text-sm font-bold text-white transition-all hover:brightness-110 active:scale-95 shadow-lg shadow-primary/20 flex items-center justify-center;
+}
+
+.btn-secondary {
+  @apply rounded-xl bg-secondary px-6 py-3 text-sm font-bold text-white transition-all hover:brightness-110 active:scale-95 shadow-lg shadow-secondary/20 flex items-center justify-center;
+}
