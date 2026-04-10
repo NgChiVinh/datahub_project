@@ -59,7 +59,7 @@ export default function Home() {
               </h1>
               
               <p className="mt-8 text-xl leading-relaxed text-slate-50 font-medium px-4 max-w-3xl mx-auto opacity-100 drop-shadow-lg tracking-wide">
-                Kho tàng tri thức số, kết hợp AI thông minh giúp định hướng tài liệu chuẩn xác cho cộng đồng IT Văn .
+                Kho tàng tri thức số, kết hợp AI thông minh giúp định hướng tài liệu chuẩn xác cho cộng đồng IT Văn Lang.
               </p>
 
               {/* Compact Search Bar */}

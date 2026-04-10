@@ -3,14 +3,13 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
   const pathname = usePathname();
-
-  // Giả sử chưa đăng nhập
-  const isLoggedIn = false;
+  const { data: session } = useSession();
 
   // Tự động đóng dropdown khi chuyển trang
   useEffect(() => {
@@ -35,6 +34,11 @@ export default function Header() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isOpen]);
+
+  const getInitials = (name) => {
+    if (!name) return "??";
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-slate-100 bg-white">
@@ -76,8 +80,10 @@ export default function Header() {
               onClick={() => setIsOpen(!isOpen)}
               className="h-10 w-10 overflow-hidden rounded-full border-2 border-emerald-100 bg-white p-0.5 shadow-md cursor-pointer hover:border-emerald-500 transition-all active:scale-90 flex items-center justify-center"
             >
-              <div className="h-full w-full rounded-full bg-slate-100 flex items-center justify-center text-slate-600 text-xs font-black">
-                {isLoggedIn ? "JD" : (
+              <div className="h-full w-full rounded-full bg-slate-100 flex items-center justify-center text-slate-600 text-xs font-black uppercase">
+                {session?.user ? (
+                  getInitials(session.user.name || session.user.email)
+                ) : (
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 )}
               </div>
@@ -86,7 +92,7 @@ export default function Header() {
             {/* Dropdown Menu */}
             {isOpen && (
               <div className="absolute right-0 mt-3 w-56 origin-top-right rounded-2xl bg-white p-2 shadow-2xl ring-1 ring-slate-200 focus:outline-none z-[100] animate-in fade-in zoom-in duration-200">
-                {!isLoggedIn ? (
+                {!session?.user ? (
                   <div className="flex flex-col gap-1">
                     <Link 
                       href="/login" 
@@ -111,7 +117,7 @@ export default function Header() {
                   <div className="flex flex-col gap-1">
                     <div className="px-4 py-3 border-b border-slate-50 mb-1">
                       <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tài khoản</p>
-                      <p className="text-sm font-black text-slate-800 truncate">John Doe</p>
+                      <p className="text-sm font-black text-slate-800 truncate">{session.user.name || session.user.email}</p>
                     </div>
                     <Link 
                       href="/profile" 
@@ -120,6 +126,7 @@ export default function Header() {
                       Trang cá nhân
                     </Link>
                     <button 
+                      onClick={() => signOut()}
                       className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-red-600 hover:bg-red-50 rounded-xl transition-colors text-left w-full"
                     >
                       Đăng xuất
