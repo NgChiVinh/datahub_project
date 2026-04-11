@@ -42,109 +42,136 @@ export default function DocumentDetailPage() {
   const [activeTab, setActiveTab] = useState("preview"); // preview, info, comments
 
   return (
-    <div className="min-h-screen bg-[#fafbfc] font-sans text-slate-900 pb-20">
-      {/* top Navigation */}
-      <div className="bg-white border-b border-slate-100 sticky top-20 z-40">
-        <div className="container mx-auto max-w-7xl px-4 py-4 flex items-center justify-between">
-          <Link href="/documents" className="inline-flex items-center gap-2 text-slate-500 hover:text-primary font-bold text-sm transition-colors">
-            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7"></path></svg>
+    <div className="min-h-screen bg-[#fafbfc] font-sans text-slate-900 pb-20 pt-24">
+      {/* Top Breadcrumb & Actions */}
+      <div className="bg-white/70 backdrop-blur-xl border-b border-slate-100 sticky top-16 z-40 transition-all duration-300">
+        <div className="container mx-auto max-w-7xl px-4 py-4 lg:px-12 flex items-center justify-between">
+          <Link href="/documents" className="group inline-flex items-center gap-3 text-slate-500 hover:text-emerald-600 font-black text-[10px] uppercase tracking-[0.2em] transition-all">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 group-hover:bg-emerald-100 group-hover:text-emerald-600 transition-all">
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 19l-7-7 7-7"></path></svg>
+            </div>
             Quay lại Thư viện
           </Link>
           <div className="flex items-center gap-4">
              <button 
               onClick={() => setIsLiked(!isLiked)}
-              className={`p-2.5 rounded-xl border transition-all ${isLiked ? 'bg-red-50 border-red-100 text-red-500' : 'bg-white border-slate-100 text-slate-400 hover:text-red-500'}`}
+              className={`p-3 rounded-2xl border transition-all duration-300 active:scale-90 ${isLiked ? 'bg-red-50 border-red-100 text-red-500 shadow-lg shadow-red-500/10' : 'bg-white border-slate-100 text-slate-400 hover:text-red-500 hover:border-red-100'}`}
              >
-               <svg width="20" height="20" fill={isLiked ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+               <svg width="20" height="20" fill={isLiked ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
              </button>
-             <button className="p-2.5 rounded-xl bg-white border border-slate-100 text-slate-400 hover:text-primary transition-all">
-               <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
+             <button className="p-3 rounded-2xl bg-white border border-slate-100 text-slate-400 hover:text-emerald-500 hover:border-emerald-100 transition-all active:scale-90">
+               <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
              </button>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto max-w-7xl px-4 py-10">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-start">
+      <div className="container mx-auto max-w-7xl px-4 lg:px-12 py-10">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
           
           {/* Main Content (Left - 2/3) */}
-          <div className="lg:col-span-2 space-y-8 animate-fade-in-up">
+          <div className="lg:col-span-2 space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-700">
             
-            {/* Header Info */}
-            <div className="bg-white rounded-[2.5rem] p-8 md:p-12 border border-slate-100 shadow-sm relative overflow-hidden">
-               <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-[4rem]"></div>
-               <div className="flex flex-wrap gap-3 mb-6 relative z-10">
-                  <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${doc.type === 'Source Code' ? 'bg-slate-900 text-white border-slate-900' : 'bg-red-50 text-red-600 border-red-100'}`}>
+            {/* Header Info Card */}
+            <div className="bg-white rounded-[3rem] p-10 md:p-14 border border-slate-100 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.03)] relative overflow-hidden group">
+               <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-emerald-500/5 to-blue-500/5 rounded-bl-[8rem] -mr-20 -mt-20 group-hover:scale-110 transition-transform duration-1000"></div>
+               
+               <div className="flex flex-wrap gap-3 mb-8 relative z-10">
+                  <span className={`px-5 py-2 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-sm ${doc.type === 'Source Code' ? 'bg-slate-900 text-white' : 'bg-red-500 text-white'}`}>
                     {doc.type}
                   </span>
-                  <span className="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-primary/5 text-primary border border-primary/10">
+                  <span className="px-5 py-2 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] bg-emerald-50 text-emerald-600 border border-emerald-100/50 shadow-sm">
                     {doc.category}
                   </span>
                </div>
-               <h1 className="text-3xl md:text-4xl font-black text-slate-900 leading-tight tracking-tight mb-8 relative z-10">{doc.title}</h1>
                
-               <div className="flex flex-wrap items-center gap-8 text-slate-400 text-sm font-bold border-t border-slate-50 pt-8 relative z-10">
-                  <div className="flex items-center gap-2.5">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                    {doc.views.toLocaleString()} lượt xem
+               <h1 className="text-3xl md:text-5xl font-black text-slate-900 leading-[1.15] tracking-tighter mb-10 relative z-10 uppercase italic">
+                 {doc.title}
+               </h1>
+               
+               <div className="flex flex-wrap items-center gap-10 text-slate-400 text-[11px] font-black uppercase tracking-widest border-t border-slate-50 pt-10 relative z-10">
+                  <div className="flex items-center gap-3 group/item">
+                    <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center group-hover/item:text-emerald-500 transition-colors shadow-inner">
+                      <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                    </div>
+                    <span>{doc.views.toLocaleString()} LƯỢT XEM</span>
                   </div>
-                  <div className="flex items-center gap-2.5">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                    {doc.downloads.toLocaleString()} lượt tải
+                  <div className="flex items-center gap-3 group/item">
+                    <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center group-hover/item:text-blue-500 transition-colors shadow-inner">
+                      <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    </div>
+                    <span>{doc.downloads.toLocaleString()} TẢI VỀ</span>
                   </div>
-                  <div className="flex items-center gap-2.5">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v12a2 2 0 002 2z"></path></svg>
-                    {doc.date}
+                  <div className="flex items-center gap-3 group/item">
+                    <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center group-hover/item:text-amber-500 transition-colors shadow-inner">
+                      <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v12a2 2 0 002 2z"></path></svg>
+                    </div>
+                    <span>{doc.date}</span>
                   </div>
                </div>
             </div>
 
-            {/* Document Tabs & Content */}
-            <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-               <div className="flex border-b border-slate-50 px-8 pt-6">
-                  {['preview', 'info', 'comments'].map((tab) => (
+            {/* Document Content Area */}
+            <div className="bg-white rounded-[3rem] border border-slate-100 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.02)] overflow-hidden">
+               <div className="flex border-b border-slate-50 px-10 pt-8 gap-4 overflow-x-auto no-scrollbar">
+                  {[
+                    { id: 'preview', label: 'XEM TRƯỚC', icon: 'eye' },
+                    { id: 'info', label: 'CHI TIẾT', icon: 'info' },
+                    { id: 'comments', label: 'THẢO LUẬN', icon: 'message' }
+                  ].map((tab) => (
                     <button 
-                      key={tab}
-                      onClick={() => setActiveTab(tab)}
-                      className={`px-8 py-4 text-xs font-black uppercase tracking-widest transition-all relative ${activeTab === tab ? 'text-primary' : 'text-slate-400 hover:text-slate-600'}`}
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`px-10 py-5 text-[10px] font-black uppercase tracking-[0.2em] transition-all relative flex items-center gap-3 whitespace-nowrap ${activeTab === tab.id ? 'text-emerald-600' : 'text-slate-400 hover:text-slate-700'}`}
                     >
-                      {tab === 'preview' ? 'Xem trước' : tab === 'info' ? 'Chi tiết' : 'Thảo luận'}
-                      {activeTab === tab && <div className="absolute bottom-0 left-0 w-full h-1 bg-primary rounded-t-full"></div>}
+                      {tab.label}
+                      {activeTab === tab.id && (
+                        <div className="absolute bottom-0 left-0 w-full h-1 bg-emerald-500 rounded-t-full shadow-[0_-4px_10px_rgba(16,185,129,0.3)]"></div>
+                      )}
                     </button>
                   ))}
                </div>
                
-               <div className="p-8 md:p-12 min-h-[400px]">
+               <div className="p-10 md:p-14 min-h-[500px]">
                   {activeTab === 'preview' && (
-                    <div className="space-y-8 animate-fade-in">
-                      <div className="aspect-[4/3] w-full bg-slate-100 rounded-[2rem] border border-slate-200 flex flex-col items-center justify-center text-center p-12 overflow-hidden relative group">
-                         {/* Placeholder for actual viewer */}
-                         <div className="w-20 h-20 bg-white rounded-3xl shadow-xl flex items-center justify-center text-primary mb-6 transition-transform group-hover:scale-110">
-                            <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                         </div>
-                         <h3 className="text-xl font-bold text-slate-800 mb-2">Chế độ Xem nhanh</h3>
-                         <p className="text-slate-500 font-medium max-w-sm">Duyệt qua các trang đầu tiên của tài liệu hoặc xem qua cấu trúc thư mục mã nguồn.</p>
+                    <div className="animate-in fade-in zoom-in-95 duration-500">
+                      <div className="aspect-[16/10] w-full bg-slate-900 rounded-[2.5rem] border border-slate-800 flex flex-col items-center justify-center text-center p-14 overflow-hidden relative group shadow-2xl">
+                         {/* Visual UI for Previewer */}
+                         <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-emerald-500 via-transparent to-transparent group-hover:scale-125 transition-transform duration-1000"></div>
                          
-                         {/* Blurred background effect */}
-                         <div className="absolute inset-x-12 bottom-0 h-32 bg-gradient-to-t from-white via-white/80 to-transparent z-10"></div>
-                         <div className="absolute bottom-12 z-20">
-                            <button className="px-8 py-3.5 rounded-xl bg-slate-900 text-white font-bold text-sm shadow-xl shadow-slate-900/20 active:scale-95 transition-all">Mở xem toàn màn hình</button>
+                         <div className="w-24 h-24 bg-white/10 backdrop-blur-3xl rounded-[2rem] border border-white/20 shadow-2xl flex items-center justify-center text-white mb-8 transition-all duration-500 group-hover:scale-110 group-hover:bg-emerald-500 group-hover:border-emerald-400">
+                            <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                         </div>
+                         <h3 className="text-2xl font-black text-white mb-4 tracking-tight uppercase italic">Chế độ Xem nhanh</h3>
+                         <p className="text-slate-400 font-medium max-w-sm mb-10 text-sm leading-relaxed">Duyệt qua các trang đầu tiên của tài liệu hoặc xem qua cấu trúc thư mục mã nguồn IT.</p>
+                         
+                         <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent z-10"></div>
+                         <div className="absolute bottom-14 z-20">
+                            <button className="px-12 py-4 rounded-2xl bg-emerald-500 text-white font-black text-xs uppercase tracking-widest shadow-2xl shadow-emerald-500/30 hover:bg-emerald-400 hover:scale-105 active:scale-95 transition-all">
+                              Mở xem toàn màn hình
+                            </button>
                          </div>
                       </div>
                     </div>
                   )}
 
                   {activeTab === 'info' && (
-                    <div className="space-y-10 animate-fade-in">
-                       <div>
-                          <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Mô tả nội dung</h4>
-                          <p className="text-slate-700 leading-loose font-medium text-lg italic border-l-4 border-primary/20 pl-6">{doc.description}</p>
+                    <div className="space-y-12 animate-in fade-in duration-500">
+                       <div className="relative">
+                          <span className="absolute -left-10 top-0 text-6xl font-black text-slate-100 italic opacity-50">“</span>
+                          <h4 className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.3em] mb-6">Mô tả tài liệu</h4>
+                          <p className="text-slate-700 leading-[2] font-semibold text-xl italic border-l-8 border-emerald-500/20 pl-10">
+                            {doc.description}
+                          </p>
                        </div>
+                       
                        <div>
-                          <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Từ khóa liên quan</h4>
-                          <div className="flex flex-wrap gap-2">
+                          <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-6">Tags Tri thức</h4>
+                          <div className="flex flex-wrap gap-3">
                              {doc.tags.map(tag => (
-                               <span key={tag} className="px-4 py-2 rounded-xl bg-slate-50 border border-slate-100 text-xs font-bold text-slate-600 hover:border-primary/20 hover:text-primary transition-all cursor-pointer">#{tag}</span>
+                               <span key={tag} className="px-6 py-3 rounded-2xl bg-slate-50 border border-slate-100 text-[11px] font-black text-slate-600 hover:border-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 transition-all cursor-pointer uppercase tracking-tight shadow-sm">
+                                 #{tag}
+                               </span>
                              ))}
                           </div>
                        </div>
@@ -152,16 +179,18 @@ export default function DocumentDetailPage() {
                   )}
 
                   {activeTab === 'comments' && (
-                    <div className="space-y-8 animate-fade-in">
-                       <div className="flex gap-4">
-                          <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-black shrink-0">B</div>
-                          <div className="flex-1 space-y-4">
+                    <div className="space-y-12 animate-in fade-in duration-500">
+                       <div className="flex gap-6 p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100 shadow-inner">
+                          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-blue-500 flex items-center justify-center text-white font-black text-xl shadow-lg shrink-0">B</div>
+                          <div className="flex-1 space-y-6">
                              <textarea 
-                              placeholder="Viết cảm nghĩ của bạn về tài liệu này..." 
-                              className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 font-medium outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all resize-none"
-                              rows="3"
+                              placeholder="Chia sẻ cảm nghĩ của bạn..." 
+                              className="w-full bg-white border-2 border-slate-100 rounded-3xl px-8 py-6 font-bold text-slate-700 outline-none focus:ring-8 focus:ring-emerald-500/5 focus:border-emerald-500/20 transition-all resize-none shadow-sm"
+                              rows="4"
                              ></textarea>
-                             <button className="bg-primary text-white font-bold px-8 py-3 rounded-xl shadow-lg shadow-primary/20 active:scale-95 transition-all">Gửi bình luận</button>
+                             <button className="bg-slate-900 text-white font-black text-xs uppercase tracking-widest px-10 py-5 rounded-2xl shadow-xl shadow-slate-900/20 hover:bg-emerald-500 hover:shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all">
+                               Gửi thảo luận
+                             </button>
                           </div>
                        </div>
                     </div>
@@ -172,81 +201,89 @@ export default function DocumentDetailPage() {
           </div>
 
           {/* Sidebar Area (Right - 1/3) */}
-          <aside className="space-y-8 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+          <aside className="space-y-12 animate-in fade-in slide-in-from-right-8 duration-700 delay-200">
             
-            {/* Download Card */}
-            <div className="bg-primary rounded-[2.5rem] p-8 text-white shadow-2xl shadow-primary/30 relative overflow-hidden group">
-               <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-bl-full -mr-10 -mt-10 group-hover:scale-110 transition-transform duration-700"></div>
-               <h3 className="text-xl font-bold mb-6 relative z-10">Tải tài liệu về máy</h3>
-               <div className="space-y-4 mb-8 relative z-10">
-                  <div className="flex items-center justify-between p-4 bg-white/10 rounded-2xl border border-white/10 backdrop-blur-sm">
-                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-                           <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            {/* Action Card: Download */}
+            <div className="bg-slate-900 rounded-[3rem] p-10 text-white shadow-2xl shadow-slate-900/30 relative overflow-hidden group">
+               <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500 rounded-bl-full -mr-16 -mt-16 group-hover:scale-125 transition-transform duration-1000 opacity-80"></div>
+               
+               <h3 className="text-2xl font-black mb-10 relative z-10 tracking-tighter uppercase italic">TẢI VỀ MÁY</h3>
+               
+               <div className="space-y-4 mb-12 relative z-10">
+                  <div className="flex items-center justify-between p-6 bg-white/5 rounded-3xl border border-white/10 backdrop-blur-xl group-hover:bg-white/10 transition-colors">
+                     <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-emerald-400 group-hover:rotate-12 transition-transform">
+                           <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                         </div>
                         <div>
-                           <p className="text-[10px] font-black uppercase tracking-widest text-white/50">Định dạng</p>
-                           <p className="text-sm font-bold">{doc.fileInfo.format}</p>
+                           <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/40 mb-1">ĐỊNH DẠNG</p>
+                           <p className="text-sm font-black tracking-tight">{doc.fileInfo.format}</p>
                         </div>
                      </div>
                      <div className="text-right">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-white/50">Kích thước</p>
-                        <p className="text-sm font-bold">{doc.fileInfo.size}</p>
+                        <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/40 mb-1">DUNG LƯỢNG</p>
+                        <p className="text-sm font-black tracking-tight">{doc.fileInfo.size}</p>
                      </div>
                   </div>
                </div>
-               <button className="w-full bg-white text-primary py-5 rounded-2xl font-black text-lg shadow-xl shadow-black/10 hover:bg-slate-50 transition-all active:scale-95 flex items-center justify-center gap-3 relative z-10">
-                  <span>TẢI XUỐNG NGAY</span>
-                  <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+               
+               <button className="w-full bg-emerald-500 text-white py-6 rounded-3xl font-black text-lg shadow-2xl shadow-emerald-500/20 hover:bg-emerald-400 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-4 relative z-10">
+                  <span>TẢI NGAY</span>
+                  <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" className="animate-bounce"><path d="M12 5v14M5 12l7 7 7-7" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/></svg>
                </button>
             </div>
 
-            {/* Author Profile */}
-            <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm text-center">
-               <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-8">Người chia sẻ</h4>
-               <div className="relative inline-block mb-6">
-                  <div className="w-24 h-24 rounded-[2rem] bg-slate-100 flex items-center justify-center text-3xl font-black text-slate-400 border border-slate-200">
+            {/* Author Profile Card */}
+            <div className="bg-white rounded-[3rem] p-10 border border-slate-100 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.03)] text-center relative overflow-hidden group">
+               <div className="absolute top-0 left-0 w-full h-24 bg-slate-50 border-b border-slate-100 -z-10 group-hover:bg-emerald-50 transition-colors"></div>
+               
+               <div className="relative inline-block mb-8 mt-4">
+                  <div className="w-28 h-28 rounded-[2.5rem] bg-white shadow-2xl flex items-center justify-center text-4xl font-black text-slate-300 border-4 border-white overflow-hidden group-hover:rotate-6 transition-transform">
                     {doc.author.avatar}
+                    <div className="absolute inset-0 bg-emerald-500 opacity-0 group-hover:opacity-10 transition-opacity"></div>
                   </div>
-                  <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-xl bg-primary text-white flex items-center justify-center border-4 border-white shadow-lg">
-                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
-                  </div>
-               </div>
-               <h3 className="text-xl font-black text-slate-800 mb-1">{doc.author.name}</h3>
-               <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6">{doc.author.role}</p>
-               <div className="grid grid-cols-2 gap-4 border-t border-slate-50 pt-6">
-                  <div>
-                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Đóng góp</p>
-                    <p className="text-lg font-black text-slate-700">{doc.author.contributions}</p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Uy tín</p>
-                    <p className="text-lg font-black text-emerald-500">9.8</p>
+                  <div className="absolute -bottom-2 -right-2 w-10 h-10 rounded-2xl bg-emerald-500 text-white flex items-center justify-center border-4 border-white shadow-xl">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
                   </div>
                </div>
-               <button className="w-full mt-8 py-3.5 rounded-xl border-2 border-slate-100 text-slate-600 font-bold text-sm hover:border-primary/20 hover:text-primary hover:bg-primary/5 transition-all">
-                  Xem trang cá nhân
+               
+               <h3 className="text-2xl font-black text-slate-900 mb-2 tracking-tight uppercase italic">{doc.author.name}</h3>
+               <p className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.3em] mb-10">{doc.author.role}</p>
+               
+               <div className="grid grid-cols-2 gap-4 border-y border-slate-50 py-8 mb-10">
+                  <div>
+                    <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-2">ĐÓNG GÓP</p>
+                    <p className="text-xl font-black text-slate-800">{doc.author.contributions}</p>
+                  </div>
+                  <div className="border-l border-slate-50">
+                    <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-2">UY TÍN</p>
+                    <p className="text-xl font-black text-emerald-500">9.8</p>
+                  </div>
+               </div>
+               
+               <button className="w-full py-5 rounded-2xl border-2 border-slate-100 text-slate-600 font-black text-[10px] uppercase tracking-widest hover:border-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 transition-all active:scale-95 shadow-sm">
+                  XEM TRANG CÁ NHÂN
                </button>
             </div>
 
-            {/* Related Documents */}
-            <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm">
-               <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-8">Tài liệu liên quan</h4>
-               <div className="space-y-6">
+            {/* Related Documents Card */}
+            <div className="bg-white rounded-[3rem] p-10 border border-slate-100 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.02)]">
+               <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] mb-10">LIÊN QUAN</h4>
+               <div className="space-y-8">
                   {doc.relatedDocs.map(item => (
-                    <Link href={`/documents/${item.id}`} key={item.id} className="group flex items-start gap-4">
-                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border transition-all ${item.type === 'Slide' ? 'bg-amber-50 border-amber-100 text-amber-500' : 'bg-red-50 border-red-100 text-red-500'}`}>
-                          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <Link href={`/documents/${item.id}`} key={item.id} className="group flex items-center gap-5">
+                       <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 border transition-all duration-500 group-hover:scale-110 group-hover:rotate-12 ${item.type === 'Slide' ? 'bg-amber-50 border-amber-100 text-amber-500' : 'bg-red-50 border-red-100 text-red-500'}`}>
+                          <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                        </div>
-                       <div>
-                          <h5 className="text-sm font-bold text-slate-700 group-hover:text-primary transition-colors line-clamp-2 leading-snug mb-1">{item.title}</h5>
-                          <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">{item.views} lượt xem</p>
+                       <div className="flex-1 overflow-hidden">
+                          <h5 className="text-[13px] font-black text-slate-800 group-hover:text-emerald-600 transition-colors line-clamp-2 leading-snug uppercase tracking-tight mb-1">{item.title}</h5>
+                          <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">{item.views} LƯỢT XEM</p>
                        </div>
                     </Link>
                   ))}
                </div>
-               <button className="w-full mt-10 py-3.5 rounded-xl bg-slate-50 text-slate-400 font-bold text-xs uppercase tracking-widest hover:bg-slate-100 hover:text-slate-600 transition-all">
-                  Xem tất cả
+               <button className="w-full mt-12 py-5 rounded-2xl bg-slate-50 text-slate-400 font-black text-[9px] uppercase tracking-[0.3em] hover:bg-slate-900 hover:text-white transition-all shadow-inner">
+                  XEM TẤT CẢ TÀI LIỆU
                </button>
             </div>
 

@@ -43,12 +43,10 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-[calc(100vh-80px)] flex items-center justify-center bg-[#fafbfc] relative overflow-hidden px-4 py-12">
-      {/* Soft Minimalist Background */}
       <div className="absolute inset-0 z-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(#004d40 1px, transparent 1px)', backgroundSize: '32px 32px' }}></div>
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-primary/5 blur-[120px] -z-10 rounded-full"></div>
 
       <div className="w-full max-w-[420px] z-10 animate-fade-in">
-        {/* Header Section */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-black text-slate-900 tracking-tight italic uppercase">
             Tham gia <span className="text-primary">Cộng đồng</span>
@@ -56,7 +54,6 @@ export default function RegisterPage() {
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] mt-2">Khởi tạo hành trình tri thức mới</p>
         </div>
 
-        {/* Minimalist Card */}
         <div className="bg-white rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.04)] border border-slate-100 overflow-hidden">
           <div className="p-8 md:p-10">
             {error && (
@@ -67,7 +64,6 @@ export default function RegisterPage() {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Họ và tên */}
               <div className="space-y-1.5">
                 <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Họ và tên</label>
                 <div className="relative group">
@@ -86,7 +82,6 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              {/* Email */}
               <div className="space-y-1.5">
                 <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Email sinh viên</label>
                 <div className="relative group">
@@ -104,7 +99,6 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              {/* Password Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                  <div className="space-y-1.5">
                     <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Mật khẩu</label>
@@ -146,7 +140,6 @@ export default function RegisterPage() {
             </form>
           </div>
 
-          {/* Footer Link */}
           <div className="py-6 bg-slate-50 text-center border-t border-slate-100">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
               Đã có tài khoản?{" "}

@@ -1,0 +1,5 @@
+'Thiết kế website chia sẻ tài liệu học tập cho sinh viên Khoa Công nghệ thông tin, Đại học Văn Lang, cung cấp các nền tảng chia sẻ tài liệu, bài tập, video bài học.... cho sinh viên.
+Áp dụng AI để gợi ý nội dung bài học, bài tập... phù hợp cho các bạn sinh viên.'- Sử dụng AI để đề xuất tài liệu học tập dựa trên lịch sử tìm kiếm và sở thích của sinh viên.
+- Có thể phân loại tài liệu cho phép người dùng chọn chủ đề, cấp độ hoặc thể loại tài liệu.
+- Sinh viên có thể chi sẻ tài liệu của mình với người học
+- Cho phép sinh viên đánh giá tài liệu học tập qua quá trình chi sẻ

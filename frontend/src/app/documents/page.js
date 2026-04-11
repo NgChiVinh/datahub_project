@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 // Mock Data mở rộng
 const categories = [
@@ -28,6 +29,15 @@ const mockDocuments = [
 export default function DocumentsPage() {
   const [activeCategory, setActiveCategory] = useState("Tất cả");
   const [searchQuery, setSearchQuery] = useState("");
+  const searchParams = useSearchParams();
+
+  // Tự động điền searchQuery từ URL khi trang được tải
+  useEffect(() => {
+    const search = searchParams.get("search");
+    if (search) {
+      setSearchQuery(search);
+    }
+  }, [searchParams]);
 
   const filteredDocs = mockDocuments.filter(doc => {
     const matchCategory = activeCategory === "Tất cả" || doc.category === activeCategory;

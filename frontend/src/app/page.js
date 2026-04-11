@@ -3,11 +3,22 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { CATEGORIES, FEATURED_DOCUMENTS } from "@/data/mockData";
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
+  const router = useRouter();
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/documents?search=${encodeURIComponent(searchQuery.trim())}`);
+    } else {
+      router.push("/documents");
+    }
+  };
 
   const filters = [
     { id: "all", label: "Tất cả", icon: "square" },
@@ -54,7 +65,7 @@ export default function Home() {
               <h1 className="text-5xl font-black leading-[1.2] tracking-tighter lg:text-8xl mb-10 drop-shadow-2xl uppercase italic">
                 <span className="text-white">TRẠM TRI THỨC</span> <br />
                 <span className="inline-block py-2 bg-gradient-to-r from-emerald-400 via-emerald-200 to-blue-400 bg-clip-text text-transparent font-black">
-                  CHUYÊN BIỆT IT
+                  CỘNG ĐỒNG IT
                 </span>
               </h1>
               
@@ -63,7 +74,7 @@ export default function Home() {
               </p>
 
               {/* Enhanced Search Bar */}
-              <div className="mt-12 w-full max-w-2xl mx-auto px-4 group">
+              <form onSubmit={handleSearch} className="mt-12 w-full max-w-2xl mx-auto px-4 group">
                 <div className="relative flex items-center rounded-2xl border border-white/20 bg-white/10 backdrop-blur-2xl p-1.5 shadow-2xl transition-all duration-500 focus-within:bg-white focus-within:ring-8 focus-within:ring-primary/5">
                   <div className="flex flex-1 items-center gap-4 px-4">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-300 group-focus-within:text-primary transition-colors"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
@@ -75,7 +86,7 @@ export default function Home() {
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
                   </div>
-                  <button className="rounded-xl bg-primary px-8 py-3.5 text-[10px] font-black text-white shadow-xl hover:bg-emerald-800 active:scale-95 transition-all uppercase tracking-widest">
+                  <button type="submit" className="rounded-xl bg-primary px-8 py-3.5 text-[10px] font-black text-white shadow-xl hover:bg-emerald-800 active:scale-95 transition-all uppercase tracking-widest">
                      TÌM KIẾM
                   </button>
                 </div>
@@ -83,11 +94,11 @@ export default function Home() {
                 {/* Trending Tags */}
                 <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-[9px] font-bold text-slate-300 uppercase tracking-widest">
                   <span className="opacity-50 text-emerald-400">Xu hướng:</span>
-                  <button onClick={() => setSearchQuery("Python")} className="hover:text-emerald-300 transition-colors border-b border-transparent hover:border-emerald-300">#PYTHON</button>
-                  <button onClick={() => setSearchQuery("DSA")} className="hover:text-emerald-300 transition-colors border-b border-transparent hover:border-emerald-300">#DSA</button>
-                  <button onClick={() => setSearchQuery("Next.js")} className="hover:text-emerald-300 transition-colors border-b border-transparent hover:border-emerald-300">#NEXTJS</button>
+                  <button type="button" onClick={() => setSearchQuery("Python")} className="hover:text-emerald-300 transition-colors border-b border-transparent hover:border-emerald-300">#PYTHON</button>
+                  <button type="button" onClick={() => setSearchQuery("DSA")} className="hover:text-emerald-300 transition-colors border-b border-transparent hover:border-emerald-300">#DSA</button>
+                  <button type="button" onClick={() => setSearchQuery("Next.js")} className="hover:text-emerald-300 transition-colors border-b border-transparent hover:border-emerald-300">#NEXTJS</button>
                 </div>
-              </div>
+              </form>
             </div>
 
             {/* ADJUSTED VLU LOGO (SMALLER & REFINED) */}
