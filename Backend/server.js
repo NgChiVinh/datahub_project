@@ -15,9 +15,11 @@ app.use(cors());
 
 // Import Routes
 const userRoutes = require("./routes/userRoutes");
+const majorRoutes = require("./routes/majorRoutes");
 
 // Sử dụng API routes
 app.use("/api/users", userRoutes);
+app.use("/api/majors", majorRoutes);
 
 // Default route
 app.get("/", (req, res) => {
