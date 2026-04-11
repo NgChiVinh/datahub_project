@@ -1,0 +1,31 @@
+const express = require("express");
+const dotenv = require("dotenv");
+const cors = require("cors");
+const connectDB = require("./config/db");
+
+// Load .env
+dotenv.config();
+
+// Kết nối MongoDB
+connectDB();
+
+const app = express();
+app.use(express.json());
+app.use(cors());
+
+// Import Routes
+const userRoutes = require("./routes/userRoutes");
+
+// Sử dụng API routes
+app.use("/api/users", userRoutes);
+
+// Default route
+app.get("/", (req, res) => {
+  res.send("API DataHub Running...");
+});
+
+// Lắng nghe server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server running on port ${PORT}`);
+});
