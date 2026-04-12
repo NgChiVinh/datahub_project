@@ -16,10 +16,14 @@ app.use(cors());
 // Import Routes
 const userRoutes = require("./routes/userRoutes");
 const majorRoutes = require("./routes/majorRoutes");
+const categoryRoutes = require("./routes/categoryRoutes");
+const tagRoutes = require("./routes/tagRoutes");
 
 // Sử dụng API routes
 app.use("/api/users", userRoutes);
 app.use("/api/majors", majorRoutes);
+app.use("/api/categories", categoryRoutes);
+app.use("/api/tags", tagRoutes);
 
 // Default route
 app.get("/", (req, res) => {
