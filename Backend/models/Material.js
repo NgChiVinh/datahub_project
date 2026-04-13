@@ -5,10 +5,20 @@ const materialSchema = new mongoose.Schema(
     title: { type: String, required: true },
     description: { type: String },
     fileUrl: { type: String, required: true },
+    sourceType: {
+      type: String,
+      enum: ["upload", "link"],
+      default: "upload",
+    },
     materialType: {
       type: String,
-      enum: ["pdf", "docx", "zip", "video", "pptx"],
+      enum: ["pdf", "docx", "zip", "video", "pptx", "other"],
       required: true,
+    },
+    academicYear: {
+      type: String,
+      enum: ["Năm 1", "Năm 2", "Năm 3", "Năm 4", "Khác"],
+      default: "Khác",
     },
     categoryId: {
       type: mongoose.Schema.Types.ObjectId,

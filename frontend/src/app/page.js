@@ -2,14 +2,36 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { CATEGORIES, FEATURED_DOCUMENTS } from "@/data/mockData";
+import { CATEGORIES } from "@/data/mockData";
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
+  const [materials, setMaterials] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+
+  // Lấy dữ liệu từ Backend
+  useEffect(() => {
+    const fetchMaterials = async () => {
+      try {
+        setIsLoading(true);
+        const res = await fetch("http://localhost:5000/api/materials");
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          // Lấy 6 cái mới nhất
+          setMaterials(data.slice(0, 6));
+        }
+      } catch (error) {
+        console.error("Lỗi lấy tài liệu:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchMaterials();
+  }, []);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -23,12 +45,13 @@ export default function Home() {
   const filters = [
     { id: "all", label: "Tất cả", icon: "square" },
     { id: "video", label: "Video bài giảng", icon: "play" },
-    { id: "doc", label: "Tài liệu PDF", icon: "file-text" },
-    { id: "exercise", label: "Bài tập & Code", icon: "code" },
+    { id: "pdf", label: "Tài liệu PDF", icon: "file-text" },
+    { id: "docx", label: "File Word", icon: "file-text" },
+    { id: "zip", label: "Bài tập & Code", icon: "code" },
   ];
 
   const filteredDocuments = useMemo(() => {
-    let docs = FEATURED_DOCUMENTS;
+    let docs = materials;
     
     if (searchQuery.trim()) {
       docs = docs.filter((doc) =>
@@ -37,11 +60,11 @@ export default function Home() {
     }
 
     if (activeFilter !== "all") {
-      docs = docs.filter((doc) => doc.type === activeFilter);
+      docs = docs.filter((doc) => doc.materialType === activeFilter);
     }
 
     return docs;
-  }, [searchQuery, activeFilter]);
+  }, [searchQuery, activeFilter, materials]);
 
   return (
     <div className="bg-white font-sans text-slate-900 overflow-x-hidden">
@@ -90,41 +113,19 @@ export default function Home() {
                      TÌM KIẾM
                   </button>
                 </div>
-
-                {/* Trending Tags */}
-                <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-[9px] font-bold text-slate-300 uppercase tracking-widest">
-                  <span className="opacity-50 text-emerald-400">Xu hướng:</span>
-                  <button type="button" onClick={() => setSearchQuery("Python")} className="hover:text-emerald-300 transition-colors border-b border-transparent hover:border-emerald-300">#PYTHON</button>
-                  <button type="button" onClick={() => setSearchQuery("DSA")} className="hover:text-emerald-300 transition-colors border-b border-transparent hover:border-emerald-300">#DSA</button>
-                  <button type="button" onClick={() => setSearchQuery("Next.js")} className="hover:text-emerald-300 transition-colors border-b border-transparent hover:border-emerald-300">#NEXTJS</button>
-                </div>
               </form>
-            </div>
-
-            {/* ADJUSTED VLU LOGO (SMALLER & REFINED) */}
-            <div className="absolute bottom-[-140px] right-4 lg:right-0 group">
-              <div className="relative">
-                <div className="absolute inset-0 bg-white/10 blur-xl rounded-full scale-125 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <Image 
-                  src="/images/logo_vlu.png" 
-                  alt="Logo VLU" 
-                  width={125} 
-                  height={50} 
-                  className="relative h-auto w-24 lg:w-36 object-contain drop-shadow-[0_8px_25px_rgba(0,0,0,0.5)] brightness-110 transition-all duration-500 group-hover:scale-105"
-                />
-              </div>
             </div>
           </div>
         </section>
 
-        {/* --- MAIN CONTENT / FILTERS (UPGRADED STYLE KEPT) --- */}
+        {/* --- MAIN CONTENT / FILTERS --- */}
         <section className="bg-white py-24 relative border-t border-slate-50">
           <div className="container mx-auto px-4 lg:px-8">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-10 mb-20">
               <div>
                 <span className="text-[10px] font-black text-primary uppercase tracking-[0.4em] mb-4 block">Knowledge Base</span>
                 <h2 className="flex items-center gap-4 text-4xl font-black tracking-tighter text-slate-900 uppercase italic">
-                  {searchQuery ? `Kết quả cho "${searchQuery}"` : "Dành riêng cho bạn"}
+                  {searchQuery ? `Kết quả cho "${searchQuery}"` : "Tài liệu mới nhất"}
                   <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></div>
                 </h2>
               </div>
@@ -146,13 +147,18 @@ export default function Home() {
               </div>
             </div>
 
-            {filteredDocuments.length > 0 ? (
+            {isLoading ? (
+              <div className="text-center py-20">
+                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
+                <p className="mt-4 text-slate-500 font-bold uppercase tracking-widest text-xs">Đang tải tri thức...</p>
+              </div>
+            ) : filteredDocuments.length > 0 ? (
               <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-3">
                 {filteredDocuments.map((item, idx) => (
-                  <div key={item.id} className="group flex flex-col cursor-pointer transition-all duration-500" style={{ animationDelay: `${idx * 100}ms` }}>
+                  <Link href={`/documents/${item._id}`} key={item._id} className="group flex flex-col cursor-pointer transition-all duration-500" style={{ animationDelay: `${idx * 100}ms` }}>
                     <div className="relative aspect-[16/10] w-full overflow-hidden rounded-[40px] bg-slate-100 mb-8 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.05)] group-hover:shadow-[0_40px_80px_-15px_rgba(16,185,129,0.15)] transition-all duration-500 group-hover:-translate-y-3">
                        <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-950">
-                          {item.type === "video" && (
+                          {item.materialType === "video" && (
                             <div className="z-10 absolute inset-0 flex items-center justify-center">
                               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/10 backdrop-blur-2xl text-white border border-white/20 group-hover:bg-emerald-500 group-hover:scale-110 transition-all duration-500">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="m7 4 12 8-12 8V4Z"/></svg>
@@ -164,9 +170,9 @@ export default function Home() {
                        
                        <div className="absolute top-6 left-6 z-20">
                           <span className={`rounded-xl px-4 py-1.5 text-[10px] font-black text-white shadow-lg tracking-widest uppercase ${
-                            item.type === 'video' ? 'bg-red-500' : item.type === 'exercise' ? 'bg-blue-500' : 'bg-emerald-500'
+                            item.materialType === 'video' ? 'bg-red-500' : item.materialType === 'zip' ? 'bg-blue-500' : 'bg-emerald-500'
                           }`}>
-                            {item.tag}
+                            {item.materialType}
                           </span>
                        </div>
                     </div>
@@ -179,29 +185,26 @@ export default function Home() {
                       <div className="flex items-center justify-between pt-5 border-t border-slate-50">
                         <div className="flex items-center gap-3">
                           <div className="h-9 w-9 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 border border-slate-200 flex items-center justify-center text-[11px] font-black text-slate-500 group-hover:from-emerald-50 group-hover:to-emerald-100 group-hover:text-emerald-600 transition-all">
-                            {item.author.charAt(0)}
+                            {item.uploaderId?.fullName?.charAt(0) || "U"}
                           </div>
-                          <span className="text-[12px] font-bold text-slate-600 tracking-tight uppercase">{item.author}</span>
+                          <span className="text-[12px] font-bold text-slate-600 tracking-tight uppercase">{item.uploaderId?.fullName || "Người dùng"}</span>
                         </div>
                         <div className="flex items-center gap-5 text-[11px] font-black text-slate-400 uppercase">
                           <span className="flex items-center gap-1.5 text-emerald-500">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="mb-0.5"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                            {item.rating}
+                            {item.metrics?.averageRating || 0}
                           </span>
-                          <span className="tracking-widest">{item.views} LƯỢT XEM</span>
+                          <span className="tracking-widest">{item.metrics?.viewCount || 0} LƯỢT XEM</span>
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             ) : (
               <div className="text-center py-32 rounded-[3rem] bg-slate-50 border-2 border-dashed border-slate-200">
-                <div className="mx-auto w-24 h-24 mb-6 text-slate-200 animate-bounce">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                </div>
-                <p className="text-2xl font-black text-slate-400 tracking-tighter italic uppercase">Không có tài liệu nào phù hợp...</p>
-                <button onClick={() => {setSearchQuery(""); setActiveFilter("all");}} className="mt-8 px-10 py-4 bg-primary text-white font-black rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all">KHÁM PHÁ LẠI</button>
+                <p className="text-2xl font-black text-slate-400 tracking-tighter italic uppercase">Chưa có tài liệu nào...</p>
+                <Link href="/upload" className="mt-8 inline-block px-10 py-4 bg-primary text-white font-black rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all">CHIA SẺ NGAY</Link>
               </div>
             )}
           </div>
@@ -234,7 +237,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* --- CTA SECTION (REPAIRED SPACING) --- */}
+        {/* --- CTA SECTION --- */}
         <section className="bg-slate-900 py-32 text-center text-white relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-full opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:32px_32px]"></div>
           <div className="container relative z-10 mx-auto px-4 lg:px-8">

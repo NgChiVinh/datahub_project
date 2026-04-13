@@ -40,12 +40,12 @@ export default function AISuggestPage() {
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
               Cá nhân hóa bởi trí tuệ nhân tạo
             </div>
-            <h1 className="text-4xl lg:text-6xl font-black text-slate-900 leading-[1.1] mb-6 uppercase tracking-tighter">
+            <h1 className="text-4xl lg:text-6xl font-black text-slate-900 leading-[1.15] mb-6 uppercase tracking-tighter">
               Lộ trình học tập <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-blue-600">Dành riêng cho bạn</span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-blue-600">Năm 3: Chuyên ngành IT</span>
             </h1>
             <p className="text-lg text-slate-600 font-medium leading-relaxed mb-8">
-              Dựa trên các tài liệu bạn đã xem và bài tập bạn quan tâm, AI đã tổng hợp một lộ trình tối ưu để giúp bạn làm chủ kiến thức nhanh nhất.
+              Dựa trên các tài liệu bạn đã xem về <span className="text-emerald-600 font-black">Next.js</span> và bài tập <span className="text-blue-600 font-black">Cơ sở dữ liệu</span>, AI đã tổng hợp một lộ trình tối ưu để giúp bạn làm chủ kiến thức chuyên ngành.
             </p>
           </div>
         </div>
@@ -56,28 +56,44 @@ export default function AISuggestPage() {
           
           {/* Main Roadmap */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50 border border-slate-100">
-              <h3 className="text-sm font-black uppercase tracking-widest text-slate-400 mb-8 flex items-center gap-3">
-                <span className="w-8 h-1 bg-emerald-500 rounded-full"></span>
-                Lộ trình đề xuất tháng 04/2026
-              </h3>
+            <div className="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-xl shadow-slate-200/50 border border-slate-100">
+              <div className="flex items-center justify-between mb-10 flex-wrap gap-4">
+                <h3 className="text-sm font-black uppercase tracking-widest text-slate-400 flex items-center gap-3">
+                  <span className="w-8 h-1 bg-emerald-500 rounded-full"></span>
+                  Lộ trình đề xuất tháng 04/2026
+                </h3>
+                <span className="px-4 py-1.5 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest border border-emerald-100">
+                  Độ chính xác: 95%
+                </span>
+              </div>
               
               <div className="space-y-12 relative before:absolute before:left-4 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-100">
                 {[
-                  { step: "01", title: "Nền tảng cấu trúc dữ liệu", status: "Hoàn thành", color: "bg-emerald-500" },
-                  { step: "02", title: "Thuật toán tìm kiếm nâng cao", status: "Đang học", color: "bg-blue-500", active: true },
-                  { step: "03", title: "Ứng dụng AI vào Web App", status: "Sắp tới", color: "bg-slate-200" },
-                  { step: "04", title: "Đồ án cuối kỳ thực chiến", status: "Sắp tới", color: "bg-slate-200" }
+                  { step: "01", title: "Nền tảng cấu trúc dữ liệu", status: "Hoàn thành", color: "bg-emerald-500", reason: "Bạn đã xem 12 tài liệu phần này" },
+                  { step: "02", title: "Thuật toán tìm kiếm nâng cao", status: "Đang học", color: "bg-blue-500", active: true, reason: "Phù hợp với môn DSA bạn đang học" },
+                  { step: "03", title: "Ứng dụng AI vào Web App", status: "Sắp tới", color: "bg-slate-200", reason: "Dựa trên xu hướng tìm kiếm 'AI' của bạn" },
+                  { step: "04", title: "Đồ án cuối kỳ thực chiến", status: "Sắp tới", color: "bg-slate-200", reason: "Giai đoạn quan trọng của Năm 3" }
                 ].map((item, idx) => (
                   <div key={idx} className="relative pl-12 group">
                     <div className={`absolute left-0 top-0 w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black text-white z-10 shadow-lg ${item.color} ${item.active ? "ring-4 ring-blue-100 animate-pulse" : ""}`}>
                       {item.step}
                     </div>
-                    <div>
-                      <h4 className={`text-lg font-black uppercase tracking-tight mb-1 transition-colors ${item.active ? "text-blue-600" : "text-slate-800"}`}>
-                        {item.title}
-                      </h4>
-                      <p className="text-sm text-slate-500 font-bold uppercase tracking-widest">{item.status}</p>
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+                      <div>
+                        <h4 className={`text-lg font-black uppercase tracking-tight mb-1 transition-colors ${item.active ? "text-blue-600" : "text-slate-800"}`}>
+                          {item.title}
+                        </h4>
+                        <p className="text-xs text-slate-400 font-bold uppercase tracking-widest flex items-center gap-2">
+                          {item.status}
+                          <span className="w-1 h-1 bg-slate-200 rounded-full"></span>
+                          <span className="text-emerald-500/80 italic normal-case font-medium">{item.reason}</span>
+                        </p>
+                      </div>
+                      {item.active && (
+                         <button className="px-6 py-2 rounded-xl bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-600/20 hover:scale-105 active:scale-95 transition-all">
+                            Tiếp tục học
+                         </button>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -94,13 +110,16 @@ export default function AISuggestPage() {
               <h3 className="text-xs font-black uppercase tracking-[0.2em] mb-6 text-emerald-400">Tài liệu khuyên đọc</h3>
               <div className="space-y-4">
                 {[
-                  "Cẩm nang thuật toán 2024",
-                  "Source Code quản lý sinh viên",
-                  "Slide bài giảng AI nâng cao"
+                  { title: "Cẩm nang thuật toán 2024", label: "Phổ biến trong Năm 3" },
+                  { title: "Source Code quản lý sinh viên", label: "Dành cho sở thích Web" },
+                  { title: "Slide bài giảng AI nâng cao", label: "Mới cập nhật" }
                 ].map((doc, i) => (
-                  <Link href="#" key={i} className="block p-4 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/5 transition-all">
-                    <p className="text-sm font-black tracking-tight mb-1">{doc}</p>
-                    <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest leading-none">Xem ngay →</span>
+                  <Link href="#" key={i} className="block p-4 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/5 transition-all group/doc">
+                    <span className="block text-[8px] font-black text-emerald-400 uppercase tracking-widest mb-1 opacity-70 group-hover/doc:opacity-100 transition-opacity">
+                      {doc.label}
+                    </span>
+                    <p className="text-sm font-black tracking-tight mb-2">{doc.title}</p>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none group-hover/doc:text-white transition-colors">Xem ngay →</span>
                   </Link>
                 ))}
               </div>

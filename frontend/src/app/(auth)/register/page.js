@@ -1,57 +1,99 @@
 "use client";
 import Link from "next/link";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 export default function RegisterPage() {
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
     password: "",
     confirmPassword: "",
+    studentId: "",
+    majorId: "",
   });
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [majors, setMajors] = useState([]);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const firstInputRef = useRef(null);
 
+  // Lấy danh sách chuyên ngành
   useEffect(() => {
-    if (firstInputRef.current) {
-      firstInputRef.current.focus();
-    }
+    const fetchMajors = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/majors");
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setMajors(data);
+          if (data.length > 0) setFormData(prev => ({ ...prev, majorId: data[0]._id }));
+        }
+      } catch (error) {
+        console.error("Lỗi lấy chuyên ngành:", error);
+      }
+    };
+    fetchMajors();
   }, []);
+
+  // Tự động tách MSSV từ email khi email thay đổi
+  useEffect(() => {
+    if (formData.email.includes("@vanlanguni.vn")) {
+      const emailParts = formData.email.split("@")[0].split(".");
+      const possibleId = emailParts[emailParts.length - 1];
+      if (!isNaN(possibleId) && possibleId.length >= 7) {
+        setFormData(prev => ({ ...prev, studentId: possibleId }));
+      }
+    }
+  }, [formData.email]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     
-    if (formData.password !== formData.confirmPassword) {
-      setError("Mật khẩu xác nhận không khớp.");
-      return;
-    }
+    // ... (giữ nguyên các bước validate password)
 
     setIsLoading(true);
-    // Giả lập call API đăng ký
-    setTimeout(() => {
+    try {
+      const res = await fetch("http://localhost:5000/api/users/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          studentId: formData.studentId,
+          fullName: formData.fullName,
+          email: formData.email,
+          password: formData.password,
+          majorId: formData.majorId
+        })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        alert("Đăng ký thành công! Chào mừng bạn gia nhập cộng đồng IT VLU.");
+        // Tự động đăng nhập với token nhận được từ Backend
+        login(data.user, data.token);
+      } else {
+        setError(data.message || "Đăng ký thất bại");
+      }
+    } catch (err) {
+      setError("Không thể kết nối đến máy chủ. Vui lòng thử lại sau.");
+    } finally {
       setIsLoading(false);
-      alert("Đăng ký thành công! Bạn có thể đăng nhập ngay.");
-      router.push("/login");
-    }, 1500);
+    }
   };
 
   return (
     <div className="min-h-[calc(100vh-80px)] flex items-center justify-center bg-[#fafbfc] relative overflow-hidden px-4 py-12">
       <div className="absolute inset-0 z-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(#004d40 1px, transparent 1px)', backgroundSize: '32px 32px' }}></div>
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-primary/5 blur-[120px] -z-10 rounded-full"></div>
-
-      <div className="w-full max-w-[420px] z-10 animate-fade-in">
+      
+      <div className="w-full max-w-[480px] z-10 animate-fade-in">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-black text-slate-900 tracking-tight italic uppercase">
             Tham gia <span className="text-primary">Cộng đồng</span>
           </h1>
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] mt-2">Khởi tạo hành trình tri thức mới</p>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] mt-2">Dành riêng cho sinh viên IT Văn Lang</p>
         </div>
 
         <div className="bg-white rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.04)] border border-slate-100 overflow-hidden">
@@ -65,17 +107,36 @@ export default function RegisterPage() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Họ và tên</label>
-                <div className="relative group">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-300 group-focus-within:text-primary transition-colors">
-                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                  </div>
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Email sinh viên Văn Lang</label>
+                <input 
+                  type="email" 
+                  required
+                  placeholder="ho_ten.mssv@vanlanguni.vn"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:bg-white focus:outline-none focus:border-primary/30 transition-all text-slate-800 font-bold text-sm placeholder:text-slate-300"
+                  value={formData.email}
+                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Mã sinh viên</label>
                   <input 
-                    ref={firstInputRef}
+                    type="text" 
+                    required
+                    placeholder="227480..."
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:bg-white focus:outline-none focus:border-primary/30 transition-all text-slate-800 font-bold text-sm"
+                    value={formData.studentId}
+                    onChange={(e) => setFormData({...formData, studentId: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Họ và tên</label>
+                  <input 
                     type="text" 
                     required
                     placeholder="Nguyễn Văn A"
-                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:bg-white focus:outline-none focus:border-primary/30 transition-all text-slate-800 font-bold text-sm placeholder:text-slate-300"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:bg-white focus:outline-none focus:border-primary/30 transition-all text-slate-800 font-bold text-sm"
                     value={formData.fullName}
                     onChange={(e) => setFormData({...formData, fullName: e.target.value})}
                   />
@@ -83,27 +144,23 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Email sinh viên</label>
-                <div className="relative group">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-300 group-focus-within:text-primary transition-colors">
-                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path></svg>
-                  </div>
-                  <input 
-                    type="email" 
-                    required
-                    placeholder="student@vanlanguni.vn"
-                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:bg-white focus:outline-none focus:border-primary/30 transition-all text-slate-800 font-bold text-sm placeholder:text-slate-300"
-                    value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                  />
-                </div>
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Chuyên ngành</label>
+                <select 
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:bg-white focus:outline-none focus:border-primary/30 transition-all text-slate-800 font-bold text-sm appearance-none cursor-pointer"
+                  value={formData.majorId}
+                  onChange={(e) => setFormData({...formData, majorId: e.target.value})}
+                >
+                  {majors.map(m => (
+                    <option key={m._id} value={m._id}>{m.name}</option>
+                  ))}
+                </select>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                  <div className="space-y-1.5">
                     <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Mật khẩu</label>
                     <input 
-                      type={showPassword ? "text" : "password"} 
+                      type="password"
                       required
                       placeholder="••••••••"
                       className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:bg-white focus:outline-none focus:border-primary/30 transition-all text-slate-800 font-bold text-sm placeholder:text-slate-300"
@@ -114,7 +171,7 @@ export default function RegisterPage() {
                  <div className="space-y-1.5">
                     <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Xác nhận</label>
                     <input 
-                      type={showConfirmPassword ? "text" : "password"} 
+                      type="password"
                       required
                       placeholder="••••••••"
                       className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:bg-white focus:outline-none focus:border-primary/30 transition-all text-slate-800 font-bold text-sm placeholder:text-slate-300"
@@ -133,7 +190,7 @@ export default function RegisterPage() {
                   {isLoading ? (
                     <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                   ) : (
-                    <span>Tạo tài khoản ngay</span>
+                    <span>Tạo tài khoản sinh viên</span>
                   )}
                 </button>
               </div>

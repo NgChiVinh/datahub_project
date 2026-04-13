@@ -4,6 +4,7 @@ const {
   getUsers,
   registerUser,
   loginUser,
+  getMe,
   updateUserRole,
   deleteUser,
   updateUserProfile,
@@ -12,6 +13,7 @@ const { authMiddleware, isAdmin } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
+router.get("/me", authMiddleware, getMe);
 router.get("/", authMiddleware, isAdmin, getUsers);
 router.put("/:id/role", authMiddleware, isAdmin, updateUserRole);
 router.delete("/:id", authMiddleware, isAdmin, deleteUser);

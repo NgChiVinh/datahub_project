@@ -11,6 +11,8 @@ const mockDocDetail = {
   title: "Đồ án ReactJS - Hệ thống Quản lý Thư viện số dành cho Sinh viên IT",
   category: "Lập trình Web",
   type: "Source Code",
+  rating: 4.8,
+  totalReviews: 24,
   author: {
     name: "Nguyễn Minh Triết",
     role: "Sinh viên K27",
@@ -40,6 +42,8 @@ export default function DocumentDetailPage() {
   const [doc, setDoc] = useState(mockDocDetail);
   const [isLiked, setIsLiked] = useState(false);
   const [activeTab, setActiveTab] = useState("preview"); // preview, info, comments
+  const [userRating, setUserRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
 
   return (
     <div className="min-h-screen bg-[#fafbfc] font-sans text-slate-900 pb-20 pt-24">
@@ -83,6 +87,9 @@ export default function DocumentDetailPage() {
                   <span className="px-5 py-2 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] bg-emerald-50 text-emerald-600 border border-emerald-100/50 shadow-sm">
                     {doc.category}
                   </span>
+                  <span className="px-5 py-2 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] bg-blue-50 text-blue-600 border border-blue-100/50 shadow-sm">
+                    Năm 3
+                  </span>
                </div>
                
                <h1 className="text-3xl md:text-5xl font-black text-slate-900 leading-[1.15] tracking-tighter mb-10 relative z-10 uppercase italic">
@@ -95,6 +102,12 @@ export default function DocumentDetailPage() {
                       <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                     </div>
                     <span>{doc.views.toLocaleString()} LƯỢT XEM</span>
+                  </div>
+                  <div className="flex items-center gap-3 group/item">
+                    <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center group-hover/item:text-amber-500 transition-colors shadow-inner text-amber-500">
+                      <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                    </div>
+                    <span>{doc.rating} ({doc.totalReviews} ĐÁNH GIÁ)</span>
                   </div>
                   <div className="flex items-center gap-3 group/item">
                     <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center group-hover/item:text-blue-500 transition-colors shadow-inner">
@@ -180,18 +193,91 @@ export default function DocumentDetailPage() {
 
                   {activeTab === 'comments' && (
                     <div className="space-y-12 animate-in fade-in duration-500">
-                       <div className="flex gap-6 p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100 shadow-inner">
-                          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-blue-500 flex items-center justify-center text-white font-black text-xl shadow-lg shrink-0">B</div>
-                          <div className="flex-1 space-y-6">
+                       {/* Rating Input */}
+                       <div className="flex flex-col gap-6 p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100 shadow-inner">
+                          <div className="flex items-center justify-between flex-wrap gap-4">
+                            <div className="flex items-center gap-4">
+                              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-blue-500 flex items-center justify-center text-white font-black text-xl shadow-lg shrink-0">B</div>
+                              <div>
+                                <p className="text-sm font-black text-slate-800 uppercase tracking-tight">Đánh giá của bạn</p>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Hãy cho mọi người biết cảm nhận của bạn</p>
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-center gap-1">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <button
+                                  key={star}
+                                  onMouseEnter={() => setHoverRating(star)}
+                                  onMouseLeave={() => setHoverRating(0)}
+                                  onClick={() => setUserRating(star)}
+                                  className="p-1 transition-transform active:scale-90"
+                                >
+                                  <svg 
+                                    width="28" height="28" 
+                                    viewBox="0 0 24 24" 
+                                    fill={(hoverRating || userRating) >= star ? "#fbbf24" : "none"} 
+                                    stroke={(hoverRating || userRating) >= star ? "#fbbf24" : "#cbd5e1"}
+                                    strokeWidth="2"
+                                  >
+                                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                                  </svg>
+                                </button>
+                              ))}
+                              {userRating > 0 && (
+                                <span className="ml-2 text-xs font-black text-amber-500">{userRating}.0</span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="space-y-6">
                              <textarea 
-                              placeholder="Chia sẻ cảm nghĩ của bạn..." 
-                              className="w-full bg-white border-2 border-slate-100 rounded-3xl px-8 py-6 font-bold text-slate-700 outline-none focus:ring-8 focus:ring-emerald-500/5 focus:border-emerald-500/20 transition-all resize-none shadow-sm"
+                              placeholder="Chia sẻ cảm nghĩ của bạn về tài liệu này..." 
+                              className="w-full bg-white border-2 border-slate-100 rounded-3xl px-8 py-6 font-bold text-slate-700 outline-none focus:ring-8 focus:ring-emerald-500/5 focus:border-emerald-500/20 transition-all resize-none shadow-sm placeholder:text-slate-300"
                               rows="4"
                              ></textarea>
-                             <button className="bg-slate-900 text-white font-black text-xs uppercase tracking-widest px-10 py-5 rounded-2xl shadow-xl shadow-slate-900/20 hover:bg-emerald-500 hover:shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all">
-                               Gửi thảo luận
-                             </button>
+                             <div className="flex justify-end">
+                               <button className="bg-slate-900 text-white font-black text-[10px] uppercase tracking-[0.2em] px-10 py-5 rounded-2xl shadow-xl shadow-slate-900/20 hover:bg-emerald-500 hover:shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all">
+                                 Gửi thảo luận
+                               </button>
+                             </div>
                           </div>
+                       </div>
+
+                       {/* Sample Comments List */}
+                       <div className="space-y-10">
+                          <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] mb-10">TẤT CẢ THẢO LUẬN (12)</h4>
+                          
+                          {[
+                            { name: "Lê Duy Anh", avatar: "A", date: "3 giờ trước", rating: 5, content: "Tài liệu cực kỳ chất lượng, source code chạy mượt và dễ hiểu. Rất giúp ích cho đồ án của mình!" },
+                            { name: "Trần Bảo Ngọc", avatar: "N", date: "Hôm qua", rating: 4, content: "Slide trình bày đẹp, kiến thức cô đọng. Nếu có thêm phần ví dụ thực tế về Web Security nữa thì tuyệt vời." }
+                          ].map((comment, i) => (
+                            <div key={i} className="flex gap-6 group">
+                              <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-500 font-black text-lg border border-slate-200 shrink-0 group-hover:bg-primary group-hover:text-white transition-all">
+                                {comment.avatar}
+                              </div>
+                              <div className="flex-1 space-y-3 pb-8 border-b border-slate-50">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <h5 className="text-sm font-black text-slate-800 uppercase tracking-tight">{comment.name}</h5>
+                                    <div className="flex items-center gap-1 mt-1">
+                                      {[1, 2, 3, 4, 5].map(s => (
+                                        <svg key={s} width="12" height="12" fill={s <= comment.rating ? "#fbbf24" : "#e2e8f0"} viewBox="0 0 24 24">
+                                          <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                                        </svg>
+                                      ))}
+                                    </div>
+                                  </div>
+                                  <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">{comment.date}</span>
+                                </div>
+                                <p className="text-sm text-slate-600 font-medium leading-relaxed">{comment.content}</p>
+                              </div>
+                            </div>
+                          ))}
+
+                          <button className="w-full py-5 rounded-2xl border-2 border-dashed border-slate-100 text-slate-400 font-black text-[9px] uppercase tracking-widest hover:border-primary hover:text-primary transition-all">
+                            Xem thêm bình luận
+                          </button>
                        </div>
                     </div>
                   )}

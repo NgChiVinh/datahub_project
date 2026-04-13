@@ -1,3 +1,10 @@
+export const YEARS = [
+  { id: "y1", name: "Năm 1 (Đại cương)" },
+  { id: "y2", name: "Năm 2 (Cơ sở ngành)" },
+  { id: "y3", name: "Năm 3 (Chuyên ngành)" },
+  { id: "y4", name: "Năm 4 (Đồ án & Thực chiến)" },
+];
+
 export const CATEGORIES = [
   { id: "web", name: "Lập trình Web", icon: "code" },
   { id: "ai", name: "Trí tuệ nhân tạo", icon: "brain" },
@@ -17,6 +24,7 @@ export const FEATURED_DOCUMENTS = [
     tag: "VIDEO",
     type: "video",
     category: "web",
+    year: "y3",
     thumbnail: "/images/thumb_1.png"
   },
   {
@@ -28,6 +36,7 @@ export const FEATURED_DOCUMENTS = [
     tag: "BÀI TẬP",
     type: "exercise",
     category: "web",
+    year: "y2",
     thumbnail: "/images/thumb_2.png"
   },
   {
@@ -39,6 +48,7 @@ export const FEATURED_DOCUMENTS = [
     tag: "TÀI LIỆU",
     type: "doc",
     category: "security",
+    year: "y4",
     thumbnail: "/images/thumb_3.png"
   },
 ];

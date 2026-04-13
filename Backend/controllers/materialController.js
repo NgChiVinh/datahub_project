@@ -1,32 +1,76 @@
 const Material = require("../models/Material");
 
-// CREATE (upload file + lưu DB)
+// CREATE (upload file hoặc gửi link + lưu DB)
 const createMaterial = async (req, res) => {
   try {
-    const { title, description, materialType, categoryId, tags } = req.body;
+    const { title, description, materialType, categoryId, tags, link, academicYear } = req.body;
+    let finalFileUrl = "";
+    let finalSourceType = "upload";
+    let finalMaterialType = materialType || "other";
 
-    if (!req.file) {
-      return res.status(400).json({ message: "Vui lòng upload file" });
+    // 1. Xử lý Nguồn dữ liệu (File hoặc Link)
+    if (req.file) {
+      finalFileUrl = req.file.path;
+      finalSourceType = "upload";
+      if (!materialType) {
+        const ext = req.file.originalname.split(".").pop().toLowerCase();
+        if (["pdf"].includes(ext)) finalMaterialType = "pdf";
+        else if (["doc", "docx"].includes(ext)) finalMaterialType = "docx";
+        else if (["zip", "rar", "7z"].includes(ext)) finalMaterialType = "zip";
+        else if (["mp4", "mov", "avi"].includes(ext)) finalMaterialType = "video";
+        else if (["ppt", "pptx"].includes(ext)) finalMaterialType = "pptx";
+      }
+    } else if (link) {
+      finalFileUrl = link;
+      finalSourceType = "link";
+      if (link.includes("youtube.com") || link.includes("youtu.be")) {
+        finalMaterialType = "video";
+      }
+    } else {
+      return res.status(400).json({ message: "Vui lòng upload file hoặc cung cấp đường dẫn tài liệu" });
     }
 
-    const material = new Material({
+    // 2. Xử lý Tags an toàn (Tạm thời lọc bỏ nếu không phải ObjectId hợp lệ để tránh lỗi DB)
+    let processedTags = [];
+    if (tags) {
+      try {
+        const parsedTags = typeof tags === "string" ? JSON.parse(tags) : tags;
+        if (Array.isArray(parsedTags)) {
+          // Chỉ lấy những tag là ObjectId hợp lệ (hoặc bỏ qua bước này nếu bạn chưa có ID tag)
+          // Để fix nhanh: Nếu là string (từ client gửi lên), chúng ta tạm thời bỏ qua cho đến khi có logic tạo Tag tự động
+          processedTags = parsedTags.filter(id => id.length === 24); 
+        }
+      } catch (e) {
+        console.error("Tags parsing failed:", e.message);
+      }
+    }
+
+    const materialData = {
       title,
       description,
-      materialType,
+      materialType: finalMaterialType,
+      sourceType: finalSourceType,
+      academicYear: ["Năm 1", "Năm 2", "Năm 3", "Năm 4"].includes(academicYear) ? academicYear : "Khác",
       categoryId,
       uploaderId: req.user._id,
-      fileUrl: req.file.path, // URL từ Cloudinary
-      tags: tags ? JSON.parse(tags) : [],
-    });
+      fileUrl: finalFileUrl,
+    };
 
+    // Chỉ thêm tags nếu có dữ liệu hợp lệ
+    if (processedTags.length > 0) {
+      materialData.tags = processedTags;
+    }
+
+    const material = new Material(materialData);
     await material.save();
 
     res.status(201).json({
-      message: "Upload tài liệu thành công",
+      message: "Chia sẻ tài liệu thành công",
       material,
     });
   } catch (error) {
-    res.status(500).json({ message: "Lỗi upload", error });
+    console.error("Upload Error:", error);
+    res.status(500).json({ message: "Lỗi upload tài liệu", error: error.message });
   }
 };
 

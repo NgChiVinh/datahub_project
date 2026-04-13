@@ -2,19 +2,26 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
-import { usePathname } from "next/navigation";
-import { useSession, signOut } from "next-auth/react";
+import { usePathname, useRouter } from "next/navigation";
+
+import { useAuth } from "@/context/AuthContext";
 
 export default function Header() {
+  const { user, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const dropdownRef = useRef(null);
   const searchInputRef = useRef(null);
   const pathname = usePathname();
-  const { data: session } = useSession();
+  const router = useRouter();
 
   const isAuthPage = pathname === "/login" || pathname === "/register";
+
+  const handleLogout = () => {
+    logout();
+    setIsOpen(false);
+  };
 
   useEffect(() => {
     setIsOpen(false);
@@ -84,7 +91,7 @@ export default function Header() {
           </Link>
         </div>
 
-        {/* Center Section: Navigation (Hidden when searching on desktop) OR Search Input */}
+        {/* Center Section: Navigation */}
         <div className="flex-1 max-w-2xl mx-4 lg:mx-8">
           {isSearchOpen ? (
             <div className="relative flex items-center animate-in fade-in zoom-in-95 duration-200">
@@ -152,8 +159,8 @@ export default function Header() {
               className="group flex items-center gap-2 rounded-2xl p-1 lg:pr-3 bg-slate-50 hover:bg-slate-100 transition-all duration-300 border border-slate-100"
             >
               <div className="h-9 w-9 overflow-hidden rounded-xl bg-gradient-to-br from-emerald-400 to-blue-500 flex items-center justify-center shadow-md transition-transform group-hover:rotate-6">
-                {session?.user ? (
-                  <span className="text-[11px] font-black text-white">{getInitials(session.user.name || session.user.email)}</span>
+                {user ? (
+                  <span className="text-[11px] font-black text-white">{getInitials(user.fullName || user.email)}</span>
                 ) : (
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 )}
@@ -163,7 +170,7 @@ export default function Header() {
 
             {isOpen && (
               <div className="absolute right-0 mt-4 w-60 origin-top-right rounded-[1.5rem] bg-white p-2 shadow-[0_15px_40px_rgba(0,0,0,0.12)] border border-slate-100 z-[100] animate-in fade-in zoom-in-95 duration-200">
-                {!session?.user ? (
+                {!user ? (
                   <div className="flex flex-col gap-1 p-1">
                     <Link href="/login" className="flex items-center gap-4 px-4 py-3.5 text-xs font-black text-slate-700 hover:bg-emerald-50 hover:text-emerald-600 rounded-xl transition-all">ĐĂNG NHẬP</Link>
                     <Link href="/register" className="flex items-center gap-4 px-4 py-3.5 text-xs font-black text-white bg-slate-900 hover:bg-emerald-500 rounded-xl transition-all shadow-lg shadow-slate-900/10">ĐĂNG KÝ</Link>
@@ -171,11 +178,19 @@ export default function Header() {
                 ) : (
                   <div className="flex flex-col gap-1 p-1">
                     <div className="px-4 py-3 bg-slate-50 rounded-xl mb-1">
-                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Tài khoản</p>
-                      <p className="text-[13px] font-black text-slate-800 truncate uppercase tracking-tight">{session.user.name || session.user.email}</p>
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                        {user.role === "admin" ? "Quản trị viên" : "Tài khoản sinh viên"}
+                      </p>
+                      <p className="text-[13px] font-black text-slate-800 truncate uppercase tracking-tight">{user.fullName}</p>
+                      <p className="text-[10px] font-bold text-slate-400 truncate">{user.email}</p>
                     </div>
+                    {user.role === "admin" && (
+                      <Link href="/admin" className="flex items-center gap-4 px-4 py-3.5 text-xs font-black text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all border border-emerald-100/50 mb-1">
+                        TRANG QUẢN TRỊ
+                      </Link>
+                    )}
                     <Link href="/profile" className="flex items-center gap-4 px-4 py-3.5 text-xs font-black text-slate-700 hover:bg-emerald-50 hover:text-emerald-600 rounded-xl transition-all">TRANG CÁ NHÂN</Link>
-                    <button onClick={() => signOut()} className="flex items-center gap-4 px-4 py-3.5 text-xs font-black text-red-500 hover:bg-red-50 rounded-xl transition-all w-full text-left">ĐĂNG XUẤT</button>
+                    <button onClick={handleLogout} className="flex items-center gap-4 px-4 py-3.5 text-xs font-black text-red-500 hover:bg-red-50 rounded-xl transition-all w-full text-left">ĐĂNG XUẤT</button>
                   </div>
                 )}
               </div>
@@ -214,10 +229,11 @@ export default function Header() {
             </div>
 
             <div className="mt-auto">
-              <Link href="/upload" className="flex items-center justify-center gap-3 w-full p-5 rounded-[1.5rem] bg-slate-900 text-white font-black uppercase tracking-widest shadow-xl">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
-                Tải tài liệu lên
-              </Link>
+              {user ? (
+                <button onClick={handleLogout} className="flex items-center justify-center gap-3 w-full p-5 rounded-[1.5rem] bg-red-500 text-white font-black uppercase tracking-widest shadow-xl">ĐĂNG XUẤT</button>
+              ) : (
+                <Link href="/login" className="flex items-center justify-center gap-3 w-full p-5 rounded-[1.5rem] bg-slate-900 text-white font-black uppercase tracking-widest shadow-xl">ĐĂNG NHẬP</Link>
+              )}
             </div>
           </div>
         </div>
