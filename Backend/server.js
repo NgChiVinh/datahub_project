@@ -18,12 +18,14 @@ const userRoutes = require("./routes/userRoutes");
 const majorRoutes = require("./routes/majorRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
 const tagRoutes = require("./routes/tagRoutes");
+const materialRoutes = require("./routes/materialRoutes");
 
 // Sử dụng API routes
 app.use("/api/users", userRoutes);
 app.use("/api/majors", majorRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/tags", tagRoutes);
+app.use("/api/materials", materialRoutes);
 
 // Default route
 app.get("/", (req, res) => {
