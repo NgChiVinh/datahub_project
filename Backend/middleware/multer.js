@@ -22,16 +22,20 @@ const storage = new CloudinaryStorage({
 const fileFilter = (req, file, cb) => {
   const allowedTypes = [
     "application/pdf",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
+    "application/msword", // .doc
     "application/zip",
-    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    "application/x-zip-compressed",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation", // .pptx
     "video/mp4",
+    "image/jpeg",
+    "image/png"
   ];
 
   if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error("File không hợp lệ!"), false);
+    cb(new Error("Định dạng file không được hỗ trợ!"), false);
   }
 };
 

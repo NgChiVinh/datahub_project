@@ -3,3 +3,6 @@
 - Có thể phân loại tài liệu cho phép người dùng chọn chủ đề, cấp độ hoặc thể loại tài liệu.
 - Sinh viên có thể chi sẻ tài liệu của mình với người học
 - Cho phép sinh viên đánh giá tài liệu học tập qua quá trình chi sẻ
+ 1. AI Gợi ý nội dung (Personalized Recommendation): Đề xuất tài liệu, bài tập, video phù hợp dựa trên
+      lịch sử tìm kiếm và sở thích của sinh viên.
+   2. AI Phân loại (Automated Classification): Phân loại tài liệu theo chủ đề, cấp độ hoặc thể loại.

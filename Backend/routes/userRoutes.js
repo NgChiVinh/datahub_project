@@ -10,6 +10,7 @@ const {
   updateUserProfile,
 } = require("../controllers/userController");
 const { authMiddleware, isAdmin } = require("../middleware/authMiddleware");
+const upload = require("../middleware/multer");
 
 const router = express.Router();
 
@@ -27,7 +28,7 @@ router.get("/profile", authMiddleware, (req, res) => {
   res.json({ message: "Bạn đã truy cập vào trang cá nhân", user: req.user });
 });
 
-// Cập nhật thông tin cá nhân
-router.put("/profile", authMiddleware, updateUserProfile);
+// Cập nhật thông tin cá nhân (bao gồm upload avatar)
+router.put("/profile", authMiddleware, upload.single("avatar"), updateUserProfile);
 
 module.exports = router;

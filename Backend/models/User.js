@@ -13,6 +13,7 @@ const userSchema = new mongoose.Schema(
       default: "student",
     },
     majorId: { type: mongoose.Schema.Types.ObjectId, ref: "Major" },
+    avatar: { type: String, default: "" },
     reputationPoints: { type: Number, default: 0 },
     preferences: [{ type: String }],
     isActive: { type: Boolean, default: true },

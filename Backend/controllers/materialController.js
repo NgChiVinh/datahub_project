@@ -1,4 +1,6 @@
 const Material = require("../models/Material");
+const Tag = require("../models/Tag");
+const slugify = require("slugify");
 
 // CREATE (upload file hoặc gửi link + lưu DB)
 const createMaterial = async (req, res) => {
@@ -12,36 +14,57 @@ const createMaterial = async (req, res) => {
     if (req.file) {
       finalFileUrl = req.file.path;
       finalSourceType = "upload";
-      if (!materialType) {
+      
+      // Tự động nhận diện loại tài liệu dựa trên extension nếu client không gửi materialType
+      if (!materialType || materialType === "other") {
         const ext = req.file.originalname.split(".").pop().toLowerCase();
         if (["pdf"].includes(ext)) finalMaterialType = "pdf";
         else if (["doc", "docx"].includes(ext)) finalMaterialType = "docx";
         else if (["zip", "rar", "7z"].includes(ext)) finalMaterialType = "zip";
-        else if (["mp4", "mov", "avi"].includes(ext)) finalMaterialType = "video";
+        else if (["mp4", "mov", "avi", "mkv"].includes(ext)) finalMaterialType = "video";
         else if (["ppt", "pptx"].includes(ext)) finalMaterialType = "pptx";
+        else finalMaterialType = "other";
+      } else {
+        finalMaterialType = materialType;
       }
     } else if (link) {
       finalFileUrl = link;
       finalSourceType = "link";
-      if (link.includes("youtube.com") || link.includes("youtu.be")) {
+      // Nếu là link YouTube/Video thì mặc định là video
+      if (link.includes("youtube.com") || link.includes("youtu.be") || link.match(/\.(mp4|mov|avi)$/)) {
         finalMaterialType = "video";
+      } else {
+        finalMaterialType = materialType || "other";
       }
     } else {
       return res.status(400).json({ message: "Vui lòng upload file hoặc cung cấp đường dẫn tài liệu" });
     }
 
-    // 2. Xử lý Tags an toàn (Tạm thời lọc bỏ nếu không phải ObjectId hợp lệ để tránh lỗi DB)
+    // 2. Xử lý Tags thông minh (Hỗ trợ cả ID hiện có và Tên tag mới)
     let processedTags = [];
     if (tags) {
       try {
         const parsedTags = typeof tags === "string" ? JSON.parse(tags) : tags;
         if (Array.isArray(parsedTags)) {
-          // Chỉ lấy những tag là ObjectId hợp lệ (hoặc bỏ qua bước này nếu bạn chưa có ID tag)
-          // Để fix nhanh: Nếu là string (từ client gửi lên), chúng ta tạm thời bỏ qua cho đến khi có logic tạo Tag tự động
-          processedTags = parsedTags.filter(id => id.length === 24); 
+          for (const tagInput of parsedTags) {
+            // Nếu là ObjectId (24 ký tự) - Giả định là ID tag hiện có
+            if (tagInput.length === 24 && /^[0-9a-fA-F]{24}$/.test(tagInput)) {
+              processedTags.push(tagInput);
+            } else {
+              // Nếu là text - Xử lý tạo tag mới hoặc tìm tag tương đương
+              const slug = slugify(tagInput, { lower: true });
+              let tag = await Tag.findOne({ slug });
+              
+              if (!tag) {
+                tag = new Tag({ name: tagInput, slug });
+                await tag.save();
+              }
+              processedTags.push(tag._id);
+            }
+          }
         }
       } catch (e) {
-        console.error("Tags parsing failed:", e.message);
+        console.error("Tags processing failed:", e.message);
       }
     }
 
@@ -54,12 +77,8 @@ const createMaterial = async (req, res) => {
       categoryId,
       uploaderId: req.user._id,
       fileUrl: finalFileUrl,
+      tags: processedTags
     };
-
-    // Chỉ thêm tags nếu có dữ liệu hợp lệ
-    if (processedTags.length > 0) {
-      materialData.tags = processedTags;
-    }
 
     const material = new Material(materialData);
     await material.save();
@@ -74,18 +93,56 @@ const createMaterial = async (req, res) => {
   }
 };
 
-// GET ALL
+// GET ALL (Có hỗ trợ lọc, tìm kiếm và sắp xếp)
 const getMaterials = async (req, res) => {
   try {
-    const materials = await Material.find()
-      .populate("uploaderId", "fullName email")
+    const { category, major, academicYear, search, status, uploaderId, sortBy } = req.query;
+    
+    // Xây dựng bộ lọc dữ liệu
+    let query = {};
+    
+    if (uploaderId) {
+      query.uploaderId = uploaderId;
+    } else {
+      if (status) {
+        query.status = status;
+      } else {
+        query.status = "approved";
+      }
+    }
+
+    if (category && category !== "all") {
+      query.categoryId = category;
+    }
+
+    if (major && major !== "all") {
+      query.majorId = major;
+    }
+
+    if (academicYear && academicYear !== "all") {
+      query.academicYear = academicYear;
+    }
+
+    if (search) {
+      query.title = { $regex: search, $options: "i" };
+    }
+
+    // Xử lý sắp xếp
+    let sortOptions = { createdAt: -1 }; // Mặc định: Mới nhất
+    if (sortBy === "most_viewed") sortOptions = { "metrics.viewCount": -1 };
+    else if (sortBy === "most_downloaded") sortOptions = { "metrics.downloadCount": -1 };
+    else if (sortBy === "top_rated") sortOptions = { "metrics.averageRating": -1 };
+
+    const materials = await Material.find(query)
+      .populate("uploaderId", "fullName email avatar")
       .populate("categoryId", "name")
       .populate("tags", "name")
-      .sort({ createdAt: -1 });
+      .sort(sortOptions);
 
     res.status(200).json(materials);
   } catch (error) {
-    res.status(500).json({ message: "Lỗi server", error });
+    console.error("Get Materials Error:", error);
+    res.status(500).json({ message: "Lỗi server khi lấy danh sách tài liệu", error: error.message });
   }
 };
 
@@ -120,13 +177,27 @@ const updateMaterial = async (req, res) => {
       return res.status(404).json({ message: "Không tìm thấy tài liệu" });
     }
 
-    const { title, description, materialType, categoryId, status } = req.body;
+    // Kiểm tra quyền: Admin được sửa tất cả, User chỉ được sửa bài của mình
+    const isOwner = material.uploaderId.toString() === req.user._id.toString();
+    const isAdmin = req.user.role === "admin";
+
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ message: "Bạn không có quyền chỉnh sửa tài liệu này" });
+    }
+
+    const { title, description, materialType, categoryId, status, academicYear, majorId } = req.body;
 
     if (title) material.title = title;
     if (description) material.description = description;
     if (materialType) material.materialType = materialType;
     if (categoryId) material.categoryId = categoryId;
-    if (status) material.status = status;
+    if (academicYear) material.academicYear = academicYear;
+    if (majorId) material.majorId = majorId;
+
+    // Chỉ Admin mới có quyền cập nhật trạng thái (duyệt/từ chối)
+    if (status && isAdmin) {
+      material.status = status;
+    }
 
     // nếu upload file mới
     if (req.file) {
@@ -140,7 +211,8 @@ const updateMaterial = async (req, res) => {
       material,
     });
   } catch (error) {
-    res.status(500).json({ message: "Lỗi update", error });
+    console.error("Update Material Error:", error);
+    res.status(500).json({ message: "Lỗi cập nhật tài liệu", error: error.message });
   }
 };
 

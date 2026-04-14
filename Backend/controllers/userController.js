@@ -178,7 +178,7 @@ const deleteUser = async (req, res) => {
   }
 };
 
-// UPDATE PROFILE (CHỈ FIELD CÓ TRONG MODEL)
+// UPDATE PROFILE (fullName, preferences, avatar)
 const updateUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
@@ -189,7 +189,18 @@ const updateUserProfile = async (req, res) => {
     const { fullName, preferences } = req.body;
 
     if (fullName) user.fullName = fullName;
-    if (preferences) user.preferences = preferences;
+    if (preferences) {
+      try {
+        user.preferences = typeof preferences === "string" ? JSON.parse(preferences) : preferences;
+      } catch (e) {
+        user.preferences = preferences;
+      }
+    }
+
+    // Xử lý upload avatar nếu có
+    if (req.file) {
+      user.avatar = req.file.path;
+    }
 
     await user.save();
 
@@ -201,11 +212,13 @@ const updateUserProfile = async (req, res) => {
         fullName: user.fullName,
         email: user.email,
         role: user.role,
+        avatar: user.avatar,
         preferences: user.preferences,
       },
     });
   } catch (error) {
-    res.status(500).json({ message: "Lỗi cập nhật thông tin", error });
+    console.error("Update Profile Error:", error);
+    res.status(500).json({ message: "Lỗi cập nhật thông tin", error: error.message });
   }
 };
 
@@ -219,6 +232,7 @@ const getMe = async (req, res) => {
       fullName: user.fullName,
       email: user.email,
       role: user.role,
+      avatar: user.avatar,
       major: user.majorId?.name
     });
   } catch (error) {

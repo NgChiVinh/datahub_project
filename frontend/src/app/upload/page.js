@@ -94,6 +94,24 @@ export default function UploadPage() {
     setSelectedTags(selectedTags.filter(t => t._id !== tagId));
   };
 
+  const handleTagKeyDown = (e) => {
+    if (e.key === "Enter" && tagInput.trim() !== "") {
+      e.preventDefault();
+      const existingTag = allTags.find(t => t.name.toLowerCase() === tagInput.toLowerCase().trim());
+      if (existingTag) {
+        addTag(existingTag);
+      } else {
+        const newTagName = tagInput.trim();
+        if (!selectedTags.find(t => t.name.toLowerCase() === newTagName.toLowerCase())) {
+          // Gửi trực tiếp text làm _id, backend sẽ nhận diện đây không phải ObjectId và tạo mới
+          setSelectedTags([...selectedTags, { _id: newTagName, name: newTagName }]);
+        }
+        setTagInput("");
+        setShowTagSuggestions(false);
+      }
+    }
+  };
+
   const filteredTags = allTags.filter(tag => 
     tag.name.toLowerCase().includes(tagInput.toLowerCase()) &&
     !selectedTags.find(st => st._id === tag._id)
@@ -275,6 +293,7 @@ export default function UploadPage() {
                             setShowTagSuggestions(true);
                           }}
                           onFocus={() => setShowTagSuggestions(true)}
+                          onKeyDown={handleTagKeyDown}
                           placeholder={selectedTags.length === 0 ? "Chọn hoặc gõ để tìm tag..." : ""}
                           className="flex-1 bg-transparent border-none outline-none font-medium text-sm min-w-[120px]"
                         />
@@ -326,7 +345,7 @@ export default function UploadPage() {
                             </div>
                             <div>
                               <p className="font-bold text-slate-700 text-lg">Kéo thả hoặc click để chọn tệp</p>
-                              <p className="text-slate-400 text-sm mt-1 font-medium">Hỗ trợ PDF, DOCX, ZIP, JPG (Tối đa 25MB)</p>
+                              <p className="text-slate-400 text-sm mt-1 font-medium">Hỗ trợ PDF, DOCX, DOC, ZIP, JPG, PNG (Tối đa 50MB)</p>
                             </div>
                           </>
                         ) : (
@@ -417,7 +436,7 @@ export default function UploadPage() {
                     { title: "Nội dung chính xác", desc: "Đảm bảo tài liệu có tiêu đề rõ ràng, đúng chuyên mục." },
                     { title: "Bản quyền tri thức", desc: "Không chia sẻ các tài liệu vi phạm bản quyền hoặc thông tin mật." },
                     { title: "Chất lượng tệp", desc: "Khuyến khích định dạng PDF để có hiển thị tốt nhất trên web." },
-                    { title: "Dung lượng tối đa", desc: "Tệp tải lên không nên vượt quá 25MB." }
+                    { title: "Dung lượng tối đa", desc: "Tệp tải lên không nên vượt quá 50MB." }
                   ].map((item, idx) => (
                     <li key={idx} className="flex gap-4">
                       <div className="shrink-0 w-1.5 h-1.5 rounded-full bg-primary mt-2"></div>
