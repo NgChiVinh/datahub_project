@@ -19,6 +19,9 @@ const majorRoutes = require("./routes/majorRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
 const tagRoutes = require("./routes/tagRoutes");
 const materialRoutes = require("./routes/materialRoutes");
+const reviewRoutes = require("./routes/reviewRoutes");
+const commentRoutes = require("./routes/commentRoutes");
+const reportRoutes = require("./routes/reportRoutes");
 
 // Sử dụng API routes
 app.use("/api/users", userRoutes);
@@ -26,6 +29,9 @@ app.use("/api/majors", majorRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/tags", tagRoutes);
 app.use("/api/materials", materialRoutes);
+app.use("/api/reviews", reviewRoutes);
+app.use("/api/comments", commentRoutes);
+app.use("/api/reports", reportRoutes);
 
 // Default route
 app.get("/", (req, res) => {
