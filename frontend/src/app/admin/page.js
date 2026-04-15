@@ -26,15 +26,36 @@ export default function AdminDashboard() {
   const fetchMaterials = async () => {
     try {
       setIsLoading(true);
-      const res = await fetch("http://localhost:5000/api/materials");
+      const token = localStorage.getItem("token");
+      console.log("Admin Dashboard: Fetching materials with status=all...");
+      const res = await fetch("http://localhost:5000/api/materials?status=all", {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Không thể lấy dữ liệu");
+      }
+
       const data = await res.json();
+      console.log("Admin Dashboard: Received materials:", data.length);
+      
       if (Array.isArray(data)) {
         setAllMaterials(data);
         // Lọc những cái đang chờ duyệt (pending)
-        setPendingAssets(data.filter(item => item.status === "pending"));
+        const pending = data.filter(item => item.status === "pending");
+        console.log("Admin Dashboard: Pending assets found:", pending.length);
+        setPendingAssets(pending);
+      } else {
+        console.error("Dữ liệu trả về không phải là mảng:", data);
+        setAllMaterials([]);
+        setPendingAssets([]);
       }
     } catch (error) {
       console.error("Lỗi lấy danh sách tài liệu:", error);
+      alert(`Lỗi: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -73,7 +94,7 @@ export default function AdminDashboard() {
   // Lọc theo tab
   const filteredAssets = pendingAssets.filter(asset => {
     if (activeTab === "Tất cả") return true;
-    if (activeTab === "Tài liệu") return ["pdf", "docx", "pptx", "other"].includes(asset.materialType);
+    if (activeTab === "Tài liệu") return ["pdf", "docx", "pptx", "zip", "other"].includes(asset.materialType);
     if (activeTab === "Video") return asset.materialType === "video";
     if (activeTab === "Bài tập") return asset.categoryId?.name?.toLowerCase().includes("bài tập");
     return true;

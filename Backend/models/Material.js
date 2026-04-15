@@ -25,12 +25,17 @@ const materialSchema = new mongoose.Schema(
       ref: "Category",
       required: true,
     },
+    majorId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Major",
+    },
     uploaderId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
     tags: [{ type: mongoose.Schema.Types.ObjectId, ref: "Tag" }],
+    likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     status: {
       type: String,
       enum: ["pending", "approved", "rejected", "hidden"],

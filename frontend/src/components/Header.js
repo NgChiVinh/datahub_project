@@ -11,10 +11,48 @@ export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  
   const dropdownRef = useRef(null);
+  const notifRef = useRef(null);
   const searchInputRef = useRef(null);
   const pathname = usePathname();
   const router = useRouter();
+
+  // Fetch Notifications
+  useEffect(() => {
+    const fetchNotifs = async () => {
+      if (!user) return;
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch("http://localhost:5000/api/notifications", {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (Array.isArray(data)) setNotifications(data);
+      } catch (error) {
+        console.error("Lỗi lấy thông báo:", error);
+      }
+    };
+
+    fetchNotifs();
+    const interval = setInterval(fetchNotifs, 60000); // Check mỗi phút
+    return () => clearInterval(interval);
+  }, [user]);
+
+  const markNotifsAsRead = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      await fetch("http://localhost:5000/api/notifications/mark-as-read", {
+        method: "PUT",
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      setNotifications(notifications.map(n => ({ ...n, isRead: true })));
+    } catch (error) {
+      console.error("Lỗi đánh dấu đã đọc:", error);
+    }
+  };
 
   const isAuthPage = pathname === "/login" || pathname === "/register";
 
@@ -27,6 +65,7 @@ export default function Header() {
     setIsOpen(false);
     setIsMobileMenuOpen(false);
     setIsSearchOpen(false);
+    setIsNotifOpen(false);
   }, [pathname]);
 
   useEffect(() => {
@@ -40,16 +79,21 @@ export default function Header() {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsOpen(false);
       }
+      if (notifRef.current && !notifRef.current.contains(event.target)) {
+        setIsNotifOpen(false);
+      }
     };
-    if (isOpen) document.addEventListener("mousedown", handleClickOutside);
+    if (isOpen || isNotifOpen) document.addEventListener("mousedown", handleClickOutside);
     else document.removeEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isOpen]);
+  }, [isOpen, isNotifOpen]);
 
   const getInitials = (name) => {
     if (!name) return "??";
     return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
   };
+
+  const unreadCount = notifications.filter(n => !n.isRead).length;
 
   const navLinks = [
     { name: "Tài liệu", href: "/documents" },
@@ -143,6 +187,59 @@ export default function Header() {
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
             </button>
+          )}
+
+          {/* Notifications Bell */}
+          {user && (
+            <div className="relative" ref={notifRef}>
+              <button 
+                onClick={() => {
+                  setIsNotifOpen(!isNotifOpen);
+                  if (!isNotifOpen) markNotifsAsRead();
+                }}
+                className={`p-2.5 rounded-xl transition-all duration-300 relative ${isNotifOpen ? "bg-emerald-50 text-emerald-600" : "text-slate-500 hover:bg-slate-50"}`}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                {unreadCount > 0 && (
+                  <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-red-500 text-white text-[8px] font-black flex items-center justify-center rounded-full border-2 border-white">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+
+              {isNotifOpen && (
+                <div className="absolute right-0 mt-4 w-80 origin-top-right rounded-[1.5rem] bg-white p-2 shadow-[0_15px_40px_rgba(0,0,0,0.12)] border border-slate-100 z-[100] animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
+                  <div className="p-4 border-b border-slate-50 flex items-center justify-between">
+                    <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-800">Thông báo</h3>
+                    <span className="text-[8px] font-black bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full uppercase">Mới nhất</span>
+                  </div>
+                  <div className="max-h-80 overflow-y-auto custom-scrollbar">
+                    {notifications.length > 0 ? (
+                      notifications.map((n) => (
+                        <Link 
+                          key={n._id} 
+                          href={n.link || "#"}
+                          className={`flex gap-3 p-4 hover:bg-slate-50 transition-all rounded-xl border-b border-slate-50 last:border-0 ${!n.isRead ? "bg-emerald-50/30" : ""}`}
+                        >
+                          <div className={`w-8 h-8 rounded-lg shrink-0 flex items-center justify-center ${
+                            n.type === 'material_approved' ? 'bg-emerald-100 text-emerald-600' : 
+                            n.type === 'material_rejected' ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-600'
+                          }`}>
+                             <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                          </div>
+                          <div className="space-y-1">
+                            <p className={`text-[11px] leading-tight ${!n.isRead ? "font-black text-slate-900" : "font-bold text-slate-600"}`}>{n.message}</p>
+                            <p className="text-[9px] text-slate-400 font-bold">{new Date(n.createdAt).toLocaleString("vi-VN")}</p>
+                          </div>
+                        </Link>
+                      ))
+                    ) : (
+                      <div className="py-10 text-center text-slate-400 text-[10px] font-black uppercase">Không có thông báo nào</div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           )}
 
           <Link 

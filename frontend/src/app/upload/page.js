@@ -103,7 +103,6 @@ export default function UploadPage() {
       } else {
         const newTagName = tagInput.trim();
         if (!selectedTags.find(t => t.name.toLowerCase() === newTagName.toLowerCase())) {
-          // Gửi trực tiếp text làm _id, backend sẽ nhận diện đây không phải ObjectId và tạo mới
           setSelectedTags([...selectedTags, { _id: newTagName, name: newTagName }]);
         }
         setTagInput("");
@@ -119,6 +118,13 @@ export default function UploadPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log("Submit button clicked!");
+
+    if (!categoryId) {
+      alert("Vui lòng chọn chuyên mục!");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -134,7 +140,6 @@ export default function UploadPage() {
         "Authorization": `Bearer ${token}`
       };
 
-      // Chuẩn bị danh sách ID của các tag đã chọn
       const tagIds = selectedTags.map(t => t._id);
 
       if (uploadType === "file") {
@@ -144,8 +149,9 @@ export default function UploadPage() {
         formData.append("categoryId", categoryId);
         formData.append("academicYear", academicYear);
         formData.append("file", file);
-        formData.append("tags", JSON.stringify(tagIds)); // Gửi mảng ID
+        formData.append("tags", JSON.stringify(tagIds));
 
+        console.log("Uploading file...");
         res = await fetch("http://localhost:5000/api/materials", {
           method: "POST",
           headers: headers,
@@ -158,9 +164,10 @@ export default function UploadPage() {
           categoryId,
           academicYear,
           link,
-          tags: tagIds // Gửi mảng ID
+          tags: tagIds
         };
 
+        console.log("Uploading link:", body);
         res = await fetch("http://localhost:5000/api/materials", {
           method: "POST",
           headers: {
@@ -177,10 +184,11 @@ export default function UploadPage() {
         alert("Tài liệu đã được gửi để kiểm duyệt thành công!");
         router.push("/documents");
       } else {
+        console.error("Server Error:", data);
         alert(`Lỗi: ${data.message || "Không thể tải lên tài liệu"}`);
       }
     } catch (error) {
-      console.error("Upload error:", error);
+      console.error("Network Error:", error);
       alert("Lỗi kết nối đến server. Vui lòng kiểm tra lại backend!");
     } finally {
       setIsLoading(false);
@@ -205,12 +213,14 @@ export default function UploadPage() {
               </div>
               <div className="flex bg-white p-1 rounded-xl shadow-sm border border-slate-200">
                 <button 
+                  type="button"
                   onClick={() => setUploadType("file")}
                   className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${uploadType === 'file' ? 'bg-primary text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'}`}
                 >
                   Tải tệp lên
                 </button>
                 <button 
+                  type="button"
                   onClick={() => setUploadType("link")}
                   className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${uploadType === 'link' ? 'bg-primary text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'}`}
                 >
@@ -233,9 +243,10 @@ export default function UploadPage() {
                     <div className="space-y-2">
                       <label className="text-sm font-bold text-slate-600 ml-1">Tiêu đề tài liệu <span className="text-red-500">*</span></label>
                       <input 
+                        key="title-input"
                         type="text" 
                         required
-                        value={title}
+                        value={title || ""}
                         onChange={(e) => setTitle(e.target.value)}
                         placeholder="VD: Tổng hợp Lab 1 - Cấu trúc dữ liệu và giải thuật"
                         className="w-full bg-slate-50 border border-slate-200 rounded-xl px-5 py-4 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-medium"
@@ -246,11 +257,13 @@ export default function UploadPage() {
                       <div className="space-y-2">
                         <label className="text-sm font-bold text-slate-600 ml-1">Chuyên mục <span className="text-red-500">*</span></label>
                         <select 
-                          value={categoryId}
+                          key="category-select"
+                          value={categoryId || ""}
                           onChange={(e) => setCategoryId(e.target.value)}
                           required
                           className="w-full bg-slate-50 border border-slate-200 rounded-xl px-5 py-4 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none appearance-none cursor-pointer font-medium text-slate-700"
                         >
+                          <option value="">-- Chọn chuyên mục --</option>
                           {categories.map((cat) => (
                             <option key={cat._id} value={cat._id}>{cat.name}</option>
                           ))}
@@ -259,7 +272,8 @@ export default function UploadPage() {
                       <div className="space-y-2">
                         <label className="text-sm font-bold text-slate-600 ml-1">Năm học <span className="text-red-500">*</span></label>
                         <select 
-                          value={academicYear}
+                          key="academic-year-select"
+                          value={academicYear || ""}
                           onChange={(e) => setAcademicYear(e.target.value)}
                           required
                           className="w-full bg-slate-50 border border-slate-200 rounded-xl px-5 py-4 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none appearance-none cursor-pointer font-medium text-slate-700"
@@ -272,7 +286,6 @@ export default function UploadPage() {
                       </div>
                     </div>
 
-                    {/* Tag Picker UI */}
                     <div className="space-y-2 relative">
                       <label className="text-sm font-bold text-slate-600 ml-1">Từ khóa (Tags)</label>
                       <div className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all flex flex-wrap gap-2">
@@ -285,9 +298,10 @@ export default function UploadPage() {
                           </span>
                         ))}
                         <input 
+                          key="tag-input"
                           ref={tagInputRef}
                           type="text" 
-                          value={tagInput}
+                          value={tagInput || ""}
                           onChange={(e) => {
                             setTagInput(e.target.value);
                             setShowTagSuggestions(true);
@@ -299,7 +313,6 @@ export default function UploadPage() {
                         />
                       </div>
                       
-                      {/* Gợi ý Tag Dropdown */}
                       {showTagSuggestions && tagInput.trim() !== "" && (
                         <div className="absolute z-50 mt-2 w-full bg-white rounded-2xl shadow-xl border border-slate-100 max-h-48 overflow-y-auto p-2 animate-in fade-in slide-in-from-top-2">
                           {filteredTags.length > 0 ? (
@@ -330,6 +343,7 @@ export default function UploadPage() {
 
                     {uploadType === 'file' ? (
                       <div 
+                        key="dropzone-file-container"
                         className={`relative group rounded-3xl border-2 border-dashed transition-all duration-300 py-12 px-6 flex flex-col items-center text-center gap-4 cursor-pointer
                           ${dragActive ? 'border-primary bg-primary/5' : 'border-slate-200 bg-slate-50/50 hover:border-primary/40 hover:bg-slate-50'}`}
                         onDragEnter={handleDrag}
@@ -366,15 +380,16 @@ export default function UploadPage() {
                             </button>
                           </div>
                         )}
-                        <input ref={fileInputRef} type="file" onChange={handleChange} className="hidden" />
+                        <input key="hidden-file-input" ref={fileInputRef} type="file" onChange={handleChange} className="hidden" />
                       </div>
                     ) : (
-                      <div className="space-y-2">
+                      <div key="url-input-container" className="space-y-2">
                         <label className="text-sm font-bold text-slate-600 ml-1">Đường dẫn tài liệu (YouTube, Drive...) <span className="text-red-500">*</span></label>
                         <input 
+                          key="url-link-input"
                           type="url" 
                           required
-                          value={link}
+                          value={link || ""}
                           onChange={(e) => setLink(e.target.value)}
                           placeholder="https://youtube.com/watch?v=..."
                           className="w-full bg-slate-50 border border-slate-200 rounded-xl px-5 py-4 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-medium"
@@ -389,8 +404,9 @@ export default function UploadPage() {
                       <h3 className="font-bold text-slate-800">Mô tả thêm</h3>
                     </div>
                     <textarea 
+                      key="description-textarea"
                       rows="4"
-                      value={description}
+                      value={description || ""}
                       onChange={(e) => setDescription(e.target.value)}
                       placeholder="Viết một vài dòng giới thiệu về nội dung tài liệu này..."
                       className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none font-medium"
@@ -403,6 +419,7 @@ export default function UploadPage() {
                     Tài liệu sẽ được quản trị viên kiểm duyệt trước khi hiển thị.
                   </p>
                   <button 
+                    type="submit"
                     disabled={isLoading || (uploadType === 'file' && !file) || (uploadType === 'link' && !link)}
                     className="bg-primary hover:brightness-110 disabled:opacity-50 text-white font-bold py-4 px-10 rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98] flex items-center gap-3 shrink-0"
                   >

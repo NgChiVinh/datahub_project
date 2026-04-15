@@ -43,6 +43,7 @@ export default function DocumentsPage() {
       try {
         setIsLoading(true);
         const params = new URLSearchParams();
+        params.append("materialType", "not_video"); // Loại trừ video ra khỏi trang tài liệu
         if (activeCategory !== "all") params.append("category", activeCategory);
         if (activeMajor !== "all") params.append("major", activeMajor);
         if (activeYear !== "all") params.append("academicYear", activeYear);
@@ -259,7 +260,9 @@ export default function DocumentsPage() {
                 // Hiển thị 6 thẻ Skeleton khi đang tải
                 [...Array(6)].map((_, i) => <SkeletonCard key={i} />)
               ) : materials.length > 0 ? (
-                materials.map((doc) => (
+                materials
+                  .filter(doc => doc.materialType !== "video") // Lọc thêm 1 lần nữa ở Frontend để đảm bảo 100%
+                  .map((doc) => (
                   <div key={doc._id} className="group bg-white rounded-[2.5rem] p-8 border border-slate-100 hover:border-primary/20 hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.05)] transition-all flex flex-col h-full relative overflow-hidden">
                     {/* Hot Badge */}
                     {doc.metrics?.viewCount > 1000 && (
@@ -305,7 +308,9 @@ export default function DocumentsPage() {
                         </div>
                         <div>
                           <p className="text-[10px] font-black text-slate-800 uppercase tracking-tight">{doc.uploaderId?.fullName}</p>
-                          <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">{doc.categoryId?.name}</p>
+                          <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
+                            {doc.categoryId?.name} {doc.majorId?.name && `• ${doc.majorId.name}`}
+                          </p>
                         </div>
                       </div>
                       <span className="text-[9px] font-black text-slate-300 uppercase tracking-[0.2em]">

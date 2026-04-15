@@ -48,9 +48,19 @@ export default function DocumentDetailPage() {
     if (params.id) fetchDocData();
   }, [params.id]);
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (doc?.fileUrl) {
       window.open(doc.fileUrl, "_blank");
+      // Gọi API tăng lượt tải
+      try {
+        await fetch(`http://localhost:5000/api/materials/${params.id}/download`, { method: "POST" });
+        setDoc(prev => ({
+          ...prev,
+          metrics: { ...prev.metrics, downloadCount: (prev.metrics?.downloadCount || 0) + 1 }
+        }));
+      } catch (err) {
+        console.error("Lỗi tăng lượt tải:", err);
+      }
     }
   };
 
@@ -60,7 +70,7 @@ export default function DocumentDetailPage() {
       return;
     }
     if (!commentInput.trim()) {
-      alert("Vui lòng nhập nội dung thảo luận!");
+      alert("Vui lòng nhập nội dung đánh giá!");
       return;
     }
 
@@ -91,6 +101,9 @@ export default function DocumentDetailPage() {
         setUserRating(0);
         const updatedReviews = await fetch(`http://localhost:5000/api/reviews/material/${params.id}`).then(res => res.json());
         setReviews(updatedReviews);
+        // Cập nhật lại thông tin tài liệu để lấy rating trung bình mới
+        const updatedDoc = await fetch(`http://localhost:5000/api/materials/${params.id}`).then(res => res.json());
+        setDoc(updatedDoc);
       } else {
         const errorData = await reviewRes.json();
         alert(errorData.message || "Lỗi khi gửi đánh giá.");
@@ -102,6 +115,113 @@ export default function DocumentDetailPage() {
       setIsSubmitting(false);
     }
   };
+
+  const handleLike = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Vui lòng đăng nhập để thích tài liệu!");
+      return;
+    }
+
+    try {
+      const res = await fetch(`http://localhost:5000/api/materials/${params.id}/like`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setIsLiked(data.isLiked);
+        setDoc(prev => ({ ...prev, likes: data.isLiked ? [...(prev.likes || []), "user-id"] : (prev.likes || []).filter(id => id !== "user-id") }));
+      }
+    } catch (err) {
+      console.error("Like error:", err);
+    }
+  };
+
+  const [commentText, setCommentText] = useState("");
+  const [replyingTo, setReplyingTo] = useState(null); // { id, name }
+
+  const handleSubmitComment = async () => {
+    if (!commentText.trim()) return;
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Vui lòng đăng nhập để bình luận!");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      const res = await fetch("http://localhost:5000/api/comments", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          materialId: params.id,
+          content: commentText,
+          parentId: replyingTo?.id || null
+        })
+      });
+
+      if (res.ok) {
+        setCommentText("");
+        setReplyingTo(null);
+        const updatedComments = await fetch(`http://localhost:5000/api/comments/material/${params.id}`).then(res => res.json());
+        setComments(updatedComments);
+      }
+    } catch (err) {
+      console.error("Comment error:", err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Cập nhật trạng thái like ban đầu
+  useEffect(() => {
+    if (doc && localStorage.getItem("user")) {
+      const currentUser = JSON.parse(localStorage.getItem("user"));
+      setIsLiked(doc.likes?.includes(currentUser._id));
+    }
+  }, [doc]);
+
+  // Render Comment Component (Recursive for Replies)
+  const CommentItem = ({ comment, isReply = false }) => (
+    <div className={`flex gap-4 ${isReply ? "ml-12 mt-4" : "mt-8"}`}>
+      <div className={`${isReply ? "w-8 h-8" : "w-10 h-10"} rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 font-black text-xs border border-slate-200 shrink-0`}>
+        {comment.userId?.fullName?.charAt(0) || "U"}
+      </div>
+      <div className="flex-1 space-y-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h5 className="text-[11px] font-black text-slate-800 uppercase tracking-tight">{comment.userId?.fullName}</h5>
+            <span className="text-[8px] font-bold text-slate-300 uppercase tracking-widest">{new Date(comment.createdAt).toLocaleDateString("vi-VN")}</span>
+          </div>
+          <button 
+            onClick={() => {
+              setReplyingTo({ id: comment._id, name: comment.userId?.fullName });
+              setActiveTab("comments");
+              window.scrollTo({ top: document.getElementById("comment-form").offsetTop - 100, behavior: 'smooth' });
+            }}
+            className="text-[9px] font-black text-emerald-500 uppercase tracking-widest hover:underline"
+          >
+            Trả lời
+          </button>
+        </div>
+        <p className="text-xs text-slate-600 font-medium leading-relaxed">{comment.content}</p>
+        
+        {/* Render Replies */}
+        {comment.replies && comment.replies.length > 0 && (
+          <div className="space-y-4">
+            {comment.replies.map(reply => (
+              <CommentItem key={reply._id} comment={reply} isReply={true} />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 
   if (isLoading) return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -137,7 +257,7 @@ export default function DocumentDetailPage() {
           </Link>
           <div className="flex items-center gap-4">
              <button 
-              onClick={() => setIsLiked(!isLiked)}
+              onClick={handleLike}
               className={`p-3 rounded-2xl border transition-all duration-300 active:scale-90 ${isLiked ? 'bg-red-50 border-red-100 text-red-500 shadow-lg shadow-red-500/10' : 'bg-white border-slate-100 text-slate-400 hover:text-red-500 hover:border-red-100'}`}
              >
                <svg width="20" height="20" fill={isLiked ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
@@ -316,7 +436,7 @@ export default function DocumentDetailPage() {
                           <div className="space-y-6">
                              <textarea 
                               placeholder="Chia sẻ cảm nghĩ của bạn về tài liệu này..." 
-                              value={commentInput}
+                              value={commentInput || ""}
                               onChange={(e) => setCommentInput(e.target.value)}
                               className="w-full bg-white border-2 border-slate-100 rounded-3xl px-8 py-6 font-bold text-slate-700 outline-none focus:ring-8 focus:ring-emerald-500/5 focus:border-emerald-500/20 transition-all resize-none shadow-sm placeholder:text-slate-300"
                               rows="4"

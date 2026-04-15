@@ -82,6 +82,18 @@ export default function Home() {
             <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-[0.5px]"></div>
             <div className="absolute inset-0 bg-gradient-to-tr from-primary/30 via-transparent to-transparent"></div>
           </div>
+
+          {/* Logo Văn Lang ở góc dưới bên phải */}
+          <div className="absolute bottom-8 right-8 z-20 hidden lg:block">
+            <div className="relative h-10 w-32">
+              <Image
+                src="/images/logo_vlu.png"
+                alt="Logo Văn Lang"
+                fill
+                className="object-contain"
+              />
+            </div>
+          </div>
           
           <div className="container relative z-10 mx-auto px-4 lg:px-8">
             <div className="mx-auto max-w-4xl text-center">

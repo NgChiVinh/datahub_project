@@ -6,3 +6,4 @@
  1. AI Gợi ý nội dung (Personalized Recommendation): Đề xuất tài liệu, bài tập, video phù hợp dựa trên
       lịch sử tìm kiếm và sở thích của sinh viên.
    2. AI Phân loại (Automated Classification): Phân loại tài liệu theo chủ đề, cấp độ hoặc thể loại.
+   

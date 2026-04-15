@@ -160,12 +160,22 @@ export default function ProfilePage() {
                           <div className="space-y-1">
                               <div className="flex items-center gap-3">
                                 <h3 className="text-lg font-black text-slate-800 uppercase tracking-tight line-clamp-1">{doc.title}</h3>
-                                <span className={`px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest ${doc.status === 'approved' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600 animate-pulse'}`}>
-                                    {doc.status === 'approved' ? 'Đã duyệt' : 'Đang chờ'}
+                                <span className={`px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest ${
+                                  doc.status === 'approved' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 
+                                  doc.status === 'rejected' ? 'bg-red-50 text-red-600 border border-red-100' :
+                                  'bg-amber-50 text-amber-600 border border-amber-100 animate-pulse'
+                                }`}>
+                                    {doc.status === 'approved' ? 'Đã duyệt' : doc.status === 'rejected' ? 'Bị từ chối' : 'Đang chờ'}
                                 </span>
                               </div>
                               <div className="flex items-center gap-6 text-[10px] font-black text-slate-300 uppercase tracking-widest">
-                                <span>{doc.materialType}</span>
+                                <span className="flex items-center gap-1.5">
+                                  <span className={`w-1.5 h-1.5 rounded-full ${
+                                    doc.materialType === 'video' ? 'bg-orange-400' : 
+                                    doc.materialType === 'pdf' ? 'bg-red-400' : 'bg-blue-400'
+                                  }`}></span>
+                                  {doc.materialType}
+                                </span>
                                 <span className="flex items-center gap-1.5"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" strokeWidth="2.5"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" strokeWidth="2"/></svg> {doc.metrics?.viewCount} views</span>
                                 <span>Đăng ngày {new Date(doc.createdAt).toLocaleDateString("vi-VN")}</span>
                               </div>

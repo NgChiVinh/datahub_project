@@ -7,6 +7,8 @@ const {
   getMaterialById,
   updateMaterial,
   deleteMaterial,
+  incrementDownload,
+  toggleLike,
 } = require("../controllers/materialController");
 
 const upload = require("../middleware/multer");
@@ -15,6 +17,10 @@ const { authMiddleware, isAdmin } = require("../middleware/authMiddleware");
 // PUBLIC
 router.get("/", getMaterials);
 router.get("/:id", getMaterialById);
+router.post("/:id/download", incrementDownload); // Route tăng lượt tải
+
+// AUTH REQUIRED
+router.post("/:id/like", authMiddleware, toggleLike); // Route like/unlike
 
 // USER upload
 router.post("/", authMiddleware, upload.single("file"), createMaterial);

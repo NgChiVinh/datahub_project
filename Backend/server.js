@@ -22,6 +22,7 @@ const materialRoutes = require("./routes/materialRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
 const commentRoutes = require("./routes/commentRoutes");
 const reportRoutes = require("./routes/reportRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
 
 // Sử dụng API routes
 app.use("/api/users", userRoutes);
@@ -32,6 +33,7 @@ app.use("/api/materials", materialRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api/reports", reportRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 // Default route
 app.get("/", (req, res) => {
