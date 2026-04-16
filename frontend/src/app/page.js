@@ -4,33 +4,41 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { CATEGORIES } from "@/data/mockData";
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
   const [materials, setMaterials] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
   // Lấy dữ liệu từ Backend
   useEffect(() => {
-    const fetchMaterials = async () => {
+    const fetchData = async () => {
       try {
         setIsLoading(true);
-        const res = await fetch("http://localhost:5000/api/materials");
-        const data = await res.json();
-        if (Array.isArray(data)) {
-          // Lấy 6 cái mới nhất
-          setMaterials(data.slice(0, 6));
+        const [matRes, catRes] = await Promise.all([
+          fetch("http://localhost:5000/api/materials"),
+          fetch("http://localhost:5000/api/categories")
+        ]);
+
+        const matData = await matRes.json();
+        const catData = await catRes.json();
+
+        if (Array.isArray(matData)) {
+          setMaterials(matData.slice(0, 6));
+        }
+        if (Array.isArray(catData)) {
+          setCategories(catData);
         }
       } catch (error) {
-        console.error("Lỗi lấy tài liệu:", error);
+        console.error("Lỗi lấy dữ liệu:", error);
       } finally {
         setIsLoading(false);
       }
     };
-    fetchMaterials();
+    fetchData();
   }, []);
 
   const handleSearch = (e) => {
@@ -83,15 +91,9 @@ export default function Home() {
             <div className="absolute inset-0 bg-gradient-to-tr from-primary/30 via-transparent to-transparent"></div>
           </div>
 
-          {/* Logo Văn Lang ở góc dưới bên phải */}
           <div className="absolute bottom-8 right-8 z-20 hidden lg:block">
             <div className="relative h-10 w-32">
-              <Image
-                src="/images/logo_vlu.png"
-                alt="Logo Văn Lang"
-                fill
-                className="object-contain"
-              />
+              <Image src="/images/logo_vlu.png" alt="Logo Văn Lang" fill className="object-contain" />
             </div>
           </div>
           
@@ -103,12 +105,10 @@ export default function Home() {
                   CỘNG ĐỒNG IT
                 </span>
               </h1>
-              
-              <p className="mt-8 text-xl leading-relaxed text-slate-50 font-medium px-4 max-w-3xl mx-auto opacity-100 drop-shadow-lg tracking-wide">
+              <p className="mt-8 text-xl leading-relaxed text-slate-50 font-medium px-4 max-w-3xl mx-auto drop-shadow-lg tracking-wide">
                 Kho tàng tri thức số, kết hợp AI thông minh giúp định hướng tài liệu chuẩn xác cho cộng đồng IT Văn Lang.
               </p>
 
-              {/* Enhanced Search Bar */}
               <form onSubmit={handleSearch} className="mt-12 w-full max-w-2xl mx-auto px-4 group">
                 <div className="relative flex items-center rounded-2xl border border-white/20 bg-white/10 backdrop-blur-2xl p-1.5 shadow-2xl transition-all duration-500 focus-within:bg-white focus-within:ring-8 focus-within:ring-primary/5">
                   <div className="flex flex-1 items-center gap-4 px-4">
@@ -130,7 +130,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* --- MAIN CONTENT / FILTERS --- */}
+        {/* --- MAIN CONTENT / MATERIALS --- */}
         <section className="bg-white py-24 relative border-t border-slate-50">
           <div className="container mx-auto px-4 lg:px-8">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-10 mb-20">
@@ -165,54 +165,65 @@ export default function Home() {
                 <p className="mt-4 text-slate-500 font-bold uppercase tracking-widest text-xs">Đang tải tri thức...</p>
               </div>
             ) : filteredDocuments.length > 0 ? (
-              <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-3">
-                {filteredDocuments.map((item, idx) => (
-                  <Link href={`/documents/${item._id}`} key={item._id} className="group flex flex-col cursor-pointer transition-all duration-500" style={{ animationDelay: `${idx * 100}ms` }}>
-                    <div className="relative aspect-[16/10] w-full overflow-hidden rounded-[40px] bg-slate-100 mb-8 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.05)] group-hover:shadow-[0_40px_80px_-15px_rgba(16,185,129,0.15)] transition-all duration-500 group-hover:-translate-y-3">
-                       <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-950">
-                          {item.materialType === "video" && (
-                            <div className="z-10 absolute inset-0 flex items-center justify-center">
-                              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/10 backdrop-blur-2xl text-white border border-white/20 group-hover:bg-emerald-500 group-hover:scale-110 transition-all duration-500">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="m7 4 12 8-12 8V4Z"/></svg>
-                              </div>
-                            </div>
-                          )}
-                          <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-400 via-transparent to-transparent group-hover:scale-125 transition-transform duration-1000"></div>
-                       </div>
-                       
-                       <div className="absolute top-6 left-6 z-20">
-                          <span className={`rounded-xl px-4 py-1.5 text-[10px] font-black text-white shadow-lg tracking-widest uppercase ${
-                            item.materialType === 'video' ? 'bg-red-500' : item.materialType === 'zip' ? 'bg-blue-500' : 'bg-emerald-500'
-                          }`}>
-                            {item.materialType}
-                          </span>
-                       </div>
-                    </div>
+              <>
+                <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-3">
+                  {filteredDocuments.map((item, idx) => {
+                    const thumbConfigs = {
+                      pdf: { bg: "from-[#FF416C] to-[#FF4B2B]", shadow: "shadow-rose-500/20", accent: "bg-rose-500", icon: <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg> },
+                      video: { bg: "from-[#8E2DE2] to-[#4A00E0]", shadow: "shadow-indigo-500/20", accent: "bg-indigo-500", icon: <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg> },
+                      docx: { bg: "from-[#00c6ff] to-[#0072ff]", shadow: "shadow-blue-500/20", accent: "bg-blue-500", icon: <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg> },
+                      zip: { bg: "from-[#f2994a] to-[#f2c94c]", shadow: "shadow-amber-500/20", accent: "bg-amber-500", icon: <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg> }
+                    };
+                    const config = thumbConfigs[item.materialType] || thumbConfigs.pdf;
 
-                    <div className="px-3">
-                      <h3 className="line-clamp-2 text-xl font-bold leading-tight text-slate-800 group-hover:text-emerald-600 transition-colors duration-300 mb-5 h-14 tracking-tight uppercase text-wrap overflow-hidden">
-                        {item.title}
-                      </h3>
-                      
-                      <div className="flex items-center justify-between pt-5 border-t border-slate-50">
-                        <div className="flex items-center gap-3">
-                          <div className="h-9 w-9 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 border border-slate-200 flex items-center justify-center text-[11px] font-black text-slate-500 group-hover:from-emerald-50 group-hover:to-emerald-100 group-hover:text-emerald-600 transition-all">
-                            {item.uploaderId?.fullName?.charAt(0) || "U"}
+                    return (
+                      <Link href={`/documents/${item._id}`} key={item._id} className="group flex flex-col cursor-pointer transition-all duration-500" style={{ animationDelay: `${idx * 100}ms` }}>
+                        <div className={`relative aspect-[16/10] w-full overflow-hidden rounded-[40px] mb-8 transition-all duration-700 group-hover:-translate-y-3 group-hover:shadow-[0_40px_80px_-15px_rgba(0,0,0,0.2)] ${config.shadow}`}>
+                           <div className={`absolute inset-0 bg-gradient-to-br ${config.bg} transition-transform duration-1000 group-hover:scale-110`}></div>
+                           <div className="absolute top-0 -left-1/4 w-full h-full bg-white/20 blur-[100px] rounded-full group-hover:translate-x-1/2 transition-transform duration-1000"></div>
+                           <div className="absolute bottom-0 -right-1/4 w-full h-full bg-black/10 blur-[100px] rounded-full group-hover:-translate-x-1/2 transition-transform duration-1000"></div>
+                           <div className="absolute inset-0 opacity-[0.15] mix-blend-overlay" style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '32px 32px' }}></div>
+                           <div className="absolute inset-0 flex items-center justify-center text-white">
+                              <div className="relative p-6 rounded-[2rem] bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
+                                 {config.icon}
+                              </div>
+                           </div>
+                           <div className="absolute top-6 left-6 z-20">
+                              <div className="flex items-center gap-2 rounded-xl px-4 py-1.5 bg-black/20 backdrop-blur-md border border-white/10 text-[9px] font-black tracking-widest text-white uppercase">
+                                <div className={`w-1.5 h-1.5 rounded-full ${config.accent} animate-pulse`}></div>
+                                {item.materialType}
+                              </div>
+                           </div>
+                           {item.materialType === "video" && (
+                             <div className="absolute bottom-6 right-6 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                               <div className="w-10 h-10 rounded-full bg-white text-indigo-600 flex items-center justify-center shadow-xl"><svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="m7 4 12 8-12 8V4Z"/></svg></div>
+                             </div>
+                           )}
+                        </div>
+                        <div className="px-3">
+                          <h3 className="line-clamp-2 text-xl font-bold leading-tight text-slate-800 group-hover:text-emerald-600 transition-colors duration-300 mb-5 h-14 tracking-tight uppercase overflow-hidden italic">{item.title}</h3>
+                          <div className="flex items-center justify-between pt-5 border-t border-slate-50">
+                            <div className="flex items-center gap-3">
+                              <div className="h-9 w-9 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-[11px] font-black text-white group-hover:bg-emerald-500 transition-all">{item.uploaderId?.fullName?.charAt(0) || "U"}</div>
+                              <span className="text-[12px] font-bold text-slate-600 tracking-tight uppercase">{item.uploaderId?.fullName || "Người dùng"}</span>
+                            </div>
+                            <div className="flex items-center gap-5 text-[11px] font-black text-slate-400 uppercase">
+                              <span className="flex items-center gap-1.5 text-emerald-500"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="mb-0.5"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>{item.metrics?.averageRating || 0}</span>
+                              <span className="tracking-widest">{item.metrics?.viewCount || 0} LƯỢT XEM</span>
+                            </div>
                           </div>
-                          <span className="text-[12px] font-bold text-slate-600 tracking-tight uppercase">{item.uploaderId?.fullName || "Người dùng"}</span>
                         </div>
-                        <div className="flex items-center gap-5 text-[11px] font-black text-slate-400 uppercase">
-                          <span className="flex items-center gap-1.5 text-emerald-500">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="mb-0.5"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                            {item.metrics?.averageRating || 0}
-                          </span>
-                          <span className="tracking-widest">{item.metrics?.viewCount || 0} LƯỢT XEM</span>
-                        </div>
-                      </div>
-                    </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+                <div className="mt-20 text-center">
+                  <Link href="/documents" className="inline-flex items-center gap-4 px-12 py-6 rounded-[2rem] bg-white border-2 border-slate-100 text-slate-900 font-black text-xs uppercase tracking-[0.2em] shadow-xl hover:border-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 transition-all active:scale-95 group">
+                    Khám phá toàn bộ thư viện
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-2 transition-transform"><line x1="5" x2="19" y1="12" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                   </Link>
-                ))}
-              </div>
+                </div>
+              </>
             ) : (
               <div className="text-center py-32 rounded-[3rem] bg-slate-50 border-2 border-dashed border-slate-200">
                 <p className="text-2xl font-black text-slate-400 tracking-tighter italic uppercase">Chưa có tài liệu nào...</p>
@@ -232,18 +243,27 @@ export default function Home() {
             </div>
 
             <div className="grid grid-cols-2 gap-8 md:grid-cols-3 lg:grid-cols-6">
-              {CATEGORIES.map((subject) => (
-                <div key={subject.id} className="flex flex-col items-center gap-6 rounded-[35px] border border-white bg-white p-10 transition-all hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.1)] hover:-translate-y-3 cursor-pointer group shadow-sm">
+              {categories.map((subject) => (
+                <Link 
+                  href={`/documents?category=${subject._id}`}
+                  key={subject._id} 
+                  className="flex flex-col items-center gap-6 rounded-[35px] border border-white bg-white p-10 transition-all hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.1)] hover:-translate-y-3 cursor-pointer group shadow-sm"
+                >
                   <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-slate-50 text-slate-400 group-hover:bg-primary group-hover:text-white group-hover:rotate-12 transition-all duration-500 shadow-inner">
-                    {subject.icon === "code" && <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>}
-                    {subject.icon === "brain" && <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>}
-                    {subject.icon === "database" && <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>}
-                    {subject.icon === "wifi" && <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>}
-                    {subject.icon === "shield" && <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>}
-                    {subject.icon === "settings" && <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>}
+                    {subject.name.toLowerCase().includes("lập trình") || subject.name.toLowerCase().includes("code") ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                    ) : subject.name.toLowerCase().includes("dữ liệu") || subject.name.toLowerCase().includes("database") ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>
+                    ) : subject.name.toLowerCase().includes("mạng") || subject.name.toLowerCase().includes("web") ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+                    ) : subject.name.toLowerCase().includes("trí tuệ") || subject.name.toLowerCase().includes("ai") ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                    )}
                   </div>
                   <h4 className="text-center text-[10px] font-black text-slate-800 uppercase tracking-wider group-hover:text-primary transition-colors leading-tight h-8 flex items-center">{subject.name}</h4>
-                </div>
+                </Link>
               ))}
             </div>
           </div>

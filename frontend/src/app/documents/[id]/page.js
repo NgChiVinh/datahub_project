@@ -8,6 +8,7 @@ import { useParams } from "next/navigation";
 export default function DocumentDetailPage() {
   const params = useParams();
   const [doc, setDoc] = useState(null);
+  const [relatedDocs, setRelatedDocs] = useState([]);
   const [comments, setComments] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -39,6 +40,15 @@ export default function DocumentDetailPage() {
         setDoc(docData);
         setComments(Array.isArray(commentData) ? commentData : []);
         setReviews(Array.isArray(reviewData) ? reviewData : []);
+
+        // Fetch related documents
+        if (docData.categoryId?._id) {
+          const relatedRes = await fetch(`http://localhost:5000/api/materials?category=${docData.categoryId._id}&limit=5`);
+          const relatedData = await relatedRes.json();
+          if (Array.isArray(relatedData)) {
+            setRelatedDocs(relatedData.filter(m => m._id !== params.id));
+          }
+        }
       } catch (err) {
         setError(err.message);
       } finally {
@@ -223,6 +233,102 @@ export default function DocumentDetailPage() {
     </div>
   );
 
+  const renderPreview = () => {
+    if (!doc?.fileUrl) return (
+      <div className="flex flex-col items-center justify-center p-20 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
+        <p className="text-slate-400 font-black text-xs uppercase tracking-widest">Không có bản xem trước</p>
+      </div>
+    );
+
+    if (doc.sourceType === "link") {
+      return (
+        <div className="space-y-8 animate-in fade-in duration-500">
+           <div className="aspect-video w-full bg-slate-100 rounded-[2.5rem] border-4 border-slate-50 shadow-inner overflow-hidden flex items-center justify-center relative group">
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-blue-500/10 group-hover:opacity-100 transition-opacity"></div>
+              <div className="relative z-10 text-center space-y-6 px-10">
+                 <div className="w-20 h-20 bg-white rounded-3xl shadow-xl flex items-center justify-center mx-auto text-emerald-500 group-hover:scale-110 transition-transform">
+                    <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                 </div>
+                 <div>
+                    <h4 className="text-xl font-black text-slate-800 mb-2 uppercase italic">Tài liệu từ nguồn bên ngoài</h4>
+                    <p className="text-sm font-bold text-slate-400 uppercase tracking-widest max-w-md mx-auto">Tài liệu này được lưu trữ tại một trang web khác. Nhấn nút bên dưới để truy cập.</p>
+                 </div>
+                 <a 
+                   href={doc.fileUrl} 
+                   target="_blank" 
+                   rel="noopener noreferrer"
+                   className="inline-flex items-center gap-4 bg-slate-900 text-white px-10 py-5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-2xl shadow-slate-900/20 hover:bg-emerald-500 hover:shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all"
+                 >
+                   Mở liên kết gốc
+                   <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                 </a>
+              </div>
+           </div>
+        </div>
+      );
+    }
+
+    if (doc.materialType === "pdf") {
+      return (
+        <div className="space-y-8 animate-in fade-in duration-500">
+          <div className="w-full aspect-[1/1.4] bg-slate-100 rounded-[2.5rem] border-4 border-slate-50 shadow-inner overflow-hidden relative">
+            <iframe 
+              src={`${doc.fileUrl}#toolbar=0&navpanes=0&scrollbar=0`}
+              className="w-full h-full border-none"
+              title={doc.title}
+            ></iframe>
+            <div className="absolute top-0 right-0 p-6 flex gap-2">
+              <button 
+                onClick={handleDownload}
+                className="bg-white/90 backdrop-blur-xl p-4 rounded-2xl shadow-xl hover:bg-emerald-500 hover:text-white transition-all group"
+              >
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (doc.materialType === "video") {
+      return (
+        <div className="space-y-8 animate-in fade-in duration-500">
+           <div className="aspect-video w-full bg-slate-900 rounded-[2.5rem] border-4 border-slate-800 shadow-2xl overflow-hidden relative group">
+              <video 
+                src={doc.fileUrl} 
+                controls 
+                className="w-full h-full"
+              ></video>
+           </div>
+        </div>
+      );
+    }
+
+    // Default for other types (docx, pptx, zip, etc.)
+    return (
+      <div className="space-y-8 animate-in fade-in duration-500">
+         <div className="aspect-video w-full bg-slate-50 rounded-[2.5rem] border-4 border-slate-50 shadow-inner overflow-hidden flex items-center justify-center relative group">
+            <div className="text-center space-y-6 px-10">
+               <div className="w-24 h-24 bg-white rounded-[2.5rem] shadow-xl flex items-center justify-center mx-auto text-slate-300 group-hover:scale-110 transition-transform border border-slate-100">
+                  <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+               </div>
+               <div>
+                  <h4 className="text-xl font-black text-slate-800 mb-2 uppercase italic">Không có bản xem trước trực tiếp</h4>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] max-w-xs mx-auto">Vui lòng tải xuống tài liệu để xem nội dung đầy đủ</p>
+               </div>
+               <button 
+                 onClick={handleDownload}
+                 className="inline-flex items-center gap-4 bg-emerald-500 text-white px-10 py-5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-2xl shadow-emerald-500/20 hover:bg-emerald-400 hover:scale-105 active:scale-95 transition-all"
+               >
+                 Tải tài liệu ngay
+                 <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+               </button>
+            </div>
+         </div>
+      </div>
+    );
+  };
+
   if (isLoading) return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50">
       <div className="flex flex-col items-center gap-4">
@@ -344,31 +450,7 @@ export default function DocumentDetailPage() {
                </div>
                
                <div className="p-10 md:p-14 min-h-[500px]">
-                  {activeTab === 'preview' && (
-                    <div className="animate-in fade-in zoom-in-95 duration-500">
-                      <div className="aspect-[16/10] w-full bg-slate-900 rounded-[2.5rem] border border-slate-800 flex flex-col items-center justify-center text-center p-14 overflow-hidden relative group shadow-2xl">
-                         <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-emerald-500 via-transparent to-transparent group-hover:scale-125 transition-transform duration-1000"></div>
-                         
-                         <div className="w-24 h-24 bg-white/10 backdrop-blur-3xl rounded-[2rem] border border-white/20 shadow-2xl flex items-center justify-center text-white mb-8 transition-all duration-500 group-hover:scale-110 group-hover:bg-emerald-500 group-hover:border-emerald-400">
-                            <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                         </div>
-                         <h3 className="text-2xl font-black text-white mb-4 tracking-tight uppercase italic">Chế độ Xem nhanh</h3>
-                         <p className="text-slate-400 font-medium max-w-sm mb-10 text-sm leading-relaxed">
-                            {doc.materialType === 'video' ? 'Đang phát video tài liệu học tập...' : 'Duyệt qua nội dung tài liệu học tập IT.'}
-                         </p>
-                         
-                         <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent z-10"></div>
-                         <div className="absolute bottom-14 z-20">
-                            <button 
-                              onClick={handleDownload}
-                              className="px-12 py-4 rounded-2xl bg-emerald-500 text-white font-black text-xs uppercase tracking-widest shadow-2xl shadow-emerald-500/30 hover:bg-emerald-400 hover:scale-105 active:scale-95 transition-all"
-                            >
-                              {doc.sourceType === 'link' ? 'Mở đường dẫn tài liệu' : 'Xem tệp toàn màn hình'}
-                            </button>
-                         </div>
-                      </div>
-                    </div>
-                  )}
+                  {activeTab === 'preview' && renderPreview()}
 
                   {activeTab === 'info' && (
                     <div className="space-y-12 animate-in fade-in duration-500">
@@ -527,6 +609,40 @@ export default function DocumentDetailPage() {
                   <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" className="animate-bounce"><path d="M12 5v14M5 12l7 7 7-7" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/></svg>
                </button>
             </div>
+
+            {relatedDocs.length > 0 && (
+              <div className="bg-white rounded-[3rem] p-10 border border-slate-100 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.03)] relative overflow-hidden group">
+                <h3 className="text-xl font-black text-slate-800 mb-8 uppercase tracking-tighter italic flex items-center gap-3">
+                  <span className="w-2 h-6 bg-emerald-500 rounded-full"></span>
+                  Tài liệu cùng chuyên mục
+                </h3>
+                <div className="space-y-6">
+                  {relatedDocs.map((rd) => (
+                    <Link key={rd._id} href={`/documents/${rd._id}`} className="block group/item">
+                      <div className="flex items-start gap-4 p-4 rounded-2xl hover:bg-slate-50 transition-all border border-transparent hover:border-slate-100">
+                        <div className={`w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 shrink-0 font-black text-[10px] group-hover/item:bg-emerald-500 group-hover/item:text-white transition-all`}>
+                          {rd.materialType === 'video' ? (
+                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="m7 4 12 8-12 8V4z" strokeWidth="2.5"/></svg>
+                          ) : (
+                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" strokeWidth="2.5"/></svg>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-black text-slate-700 uppercase leading-tight line-clamp-2 group-hover/item:text-emerald-600 transition-colors">
+                            {rd.title}
+                          </p>
+                          <div className="flex items-center gap-3 mt-2">
+                             <span className="text-[9px] font-bold text-slate-300 uppercase tracking-widest">{rd.academicYear}</span>
+                             <span className="w-1 h-1 rounded-full bg-slate-200"></span>
+                             <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest">{rd.materialType}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="bg-white rounded-[3rem] p-10 border border-slate-100 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.03)] text-center relative overflow-hidden group">
                <div className="absolute top-0 left-0 w-full h-24 bg-slate-50 border-b border-slate-100 -z-10 group-hover:bg-emerald-50 transition-colors"></div>

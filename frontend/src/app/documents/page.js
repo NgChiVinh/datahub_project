@@ -16,9 +16,14 @@ export default function DocumentsPage() {
   const [isLoading, setIsLoading] = useState(true);
   
   const searchParams = useSearchParams();
+  const initialSearch = searchParams.get("search") || "";
 
-  // 1. Lấy dữ liệu ban đầu (Categories & Majors)
+  // 1. Lấy dữ liệu ban đầu (Categories & Majors) và đồng bộ search từ URL
   useEffect(() => {
+    if (initialSearch) {
+      setSearchQuery(initialSearch);
+    }
+    
     const fetchMetadata = async () => {
       try {
         const [catRes, majorRes] = await Promise.all([

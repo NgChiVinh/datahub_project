@@ -14,8 +14,10 @@ export default function UploadPage() {
   const [title, setTitle] = useState("");
   const [link, setLink] = useState("");
   const [categoryId, setCategoryId] = useState("");
+  const [majorId, setMajorId] = useState("");
   const [academicYear, setAcademicYear] = useState("Năm 1");
   const [categories, setCategories] = useState([]);
+  const [majors, setMajors] = useState([]);
   const [description, setDescription] = useState("");
   
   // Tag States
@@ -27,21 +29,28 @@ export default function UploadPage() {
   const fileInputRef = useRef(null);
   const tagInputRef = useRef(null);
 
-  // Lấy danh mục và tags từ API
+  // Lấy danh mục, chuyên ngành và tags từ API
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [catRes, tagRes] = await Promise.all([
+        const [catRes, majorRes, tagRes] = await Promise.all([
           fetch("http://localhost:5000/api/categories"),
+          fetch("http://localhost:5000/api/majors"),
           fetch("http://localhost:5000/api/tags")
         ]);
         
         const catData = await catRes.json();
+        const majorData = await majorRes.json();
         const tagData = await tagRes.json();
         
         if (Array.isArray(catData)) {
           setCategories(catData);
-          if (catData.length > 0) setCategoryId(catData[0]._id);
+          if (catData.length > 0 && !categoryId) setCategoryId(catData[0]._id);
+        }
+
+        if (Array.isArray(majorData)) {
+          setMajors(majorData);
+          if (majorData.length > 0 && !majorId) setMajorId(majorData[0]._id);
         }
         
         if (Array.isArray(tagData)) {
@@ -147,6 +156,7 @@ export default function UploadPage() {
         formData.append("title", title);
         formData.append("description", description);
         formData.append("categoryId", categoryId);
+        formData.append("majorId", majorId);
         formData.append("academicYear", academicYear);
         formData.append("file", file);
         formData.append("tags", JSON.stringify(tagIds));
@@ -162,6 +172,7 @@ export default function UploadPage() {
           title,
           description,
           categoryId,
+          majorId,
           academicYear,
           link,
           tags: tagIds
@@ -255,6 +266,21 @@ export default function UploadPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
+                        <label className="text-sm font-bold text-slate-600 ml-1">Chuyên ngành <span className="text-red-500">*</span></label>
+                        <select 
+                          key="major-select"
+                          value={majorId || ""}
+                          onChange={(e) => setMajorId(e.target.value)}
+                          required
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-5 py-4 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none appearance-none cursor-pointer font-medium text-slate-700"
+                        >
+                          <option value="">-- Chọn chuyên ngành --</option>
+                          {majors.map((m) => (
+                            <option key={m._id} value={m._id}>{m.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="space-y-2">
                         <label className="text-sm font-bold text-slate-600 ml-1">Chuyên mục <span className="text-red-500">*</span></label>
                         <select 
                           key="category-select"
@@ -267,21 +293,6 @@ export default function UploadPage() {
                           {categories.map((cat) => (
                             <option key={cat._id} value={cat._id}>{cat.name}</option>
                           ))}
-                        </select>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-600 ml-1">Năm học <span className="text-red-500">*</span></label>
-                        <select 
-                          key="academic-year-select"
-                          value={academicYear || ""}
-                          onChange={(e) => setAcademicYear(e.target.value)}
-                          required
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-5 py-4 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none appearance-none cursor-pointer font-medium text-slate-700"
-                        >
-                          <option value="Năm 1">Năm 1</option>
-                          <option value="Năm 2">Năm 2</option>
-                          <option value="Năm 3">Năm 3</option>
-                          <option value="Năm 4">Năm 4</option>
                         </select>
                       </div>
                     </div>
