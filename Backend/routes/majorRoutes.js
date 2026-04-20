@@ -16,7 +16,7 @@ router.get("/", getMajors);
 router.get("/:id", getMajorById);
 
 // ADMIN ONLY
-router.post("/", createMajor);
+router.post("/", authMiddleware, isAdmin, createMajor);
 router.put("/:id", authMiddleware, isAdmin, updateMajor);
 router.delete("/:id", authMiddleware, isAdmin, deleteMajor);
 

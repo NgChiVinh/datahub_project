@@ -37,14 +37,18 @@ const getCommentsByMaterial = async (req, res) => {
     const roots = [];
 
     comments.forEach((c) => {
-      map[c._id] = { ...c._doc, replies: [] };
+      map[c._id.toString()] = { ...c._doc, replies: [] };
     });
 
     comments.forEach((c) => {
+      const cid = c._id.toString();
       if (c.parentId) {
-        map[c.parentId]?.replies.push(map[c._id]);
+        const pid = c.parentId.toString();
+        if (map[pid]) {
+          map[pid].replies.push(map[cid]);
+        }
       } else {
-        roots.push(map[c._id]);
+        roots.push(map[cid]);
       }
     });
 
@@ -114,9 +118,23 @@ const deleteComment = async (req, res) => {
   }
 };
 
+const getAllComments = async (req, res) => {
+  try {
+    const comments = await Comment.find()
+      .populate("userId", "fullName")
+      .populate("materialId", "title")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(comments);
+  } catch (error) {
+    res.status(500).json({ message: "Lỗi server", error });
+  }
+};
+
 module.exports = {
   createComment,
   getCommentsByMaterial,
   updateComment,
   deleteComment,
+  getAllComments,
 };

@@ -6,23 +6,26 @@ const {
   getCommentsByMaterial,
   updateComment,
   deleteComment,
+  getAllComments,
 } = require("../controllers/commentController");
 
-const { authMiddleware } = require("../middleware/authMiddleware");
+const { authMiddleware, isAdmin } = require("../middleware/authMiddleware");
 
-// cần login
+// lấy comment theo material (tree) - Public
+router.get("/material/:materialId", getCommentsByMaterial);
+
+// Các route sau đây cần login
 router.use(authMiddleware);
 
 // tạo comment / reply
 router.post("/", createComment);
-
-// lấy comment theo material (tree)
-router.get("/material/:materialId", getCommentsByMaterial);
 
 // update
 router.put("/:id", updateComment);
 
 // delete
 router.delete("/:id", deleteComment);
+
+router.get("/", authMiddleware, isAdmin, getAllComments);
 
 module.exports = router;

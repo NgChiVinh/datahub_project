@@ -129,9 +129,23 @@ const deleteReview = async (req, res) => {
   }
 };
 
+const getAllReviews = async (req, res) => {
+  try {
+    const reviews = await Review.find()
+      .populate("userId", "fullName")
+      .populate("materialId", "title")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(reviews);
+  } catch (error) {
+    res.status(500).json({ message: "Lỗi server", error });
+  }
+};
+
 module.exports = {
   createReview,
   getReviewsByMaterial,
   updateReview,
   deleteReview,
+  getAllReviews,
 };

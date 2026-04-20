@@ -6,23 +6,26 @@ const {
   getReviewsByMaterial,
   updateReview,
   deleteReview,
+  getAllReviews,
 } = require("../controllers/reviewController");
 
-const { authMiddleware } = require("../middleware/authMiddleware");
+const { authMiddleware, isAdmin } = require("../middleware/authMiddleware");
 
-// cần login
+// lấy review theo material - Public
+router.get("/material/:materialId", getReviewsByMaterial);
+
+// Các route sau đây cần login
 router.use(authMiddleware);
 
 // tạo review
 router.post("/", createReview);
-
-// lấy review theo material
-router.get("/material/:materialId", getReviewsByMaterial);
 
 // update
 router.put("/:id", updateReview);
 
 // delete
 router.delete("/:id", deleteReview);
+
+router.get("/", authMiddleware, isAdmin, getAllReviews);
 
 module.exports = router;
