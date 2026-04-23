@@ -8,6 +8,8 @@ const {
   updateUserRole,
   deleteUser,
   updateUserProfile,
+  forgotPassword,
+  resetPassword,
 } = require("../controllers/userController");
 const { authMiddleware, isAdmin } = require("../middleware/authMiddleware");
 const upload = require("../middleware/multer");
@@ -22,6 +24,9 @@ router.delete("/:id", authMiddleware, isAdmin, deleteUser);
 router.post("/register", registerUser);
 router.post("/login", loginUser);
 
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password/:token", resetPassword);
+
 //  Chỉ người dùng đã login mới truy cập được profile
 //  Lấy thông tin cá nhân
 router.get("/profile", authMiddleware, (req, res) => {
@@ -29,6 +34,11 @@ router.get("/profile", authMiddleware, (req, res) => {
 });
 
 // Cập nhật thông tin cá nhân (bao gồm upload avatar)
-router.put("/profile", authMiddleware, upload.single("avatar"), updateUserProfile);
+router.put(
+  "/profile",
+  authMiddleware,
+  upload.single("avatar"),
+  updateUserProfile,
+);
 
 module.exports = router;

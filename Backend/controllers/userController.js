@@ -2,6 +2,8 @@
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
+const sendEmail = require("../utils/sendEmail");
 
 // REGISTER
 const registerUser = async (req, res) => {
@@ -32,7 +34,9 @@ const registerUser = async (req, res) => {
 
     // 3. Kiểm tra độ dài mật khẩu
     if (password.length < 6) {
-      return res.status(400).json({ message: "Mật khẩu phải từ 6 ký tự trở lên" });
+      return res
+        .status(400)
+        .json({ message: "Mật khẩu phải từ 6 ký tự trở lên" });
     }
 
     // 4. Kiểm tra trùng lặp
@@ -62,25 +66,27 @@ const registerUser = async (req, res) => {
 
     // Tự động tạo Token sau khi đăng ký thành công
     const token = jwt.sign(
-      { userId: newUser._id, role: newUser.role }, 
-      process.env.SECRET_KEY, 
-      { expiresIn: "7d" }
+      { userId: newUser._id, role: newUser.role },
+      process.env.SECRET_KEY,
+      { expiresIn: "7d" },
     );
 
-    res.status(201).json({ 
+    res.status(201).json({
       message: "Đăng ký tài khoản sinh viên thành công",
       token, // Trả về token để tự động đăng nhập
-      user: { 
+      user: {
         _id: newUser._id,
-        email: newUser.email, 
-        studentId: newUser.studentId, 
+        email: newUser.email,
+        studentId: newUser.studentId,
         fullName: newUser.fullName,
-        role: newUser.role
-      }
+        role: newUser.role,
+      },
     });
   } catch (error) {
     console.error("Register Error:", error);
-    res.status(500).json({ message: "Lỗi hệ thống khi đăng ký", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Lỗi hệ thống khi đăng ký", error: error.message });
   }
 };
 
@@ -91,13 +97,17 @@ const loginUser = async (req, res) => {
 
     // Tìm user và populate ngành học
     const user = await User.findOne({ email }).populate("majorId", "name");
-    
+
     if (!user) {
-      return res.status(400).json({ message: "Tài khoản sinh viên không tồn tại" });
+      return res
+        .status(400)
+        .json({ message: "Tài khoản sinh viên không tồn tại" });
     }
 
     if (!user.isActive) {
-      return res.status(403).json({ message: "Tài khoản của bạn đang bị tạm khóa" });
+      return res
+        .status(403)
+        .json({ message: "Tài khoản của bạn đang bị tạm khóa" });
     }
 
     // So sánh mật khẩu
@@ -108,9 +118,9 @@ const loginUser = async (req, res) => {
 
     // Tạo JWT Token (chứa cả role để phân quyền Frontend)
     const token = jwt.sign(
-      { userId: user._id, role: user.role }, 
-      process.env.SECRET_KEY, 
-      { expiresIn: "7d" }
+      { userId: user._id, role: user.role },
+      process.env.SECRET_KEY,
+      { expiresIn: "7d" },
     );
 
     res.json({
@@ -122,12 +132,14 @@ const loginUser = async (req, res) => {
         fullName: user.fullName,
         email: user.email,
         role: user.role,
-        major: user.majorId?.name
+        major: user.majorId?.name,
       },
     });
   } catch (error) {
     console.error("Login Error:", error);
-    res.status(500).json({ message: "Lỗi hệ thống khi đăng nhập", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Lỗi hệ thống khi đăng nhập", error: error.message });
   }
 };
 
@@ -191,7 +203,10 @@ const updateUserProfile = async (req, res) => {
     if (fullName) user.fullName = fullName;
     if (preferences) {
       try {
-        user.preferences = typeof preferences === "string" ? JSON.parse(preferences) : preferences;
+        user.preferences =
+          typeof preferences === "string"
+            ? JSON.parse(preferences)
+            : preferences;
       } catch (e) {
         user.preferences = preferences;
       }
@@ -218,14 +233,18 @@ const updateUserProfile = async (req, res) => {
     });
   } catch (error) {
     console.error("Update Profile Error:", error);
-    res.status(500).json({ message: "Lỗi cập nhật thông tin", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Lỗi cập nhật thông tin", error: error.message });
   }
 };
 
 // GET ME (Lấy thông tin user hiện tại từ Token)
 const getMe = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).populate("majorId", "name").select("-password");
+    const user = await User.findById(req.user._id)
+      .populate("majorId", "name")
+      .select("-password");
     res.json({
       _id: user._id,
       studentId: user.studentId,
@@ -233,19 +252,78 @@ const getMe = async (req, res) => {
       email: user.email,
       role: user.role,
       avatar: user.avatar,
-      major: user.majorId?.name
+      major: user.majorId?.name,
     });
   } catch (error) {
     res.status(500).json({ message: "Lỗi lấy thông tin người dùng" });
   }
 };
 
+//resetpassword
+const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res
+        .status(200)
+        .json({ message: "Nếu email tồn tại, link sẽ được gửi" });
+    }
+
+    const resetToken = jwt.sign({ userId: user._id }, process.env.SECRET_KEY, {
+      expiresIn: "15m",
+    });
+
+    const resetLink = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
+
+    const html = `
+      <h3>Reset Password</h3>
+      <p>Click vào link bên dưới:</p>
+      <a href="${resetLink}">${resetLink}</a>
+    `;
+
+    await sendEmail(user.email, "Reset Password", html);
+
+    res.json({ message: "Đã gửi email reset mật khẩu" });
+  } catch (error) {
+    console.error("Forgot Password Error:", error);
+    res.status(500).json({ message: "Lỗi server", error: error.message });
+  }
+};
+
+const resetPassword = async (req, res) => {
+  const { token } = req.params;
+  const { password } = req.body;
+
+  try {
+    const decoded = jwt.verify(token, process.env.SECRET_KEY);
+
+    const user = await User.findById(decoded.userId);
+    if (!user) {
+      return res.status(400).json({ message: "User không tồn tại" });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(password, salt);
+
+    await user.save();
+
+    res.json({ message: "Đổi mật khẩu thành công" });
+  } catch (error) {
+    return res.status(400).json({ message: "Token không hợp lệ hoặc hết hạn" });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
-  getMe, // Xuất hàm mới
+  getMe,
   getUsers,
   updateUserRole,
   deleteUser,
   updateUserProfile,
+  forgotPassword,
+  resetPassword,
 };

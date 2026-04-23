@@ -15,6 +15,8 @@ const userSchema = new mongoose.Schema(
     majorId: { type: mongoose.Schema.Types.ObjectId, ref: "Major" },
     avatar: { type: String, default: "" },
     reputationPoints: { type: Number, default: 0 },
+    resetPasswordToken: String,
+    resetPasswordExpire: Date,
     preferences: [{ type: String }],
     isActive: { type: Boolean, default: true },
   },
