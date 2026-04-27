@@ -1,13 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import axios from "axios";
+import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
 
 export default function ForgotPasswordPage() {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.push("/");
+    }
+  }, [user, authLoading, router]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -17,7 +28,7 @@ export default function ForgotPasswordPage() {
     try {
       const res = await axios.post(
         "http://localhost:5000/api/users/forgot-password",
-        { email },
+        { email }
       );
 
       setSuccess(true);
@@ -30,25 +41,121 @@ export default function ForgotPasswordPage() {
     setLoading(false);
   };
 
+  if (authLoading || user) {
+    return null; // Or a loading spinner
+  }
+
   return (
-    <div style={{ maxWidth: 400, margin: "auto" }}>
-      <h2>Quên mật khẩu</h2>
+    <div className="min-h-[calc(100vh-80px)] flex items-center justify-center bg-[#fafbfc] relative overflow-hidden px-4 py-12">
+      <div
+        className="absolute inset-0 z-0 opacity-[0.03]"
+        style={{
+          backgroundImage: "radial-gradient(#004d40 1px, transparent 1px)",
+          backgroundSize: "32px 32px",
+        }}
+      ></div>
+      <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-primary/5 blur-[120px] -z-10 rounded-full"></div>
 
-      <form onSubmit={handleSubmit}>
-        <input
-          type="email"
-          placeholder="Nhập email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
+      <div className="w-full max-w-[380px] z-10 animate-fade-in">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight italic uppercase">
+            Quên <span className="text-primary">Mật khẩu</span>
+          </h1>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] mt-2">
+            Khôi phục truy cập Data Hub
+          </p>
+        </div>
 
-        <button disabled={loading}>
-          {loading ? "Đang gửi..." : "Gửi email"}
-        </button>
-      </form>
+        <div className="bg-white rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.04)] border border-slate-100 overflow-hidden">
+          <div className="p-8 md:p-10">
+            {message && (
+              <div
+                className={`mb-6 p-4 border text-[11px] font-bold rounded-xl flex items-center gap-3 animate-shake ${
+                  success
+                    ? "bg-green-50 border-green-100 text-green-700"
+                    : "bg-red-50 border-red-100 text-red-700"
+                }`}
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2.5"
+                    d={
+                      success
+                        ? "M5 13l4 4L19 7"
+                        : "M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    }
+                  ></path>
+                </svg>
+                {message}
+              </div>
+            )}
 
-      {message && <p style={{ color: success ? "green" : "red" }}>{message}</p>}
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="space-y-1.5">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                  Email sinh viên Văn Lang
+                </label>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-300 group-focus-within:text-primary transition-colors">
+                    <svg
+                      width="18"
+                      height="18"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"
+                      ></path>
+                    </svg>
+                  </div>
+                  <input
+                    type="email"
+                    required
+                    placeholder="student@vanlanguni.vn"
+                    className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-xl focus:bg-white focus:outline-none focus:border-primary/30 transition-all text-slate-800 font-bold text-sm"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-4 bg-primary text-white rounded-xl font-bold text-sm shadow-lg hover:brightness-110 transition-all disabled:opacity-50"
+                >
+                  {loading ? "Đang xử lý..." : "Gửi link khôi phục"}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div className="py-6 bg-slate-50 text-center border-t border-slate-100">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              Đã nhớ mật khẩu?{" "}
+              <Link
+                href="/login"
+                className="text-primary hover:underline font-black"
+              >
+                Quay lại đăng nhập
+              </Link>
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
