@@ -3,12 +3,14 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import ReportModal from "@/components/ReportModal";
 
 export default function VideoWatchPage() {
   const { id } = useParams();
   const [video, setVideo] = useState(null);
   const [relatedVideos, setRelatedVideos] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   // 1. Lấy dữ liệu video chi tiết
   useEffect(() => {
@@ -130,6 +132,15 @@ export default function VideoWatchPage() {
                       <p className="text-sm font-black text-emerald-500">{video.metrics?.averageRating || 0}</p>
                       <p className="text-[9px] font-bold text-slate-300 uppercase tracking-widest">Đánh giá</p>
                    </div>
+                   <button 
+                    onClick={() => setIsReportModalOpen(true)}
+                    className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-300 hover:bg-red-50 hover:text-red-500 transition-all active:scale-95"
+                    title="Báo cáo vi phạm"
+                   >
+                     <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                     </svg>
+                   </button>
                 </div>
               </div>
 
@@ -196,6 +207,11 @@ export default function VideoWatchPage() {
 
         </div>
       </div>
+      <ReportModal 
+        isOpen={isReportModalOpen} 
+        onClose={() => setIsReportModalOpen(false)} 
+        materialId={id} 
+      />
     </div>
   );
 }

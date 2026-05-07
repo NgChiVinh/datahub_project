@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useParams } from "next/navigation";
+import ReportModal from "@/components/ReportModal";
 
 export default function DocumentDetailPage() {
   const params = useParams();
@@ -19,6 +20,7 @@ export default function DocumentDetailPage() {
   const [hoverRating, setHoverRating] = useState(0);
   const [commentInput, setCommentInput] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   // 1. Fetch dữ liệu từ API
   useEffect(() => {
@@ -533,6 +535,15 @@ export default function DocumentDetailPage() {
                 ></path>
               </svg>
             </button>
+            <button 
+              onClick={() => setIsReportModalOpen(true)}
+              className="p-3 rounded-2xl bg-white border border-slate-100 text-slate-400 hover:text-red-500 hover:border-red-100 transition-all active:scale-90"
+              title="Báo cáo vi phạm"
+            >
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </button>
           </div>
         </div>
       </div>
@@ -1044,6 +1055,11 @@ export default function DocumentDetailPage() {
           </aside>
         </div>
       </div>
+      <ReportModal 
+        isOpen={isReportModalOpen} 
+        onClose={() => setIsReportModalOpen(false)} 
+        materialId={params.id} 
+      />
     </div>
   );
 }

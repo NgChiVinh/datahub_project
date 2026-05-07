@@ -21,8 +21,10 @@ export default function AdminLayout({ children }) {
     { name: "Dashboard", path: "/admin", icon: "📊" },
     { name: "Tài liệu", path: "/admin/material", icon: "📄" },
     { name: "Người dùng", path: "/admin/user", icon: "👥" },
+    { name: "Báo cáo", path: "/admin/report", icon: "🚩" },
     { name: "Danh mục", path: "/admin/category", icon: "📁" },
     { name: "Chuyên ngành", path: "/admin/major", icon: "🎓" },
+    { name: "Thẻ (Tags)", path: "/admin/tag", icon: "🏷️" },
     { name: "Bình luận", path: "/admin/comment", icon: "💬" },
     { name: "Đánh giá", path: "/admin/review", icon: "⭐" },
   ];
