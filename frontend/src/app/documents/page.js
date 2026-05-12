@@ -6,6 +6,12 @@ import { useSearchParams } from "next/navigation";
 
 export default function DocumentsPage() {
   const [materials, setMaterials] = useState([]);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalMaterials: 0
+  });
+  const [currentPage, setCurrentPage] = useState(1);
   const [categories, setCategories] = useState([
     { _id: "all", name: "Tất cả" },
   ]);
@@ -51,6 +57,11 @@ export default function DocumentsPage() {
     fetchMetadata();
   }, []);
 
+  // Reset về trang 1 khi thay đổi bộ lọc
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeCategory, activeMajor, activeYear, searchQuery, sortBy]);
+
   // 2. Fetch Materials dựa trên bộ lọc và sắp xếp
   useEffect(() => {
     const fetchMaterials = async () => {
@@ -58,6 +69,8 @@ export default function DocumentsPage() {
         setIsLoading(true);
         const params = new URLSearchParams();
         params.append("materialType", "not_video"); // Loại trừ video ra khỏi trang tài liệu
+        params.append("page", currentPage);
+        params.append("limit", 6); // Mỗi trang 6 tài liệu để dễ test phân trang
         if (activeCategory !== "all") params.append("category", activeCategory);
         if (activeMajor !== "all") params.append("major", activeMajor);
         if (activeYear !== "all") params.append("academicYear", activeYear);
@@ -69,8 +82,30 @@ export default function DocumentsPage() {
         );
         const data = await res.json();
 
-        if (Array.isArray(data)) {
-          setMaterials(data);
+        // Xử lý linh hoạt và tự động phân trang nếu cần
+        const itemsPerPage = 8;
+
+        if (data && data.materials && data.pagination) {
+          // TRƯỜNG HỢP 1: Backend đã được restart và trả về Object phân trang chuẩn
+          setMaterials(data.materials);
+          setPagination(data.pagination);
+        } else if (Array.isArray(data)) {
+          // TRƯỜNG HỢP 2: Backend chưa restart (trả về Array cũ) -> Tự chia trang ở Frontend
+          const total = data.length;
+          const pages = Math.ceil(total / itemsPerPage);
+          
+          // Cắt mảng để lấy đúng dữ liệu của trang hiện tại
+          const startIndex = (currentPage - 1) * itemsPerPage;
+          const endIndex = startIndex + itemsPerPage;
+          const paginatedItems = data.slice(startIndex, endIndex);
+          
+          setMaterials(paginatedItems);
+          setPagination({
+            currentPage: currentPage,
+            totalPages: pages,
+            totalMaterials: total,
+            limit: itemsPerPage
+          });
         }
       } catch (error) {
         console.error("Lỗi lấy tài liệu:", error);
@@ -84,7 +119,7 @@ export default function DocumentsPage() {
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [activeCategory, activeMajor, activeYear, searchQuery, sortBy]);
+  }, [activeCategory, activeMajor, activeYear, searchQuery, sortBy, currentPage]);
 
   // UI Skeleton Loading Component
   const SkeletonCard = () => (
@@ -221,7 +256,7 @@ export default function DocumentsPage() {
             <h1 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-4">
               Thư viện Tri thức
               <span className="text-sm font-bold text-slate-400 bg-slate-50 px-3 py-1 rounded-full border border-slate-100">
-                {materials.length}+ tệp
+                {pagination.totalMaterials || 0}+ tệp
               </span>
             </h1>
           </div>
@@ -373,128 +408,169 @@ export default function DocumentsPage() {
                 // Hiển thị 6 thẻ Skeleton khi đang tải
                 [...Array(6)].map((_, i) => <SkeletonCard key={i} />)
               ) : materials.length > 0 ? (
-                materials
-                  .filter((doc) => doc.materialType !== "video") // Lọc thêm 1 lần nữa ở Frontend để đảm bảo 100%
-                  .map((doc) => (
-                    <div
-                      key={doc._id}
-                      className="group bg-white rounded-[2.5rem] p-8 border border-slate-100 hover:border-primary/20 hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.05)] transition-all flex flex-col h-full relative overflow-hidden"
-                    >
-                      {/* Hot Badge */}
-                      {doc.metrics?.viewCount > 1000 && (
-                        <div className="absolute -right-12 top-6 bg-red-500 text-white px-12 py-1 rotate-45 text-[8px] font-black uppercase tracking-[0.2em] shadow-lg z-20">
-                          Hot
-                        </div>
-                      )}
-
-                      <div className="flex justify-between items-start mb-8 relative z-10">
-                        <div
-                          className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-xl border text-[9px] font-black uppercase tracking-widest shadow-sm ${getTypeStyles(doc.materialType)}`}
-                        >
-                          {getTypeIcon(doc.materialType)}
-                          {doc.materialType}
-                        </div>
-                        <button className="w-10 h-10 rounded-xl bg-slate-50 text-slate-300 flex items-center justify-center hover:bg-emerald-50 hover:text-emerald-500 transition-all active:scale-90 border border-slate-100">
-                          <svg
-                            width="18"
-                            height="18"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2.5"
-                              d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
-                            ></path>
-                          </svg>
-                        </button>
-                      </div>
-
-                      <Link
-                        href={`/documents/${doc._id}`}
-                        className="flex-1 relative z-10"
+                <>
+                  {materials
+                    .filter((doc) => doc.materialType !== "video") // Lọc thêm 1 lần nữa ở Frontend để đảm bảo 100%
+                    .map((doc) => (
+                      <div
+                        key={doc._id}
+                        className="group bg-white rounded-[2.5rem] p-8 border border-slate-100 hover:border-primary/20 hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.05)] transition-all flex flex-col h-full relative overflow-hidden"
                       >
-                        <h3 className="text-xl font-black text-slate-800 leading-tight mb-4 group-hover:text-primary transition-colors line-clamp-2 uppercase italic tracking-tight">
-                          {doc.title}
-                        </h3>
-                        <div className="flex flex-wrap gap-4 text-slate-400 text-[10px] font-black uppercase tracking-widest mb-8">
-                          <div className="flex items-center gap-1.5 px-3 py-1 bg-slate-50 rounded-lg">
-                            <svg
-                              width="14"
-                              height="14"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2.5"
-                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                              ></path>
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2.5"
-                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                              ></path>
-                            </svg>
-                            {doc.metrics?.viewCount?.toLocaleString() || 0}
+                        {/* Hot Badge */}
+                        {doc.metrics?.viewCount > 1000 && (
+                          <div className="absolute -right-12 top-6 bg-red-500 text-white px-12 py-1 rotate-45 text-[8px] font-black uppercase tracking-[0.2em] shadow-lg z-20">
+                            Hot
                           </div>
-                          <div className="flex items-center gap-1.5 px-3 py-1 bg-slate-50 rounded-lg">
-                            <svg
-                              width="14"
-                              height="14"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2.5"
-                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                              ></path>
-                            </svg>
-                            {doc.metrics?.downloadCount?.toLocaleString() || 0}
-                          </div>
-                          <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-600 rounded-lg border border-amber-100">
-                            <svg
-                              width="12"
-                              height="12"
-                              fill="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                            </svg>
-                            {doc.metrics?.averageRating || 0}
-                          </div>
-                        </div>
-                      </Link>
+                        )}
 
-                      <div className="flex justify-between items-center pt-6 border-t border-slate-50 relative z-10">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-[11px] font-black text-slate-500 border-2 border-white shadow-sm group-hover:from-primary group-hover:to-blue-600 group-hover:text-white transition-all duration-500">
-                            {doc.uploaderId?.fullName?.charAt(0) || "U"}
+                        <div className="flex justify-between items-start mb-8 relative z-10">
+                          <div
+                            className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-xl border text-[9px] font-black uppercase tracking-widest shadow-sm ${getTypeStyles(doc.materialType)}`}
+                          >
+                            {getTypeIcon(doc.materialType)}
+                            {doc.materialType}
                           </div>
-                          <div>
-                            <p className="text-[10px] font-black text-slate-800 uppercase tracking-tight">
-                              {doc.uploaderId?.fullName}
-                            </p>
-                            <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
-                              {doc.categoryId?.name}{" "}
-                              {doc.majorId?.name && `• ${doc.majorId.name}`}
-                            </p>
-                          </div>
+                          <button className="w-10 h-10 rounded-xl bg-slate-50 text-slate-300 flex items-center justify-center hover:bg-emerald-50 hover:text-emerald-500 transition-all active:scale-90 border border-slate-100">
+                            <svg
+                              width="18"
+                              height="18"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2.5"
+                                d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+                              ></path>
+                            </svg>
+                          </button>
                         </div>
-                        <span className="text-[9px] font-black text-slate-300 uppercase tracking-[0.2em]">
-                          {new Date(doc.createdAt).toLocaleDateString("vi-VN")}
-                        </span>
+
+                        <Link
+                          href={`/documents/${doc._id}`}
+                          className="flex-1 relative z-10"
+                        >
+                          <h3 className="text-xl font-black text-slate-800 leading-tight mb-4 group-hover:text-primary transition-colors line-clamp-2 uppercase italic tracking-tight">
+                            {doc.title}
+                          </h3>
+                          <div className="flex flex-wrap gap-4 text-slate-400 text-[10px] font-black uppercase tracking-widest mb-8">
+                            <div className="flex items-center gap-1.5 px-3 py-1 bg-slate-50 rounded-lg">
+                              <svg
+                                width="14"
+                                height="14"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2.5"
+                                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                ></path>
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2.5"
+                                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                                ></path>
+                              </svg>
+                              {doc.metrics?.viewCount?.toLocaleString() || 0}
+                            </div>
+                            <div className="flex items-center gap-1.5 px-3 py-1 bg-slate-50 rounded-lg">
+                              <svg
+                                width="14"
+                                height="14"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2.5"
+                                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                                ></path>
+                              </svg>
+                              {doc.metrics?.downloadCount?.toLocaleString() || 0}
+                            </div>
+                            <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-600 rounded-lg border border-amber-100">
+                              <svg
+                                width="12"
+                                height="12"
+                                fill="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                              </svg>
+                              {doc.metrics?.averageRating || 0}
+                            </div>
+                          </div>
+                        </Link>
+
+                        <div className="flex justify-between items-center pt-6 border-t border-slate-50 relative z-10">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-[11px] font-black text-slate-500 border-2 border-white shadow-sm group-hover:from-primary group-hover:to-blue-600 group-hover:text-white transition-all duration-500">
+                              {doc.uploaderId?.fullName?.charAt(0) || "U"}
+                            </div>
+                            <div>
+                              <p className="text-[10px] font-black text-slate-800 uppercase tracking-tight">
+                                {doc.uploaderId?.fullName}
+                              </p>
+                              <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
+                                {doc.categoryId?.name}{" "}
+                                {doc.majorId?.name && `• ${doc.majorId.name}`}
+                              </p>
+                            </div>
+                          </div>
+                          <span className="text-[9px] font-black text-slate-300 uppercase tracking-[0.2em]">
+                            {new Date(doc.createdAt).toLocaleDateString("vi-VN")}
+                          </span>
+                        </div>
                       </div>
+                    ))}
+
+                  {/* PAGINATION CONTROLS */}
+                  {pagination.totalPages > 1 && (
+                    <div className="col-span-full mt-12 flex items-center justify-center gap-2 animate-fade-in">
+                      <button
+                        onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                        disabled={currentPage === 1}
+                        className="w-12 h-12 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary/20 disabled:opacity-30 disabled:hover:text-slate-400 disabled:hover:border-slate-100 transition-all shadow-sm"
+                      >
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" />
+                        </svg>
+                      </button>
+
+                      {[...Array(pagination.totalPages)].map((_, i) => (
+                        <button
+                          key={i + 1}
+                          onClick={() => setCurrentPage(i + 1)}
+                          className={`w-12 h-12 rounded-2xl text-[10px] font-black transition-all shadow-sm ${
+                            currentPage === i + 1
+                              ? "bg-slate-900 text-white"
+                              : "bg-white border border-slate-100 text-slate-400 hover:text-primary hover:border-primary/20"
+                          }`}
+                        >
+                          {i + 1}
+                        </button>
+                      ))}
+
+                      <button
+                        onClick={() => setCurrentPage((prev) => Math.min(pagination.totalPages, prev + 1))}
+                        disabled={currentPage === pagination.totalPages}
+                        className="w-12 h-12 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary/20 disabled:opacity-30 disabled:hover:text-slate-400 disabled:hover:border-slate-100 transition-all shadow-sm"
+                      >
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
                     </div>
-                  ))
+                  )}
+                </>
               ) : (
                 <div className="col-span-full py-32 text-center bg-white rounded-[3rem] border-2 border-dashed border-slate-100">
                   <div className="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center text-slate-200 mx-auto mb-6">

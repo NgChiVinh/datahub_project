@@ -3,6 +3,7 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Providers } from "@/components/Providers";
+import { Toaster } from "react-hot-toast";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -31,6 +32,7 @@ export default function RootLayout({ children }) {
       className={`${inter.variable} ${geistSans.variable} ${geistMono.variable} h-full antialiased font-inter`}
     >
       <body className="min-h-full flex flex-col bg-white">
+        <Toaster position="top-center" reverseOrder={false} />
         <Providers>
           <Header />
           <main className="flex-grow">

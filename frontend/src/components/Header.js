@@ -100,6 +100,13 @@ export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
 
+  const handleLogoClick = (e) => {
+    if (pathname === "/") {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
   // Fetch Notifications
   useEffect(() => {
     const fetchNotifs = async () => {
@@ -238,7 +245,7 @@ export default function Header() {
             </svg>
           </button>
 
-          <Link href="/" className="flex items-center group min-w-[120px]">
+          <Link href="/" onClick={handleLogoClick} className="flex items-center group min-w-[120px]">
             <div className="relative h-10 w-32 lg:h-12 lg:w-40 transition-all duration-300 group-hover:scale-105">
               <Image
                 src="/images/logo_datahub.png"

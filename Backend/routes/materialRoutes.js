@@ -9,6 +9,7 @@ const {
   deleteMaterial,
   incrementDownload,
   toggleLike,
+  getMaterialStats,
 } = require("../controllers/materialController");
 
 const upload = require("../middleware/multer");
@@ -16,6 +17,7 @@ const { authMiddleware, isAdmin } = require("../middleware/authMiddleware");
 
 // PUBLIC
 router.get("/", getMaterials);
+router.get("/stats", authMiddleware, isAdmin, getMaterialStats); // Thêm route stats cho Admin
 router.get("/:id", getMaterialById);
 router.post("/:id/download", incrementDownload); // Route tăng lượt tải
 

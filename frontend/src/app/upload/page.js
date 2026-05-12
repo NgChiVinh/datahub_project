@@ -3,16 +3,19 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import axios from "axios";
+import toast from "react-hot-toast";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
 export default function UploadPage() {
   const router = useRouter();
-  const [uploadType, setUploadType] = useState("file"); // 'file' or 'link'
+  const [uploadType, setUploadType] = useState("file"); 
   const [dragActive, setDragActive] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [file, setFile] = useState(null);
   const [title, setTitle] = useState("");
   const [link, setLink] = useState("");
+  const [youtubePreview, setYoutubePreview] = useState(null);
   const [categoryId, setCategoryId] = useState("");
   const [majorId, setMajorId] = useState("");
   const [academicYear, setAcademicYear] = useState("Năm 1");
@@ -20,7 +23,6 @@ export default function UploadPage() {
   const [majors, setMajors] = useState([]);
   const [description, setDescription] = useState("");
   
-  // Tag States
   const [allTags, setAllTags] = useState([]);
   const [selectedTags, setSelectedTags] = useState([]);
   const [tagInput, setTagInput] = useState("");
@@ -29,33 +31,25 @@ export default function UploadPage() {
   const fileInputRef = useRef(null);
   const tagInputRef = useRef(null);
 
-  // Lấy danh mục, chuyên ngành và tags từ API
+  const hotTags = ["#Lab", "#ĐồÁn", "#ThiCu", "#Slide"];
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [catRes, majorRes, tagRes] = await Promise.all([
-          fetch("http://localhost:5000/api/categories"),
-          fetch("http://localhost:5000/api/majors"),
-          fetch("http://localhost:5000/api/tags")
+          axios.get("http://localhost:5000/api/categories"),
+          axios.get("http://localhost:5000/api/majors"),
+          axios.get("http://localhost:5000/api/tags")
         ]);
-        
-        const catData = await catRes.json();
-        const majorData = await majorRes.json();
-        const tagData = await tagRes.json();
-        
-        if (Array.isArray(catData)) {
-          setCategories(catData);
-          if (catData.length > 0 && !categoryId) setCategoryId(catData[0]._id);
+        if (Array.isArray(catRes.data)) {
+          setCategories(catRes.data);
+          if (catRes.data.length > 0) setCategoryId(catRes.data[0]._id);
         }
-
-        if (Array.isArray(majorData)) {
-          setMajors(majorData);
-          if (majorData.length > 0 && !majorId) setMajorId(majorData[0]._id);
+        if (Array.isArray(majorRes.data)) {
+          setMajors(majorRes.data);
+          if (majorRes.data.length > 0) setMajorId(majorRes.data[0]._id);
         }
-        
-        if (Array.isArray(tagData)) {
-          setAllTags(tagData);
-        }
+        if (Array.isArray(tagRes.data)) setAllTags(tagRes.data);
       } catch (error) {
         console.error("Lỗi lấy dữ liệu:", error);
       }
@@ -63,421 +57,263 @@ export default function UploadPage() {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    if (uploadType === "link" && link) {
+      const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+      const match = link.match(regExp);
+      if (match && match[2].length === 11) {
+        setYoutubePreview(`https://img.youtube.com/vi/${match[2]}/mqdefault.jpg`);
+      } else setYoutubePreview(null);
+    } else setYoutubePreview(null);
+  }, [link, uploadType]);
+
   const handleDrag = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+    e.preventDefault(); e.stopPropagation();
     if (e.type === "dragenter" || e.type === "dragover") setDragActive(true);
     else if (e.type === "dragleave") setDragActive(false);
   };
 
   const handleDrop = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+    e.preventDefault(); e.stopPropagation();
     setDragActive(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      setFile(e.dataTransfer.files[0]);
-    }
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
   };
 
-  const handleChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
-    }
-  };
-
-  const removeFile = () => {
-    setFile(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
-  // Tag Handlers
   const addTag = (tag) => {
-    if (!selectedTags.find(t => t._id === tag._id)) {
-      setSelectedTags([...selectedTags, tag]);
-    }
-    setTagInput("");
-    setShowTagSuggestions(false);
+    if (!selectedTags.find(t => t._id === tag._id)) setSelectedTags([...selectedTags, tag]);
+    setTagInput(""); setShowTagSuggestions(false);
   };
 
-  const removeTag = (tagId) => {
-    setSelectedTags(selectedTags.filter(t => t._id !== tagId));
-  };
-
-  const handleTagKeyDown = (e) => {
-    if (e.key === "Enter" && tagInput.trim() !== "") {
-      e.preventDefault();
-      const existingTag = allTags.find(t => t.name.toLowerCase() === tagInput.toLowerCase().trim());
-      if (existingTag) {
-        addTag(existingTag);
-      } else {
-        const newTagName = tagInput.trim();
-        if (!selectedTags.find(t => t.name.toLowerCase() === newTagName.toLowerCase())) {
-          setSelectedTags([...selectedTags, { _id: newTagName, name: newTagName }]);
-        }
-        setTagInput("");
-        setShowTagSuggestions(false);
-      }
+  const addHotTag = (tagName) => {
+    const cleanName = tagName.replace("#", "");
+    const existingTag = allTags.find(t => t.name.toLowerCase() === cleanName.toLowerCase());
+    if (existingTag) addTag(existingTag);
+    else if (!selectedTags.find(t => t.name.toLowerCase() === cleanName.toLowerCase())) {
+      setSelectedTags([...selectedTags, { _id: cleanName, name: cleanName }]);
     }
   };
-
-  const filteredTags = allTags.filter(tag => 
-    tag.name.toLowerCase().includes(tagInput.toLowerCase()) &&
-    !selectedTags.find(st => st._id === tag._id)
-  );
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Submit button clicked!");
 
+    // VALIDATION
+    if (!title.trim()) {
+      toast.error("Vui lòng nhập tiêu đề tài liệu!");
+      return;
+    }
+    if (!majorId) {
+      toast.error("Vui lòng chọn chuyên ngành!");
+      return;
+    }
     if (!categoryId) {
-      alert("Vui lòng chọn chuyên mục!");
+      toast.error("Vui lòng chọn chuyên mục!");
+      return;
+    }
+    if (uploadType === "file" && !file) {
+      toast.error("Vui lòng chọn tệp để tải lên!");
+      return;
+    }
+    if (uploadType === "link" && !link.trim()) {
+      toast.error("Vui lòng dán đường dẫn tài liệu!");
       return;
     }
 
     setIsLoading(true);
-
+    const loadingToast = toast.loading("Đang tải tài liệu lên...");
     try {
       const token = localStorage.getItem("token");
-      if (!token) {
-        alert("Vui lòng đăng nhập để upload tài liệu!");
-        router.push("/login");
-        return;
-      }
-
-      let res;
-      const headers = {
-        "Authorization": `Bearer ${token}`
-      };
-
       const tagIds = selectedTags.map(t => t._id);
-
+      let res;
       if (uploadType === "file") {
         const formData = new FormData();
-        formData.append("title", title);
-        formData.append("description", description);
-        formData.append("categoryId", categoryId);
-        formData.append("majorId", majorId);
-        formData.append("academicYear", academicYear);
-        formData.append("file", file);
+        formData.append("title", title); formData.append("description", description);
+        formData.append("categoryId", categoryId); formData.append("majorId", majorId);
+        formData.append("academicYear", academicYear); formData.append("file", file);
         formData.append("tags", JSON.stringify(tagIds));
-
-        console.log("Uploading file...");
-        res = await fetch("http://localhost:5000/api/materials", {
-          method: "POST",
-          headers: headers,
-          body: formData
+        res = await axios.post("http://localhost:5000/api/materials", formData, {
+          headers: { "Authorization": `Bearer ${token}`, "Content-Type": "multipart/form-data" }
         });
       } else {
-        const body = {
-          title,
-          description,
-          categoryId,
-          majorId,
-          academicYear,
-          link,
-          tags: tagIds
-        };
-
-        console.log("Uploading link:", body);
-        res = await fetch("http://localhost:5000/api/materials", {
-          method: "POST",
-          headers: {
-            ...headers,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(body)
-        });
+        res = await axios.post("http://localhost:5000/api/materials", {
+          title, description, categoryId, majorId, academicYear, link, tags: tagIds
+        }, { headers: { "Authorization": `Bearer ${token}` } });
       }
-
-      const data = await res.json();
-
-      if (res.ok) {
-        alert("Tài liệu đã được gửi để kiểm duyệt thành công!");
+      if (res.status === 201 || res.status === 200) {
+        toast.success("Tải lên thành công! Đang chờ kiểm duyệt.", { id: loadingToast });
         router.push("/documents");
-      } else {
-        console.error("Server Error:", data);
-        alert(`Lỗi: ${data.message || "Không thể tải lên tài liệu"}`);
       }
     } catch (error) {
-      console.error("Network Error:", error);
-      alert("Lỗi kết nối đến server. Vui lòng kiểm tra lại backend!");
-    } finally {
-      setIsLoading(false);
-    }
+      toast.error(error.response?.data?.message || "Lỗi khi tải lên", { id: loadingToast });
+    } finally { setIsLoading(false); }
   };
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-slate-50/50 font-sans text-slate-900 pb-20">
-        <div className="absolute top-0 left-0 w-full h-64 bg-primary/10 -z-10 blur-3xl opacity-50"></div>
-        
-        <div className="container mx-auto max-w-5xl px-4 pt-12 md:pt-20">
-          <div className="mb-12 animate-fade-in">
-            <Link href="/documents" className="inline-flex items-center gap-2 text-primary font-bold text-sm hover:underline mb-6">
-              <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7"></path></svg>
-              Quay lại Thư viện
-            </Link>
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-              <div>
-                <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-3">Chia sẻ Tri thức</h1>
-                <p className="text-slate-500 font-medium text-lg">Góp phần xây dựng cộng đồng IT Văn Lang.</p>
-              </div>
-              <div className="flex bg-white p-1 rounded-xl shadow-sm border border-slate-200">
-                <button 
-                  type="button"
-                  onClick={() => setUploadType("file")}
-                  className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${uploadType === 'file' ? 'bg-primary text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'}`}
-                >
-                  Tải tệp lên
+      <div className="min-h-screen bg-[#fcfcfd] font-sans text-slate-900 pb-12">
+        <div className="container mx-auto max-w-6xl px-4 pt-10">
+          
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 animate-in fade-in slide-in-from-top-4 duration-700">
+            <div>
+              <Link href="/documents" className="inline-flex items-center gap-2 text-emerald-600 font-black text-[10px] uppercase tracking-[0.2em] mb-3 hover:gap-3 transition-all">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 19l-7-7 7-7"></path></svg>
+                Thư viện
+              </Link>
+              <h1 className="text-3xl font-black text-slate-900 tracking-tighter uppercase italic">Đóng góp tài liệu</h1>
+            </div>
+            <div className="flex bg-slate-100 p-1 rounded-xl w-fit border border-slate-200/50">
+              {['file', 'link'].map(type => (
+                <button key={type} onClick={() => setUploadType(type)} className={`px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${uploadType === type ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
+                  {type === 'file' ? 'Tải tệp' : 'Gửi link'}
                 </button>
-                <button 
-                  type="button"
-                  onClick={() => setUploadType("link")}
-                  className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${uploadType === 'link' ? 'bg-primary text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'}`}
-                >
-                  Gửi đường dẫn
-                </button>
-              </div>
+              ))}
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-            <div className="lg:col-span-2 space-y-8 animate-fade-in-up">
-              <form onSubmit={handleSubmit} className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
-                <div className="p-8 md:p-10 space-y-8">
-                  <div className="space-y-6">
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className="flex items-center justify-center w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-bold">1</span>
-                      <h3 className="font-bold text-slate-800">Thông tin cơ bản</h3>
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            <div className="lg:col-span-8 bg-white rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden animate-in fade-in slide-in-from-bottom-6 duration-700">
+              <div className="p-8 space-y-8">
+                {/* Row 1: Title */}
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tiêu đề tài liệu <span className="text-red-500">*</span></label>
+                  <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="VD: Slide bài giảng Chương 1 - Java Core" className="w-full bg-slate-50 border-2 border-slate-50 rounded-xl px-5 py-3.5 focus:bg-white focus:border-emerald-500/20 outline-none transition-all font-bold text-sm shadow-inner" />
+                </div>
+
+                {/* Row 2: Selects Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {[
+                    { label: "Ngành học", val: majorId, set: setMajorId, options: majors },
+                    { label: "Chuyên mục", val: categoryId, set: setCategoryId, options: categories },
+                    { label: "Học kỳ/Năm", val: academicYear, set: setAcademicYear, options: [{_id: "Năm 1", name: "Năm 1"}, {_id: "Năm 2", name: "Năm 2"}, {_id: "Năm 3", name: "Năm 3"}, {_id: "Năm 4", name: "Năm 4"}] }
+                  ].map((field, i) => (
+                    <div key={i} className="space-y-3">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{field.label}</label>
+                      <select value={field.val} onChange={(e) => field.set(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-50 rounded-xl px-4 py-3 focus:bg-white focus:border-emerald-500/20 outline-none cursor-pointer font-bold text-xs shadow-inner appearance-none">
+                        <option value="">Chọn...</option>
+                        {field.options.map(opt => <option key={opt._id} value={opt._id}>{opt.name}</option>)}
+                      </select>
                     </div>
+                  ))}
+                </div>
+
+                {/* Row 3: Tags */}
+                <div className="space-y-4">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Từ khóa (Tags)</label>
+                  <div className="flex flex-wrap gap-2 p-3 bg-slate-50 rounded-xl border-2 border-slate-50 focus-within:bg-white focus-within:border-emerald-500/20 transition-all shadow-inner relative">
+                    {selectedTags.map(tag => (
+                      <span key={tag._id} className="bg-slate-900 text-white px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider flex items-center gap-2">
+                        {tag.name}
+                        <button type="button" onClick={() => setSelectedTags(selectedTags.filter(t => t._id !== tag._id))}><svg width="10" height="10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                      </span>
+                    ))}
+                    <input type="text" value={tagInput} onChange={(e) => {setTagInput(e.target.value); setShowTagSuggestions(true)}} onFocus={() => setShowTagSuggestions(true)} onKeyDown={(e) => {
+                      if (e.key === "Enter" && tagInput.trim()) {
+                        e.preventDefault();
+                        const existing = allTags.find(t => t.name.toLowerCase() === tagInput.toLowerCase().trim());
+                        if (existing) addTag(existing);
+                        else setSelectedTags([...selectedTags, { _id: tagInput.trim(), name: tagInput.trim() }]);
+                        setTagInput("");
+                      }
+                    }} placeholder="Thêm tag..." className="flex-1 bg-transparent border-none outline-none font-bold text-xs min-w-[100px]" />
                     
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold text-slate-600 ml-1">Tiêu đề tài liệu <span className="text-red-500">*</span></label>
-                      <input 
-                        key="title-input"
-                        type="text" 
-                        required
-                        value={title || ""}
-                        onChange={(e) => setTitle(e.target.value)}
-                        placeholder="VD: Tổng hợp Lab 1 - Cấu trúc dữ liệu và giải thuật"
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-5 py-4 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-medium"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-600 ml-1">Chuyên ngành <span className="text-red-500">*</span></label>
-                        <select 
-                          key="major-select"
-                          value={majorId || ""}
-                          onChange={(e) => setMajorId(e.target.value)}
-                          required
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-5 py-4 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none appearance-none cursor-pointer font-medium text-slate-700"
-                        >
-                          <option value="">-- Chọn chuyên ngành --</option>
-                          {majors.map((m) => (
-                            <option key={m._id} value={m._id}>{m.name}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-600 ml-1">Chuyên mục <span className="text-red-500">*</span></label>
-                        <select 
-                          key="category-select"
-                          value={categoryId || ""}
-                          onChange={(e) => setCategoryId(e.target.value)}
-                          required
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-5 py-4 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none appearance-none cursor-pointer font-medium text-slate-700"
-                        >
-                          <option value="">-- Chọn chuyên mục --</option>
-                          {categories.map((cat) => (
-                            <option key={cat._id} value={cat._id}>{cat.name}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2 relative">
-                      <label className="text-sm font-bold text-slate-600 ml-1">Từ khóa (Tags)</label>
-                      <div className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all flex flex-wrap gap-2">
-                        {selectedTags.map(tag => (
-                          <span key={tag._id} className="bg-primary text-white px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-2 animate-in zoom-in-95">
-                            {tag.name}
-                            <button type="button" onClick={() => removeTag(tag._id)} className="hover:text-red-200 transition-colors">
-                              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
-                            </button>
-                          </span>
+                    {showTagSuggestions && tagInput.trim() !== "" && (
+                      <div className="absolute top-full left-0 right-0 z-50 mt-2 bg-white rounded-xl shadow-2xl border border-slate-100 max-h-32 overflow-y-auto p-1">
+                        {allTags.filter(t => t.name.toLowerCase().includes(tagInput.toLowerCase())).map(tag => (
+                          <button key={tag._id} type="button" onClick={() => addTag(tag)} className="w-full text-left px-4 py-2 hover:bg-slate-50 rounded-lg text-[10px] font-black uppercase text-slate-600">{tag.name}</button>
                         ))}
-                        <input 
-                          key="tag-input"
-                          ref={tagInputRef}
-                          type="text" 
-                          value={tagInput || ""}
-                          onChange={(e) => {
-                            setTagInput(e.target.value);
-                            setShowTagSuggestions(true);
-                          }}
-                          onFocus={() => setShowTagSuggestions(true)}
-                          onKeyDown={handleTagKeyDown}
-                          placeholder={selectedTags.length === 0 ? "Chọn hoặc gõ để tìm tag..." : ""}
-                          className="flex-1 bg-transparent border-none outline-none font-medium text-sm min-w-[120px]"
-                        />
                       </div>
-                      
-                      {showTagSuggestions && tagInput.trim() !== "" && (
-                        <div className="absolute z-50 mt-2 w-full bg-white rounded-2xl shadow-xl border border-slate-100 max-h-48 overflow-y-auto p-2 animate-in fade-in slide-in-from-top-2">
-                          {filteredTags.length > 0 ? (
-                            filteredTags.map(tag => (
-                              <button
-                                key={tag._id}
-                                type="button"
-                                onClick={() => addTag(tag)}
-                                className="w-full text-left px-4 py-3 hover:bg-slate-50 rounded-xl text-sm font-bold text-slate-700 transition-colors flex items-center justify-between"
-                              >
-                                {tag.name}
-                                <svg className="text-slate-300" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4"></path></svg>
-                              </button>
-                            ))
-                          ) : (
-                            <div className="p-4 text-center text-slate-400 text-xs font-bold uppercase tracking-widest">Không tìm thấy tag phù hợp</div>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                    )}
                   </div>
+                  <div className="flex gap-2 mt-2 flex-wrap">
+                    {hotTags.map(t => (
+                      <button key={t} type="button" onClick={() => addHotTag(t)} className="text-[9px] font-black text-emerald-600 bg-emerald-50 px-3 py-1 rounded-lg hover:bg-emerald-100 transition-all uppercase tracking-tighter">{t}</button>
+                    ))}
+                  </div>
+                </div>
 
-                  <div className="space-y-6 pt-4">
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className="flex items-center justify-center w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-bold">2</span>
-                      <h3 className="font-bold text-slate-800">Tải lên nội dung</h3>
-                    </div>
-
+                {/* Row 4: Upload & Description Side by Side */}
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-8 pt-6 border-t border-slate-100">
+                  <div className="md:col-span-3 space-y-4">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nội dung tải lên <span className="text-red-500">*</span></label>
                     {uploadType === 'file' ? (
-                      <div 
-                        key="dropzone-file-container"
-                        className={`relative group rounded-3xl border-2 border-dashed transition-all duration-300 py-12 px-6 flex flex-col items-center text-center gap-4 cursor-pointer
-                          ${dragActive ? 'border-primary bg-primary/5' : 'border-slate-200 bg-slate-50/50 hover:border-primary/40 hover:bg-slate-50'}`}
-                        onDragEnter={handleDrag}
-                        onDragLeave={handleDrag}
-                        onDragOver={handleDrag}
-                        onDrop={handleDrop}
-                        onClick={() => !file && fileInputRef.current.click()}
-                      >
+                      <div className={`relative rounded-2xl border-2 border-dashed h-40 flex flex-col items-center justify-center text-center p-4 transition-all cursor-pointer ${dragActive ? 'border-emerald-500 bg-emerald-50/30' : 'border-slate-100 bg-slate-50/50 hover:bg-slate-50'}`} onDragEnter={handleDrag} onDragLeave={handleDrag} onDragOver={handleDrag} onDrop={handleDrop} onClick={() => !file && fileInputRef.current.click()}>
                         {!file ? (
-                          <>
-                            <div className="w-16 h-16 rounded-2xl bg-white shadow-sm flex items-center justify-center text-primary border border-slate-100 group-hover:scale-110 transition-transform">
-                              <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                            </div>
-                            <div>
-                              <p className="font-bold text-slate-700 text-lg">Kéo thả hoặc click để chọn tệp</p>
-                              <p className="text-slate-400 text-sm mt-1 font-medium">Hỗ trợ PDF, DOCX, DOC, ZIP, JPG, PNG (Tối đa 50MB)</p>
-                            </div>
-                          </>
+                          <div className="space-y-2">
+                            <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-emerald-500 mx-auto border border-slate-50"><svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg></div>
+                            <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Kéo thả tệp vào đây</p>
+                          </div>
                         ) : (
-                          <div className="w-full flex items-center gap-4 p-4 bg-white rounded-2xl border border-primary/20 shadow-sm animate-fade-in">
-                            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                              <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                            </div>
-                            <div className="flex-1 text-left overflow-hidden">
-                              <p className="font-bold text-slate-800 truncate">{file.name}</p>
-                              <p className="text-xs text-slate-500 font-medium">{(file.size / 1024 / 1024).toFixed(2)} MB • Sẵn sàng tải lên</p>
-                            </div>
-                            <button 
-                              type="button" 
-                              onClick={(e) => { e.stopPropagation(); removeFile(); }}
-                              className="p-2 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-lg transition-colors"
-                            >
-                              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
-                            </button>
+                          <div className="flex items-center gap-3 p-3 bg-white rounded-xl border border-emerald-500/20 shadow-sm w-full">
+                            <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg></div>
+                            <p className="flex-1 text-[10px] font-black truncate uppercase text-slate-700">{file.name}</p>
+                            <button type="button" onClick={(e) => {e.stopPropagation(); setFile(null)}} className="p-2 text-slate-300 hover:text-red-500"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12"></path></svg></button>
                           </div>
                         )}
-                        <input key="hidden-file-input" ref={fileInputRef} type="file" onChange={handleChange} className="hidden" />
+                        <input ref={fileInputRef} type="file" onChange={(e) => setFile(e.target.files[0])} className="hidden" />
                       </div>
                     ) : (
-                      <div key="url-input-container" className="space-y-2">
-                        <label className="text-sm font-bold text-slate-600 ml-1">Đường dẫn tài liệu (YouTube, Drive...) <span className="text-red-500">*</span></label>
-                        <input 
-                          key="url-link-input"
-                          type="url" 
-                          required
-                          value={link || ""}
-                          onChange={(e) => setLink(e.target.value)}
-                          placeholder="https://youtube.com/watch?v=..."
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-5 py-4 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-medium"
-                        />
+                      <div className="space-y-4">
+                        <input type="url" value={link} onChange={(e) => setLink(e.target.value)} placeholder="Dán link (YouTube, Drive...)" className="w-full bg-slate-50 border-2 border-slate-50 rounded-xl px-4 py-3 focus:bg-white focus:border-emerald-500/20 outline-none font-bold text-xs shadow-inner" />
+                        {youtubePreview && (
+                          <div className="relative aspect-video rounded-xl overflow-hidden shadow-lg border-2 border-white animate-in zoom-in-95">
+                            <img src={youtubePreview} alt="Preview" className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-black/10 flex items-center justify-center"><div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center text-red-600"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="m7 4 12 8-12 8V4Z"/></svg></div></div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
-
-                  <div className="space-y-4 pt-4">
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className="flex items-center justify-center w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-bold">3</span>
-                      <h3 className="font-bold text-slate-800">Mô tả thêm</h3>
-                    </div>
-                    <textarea 
-                      key="description-textarea"
-                      rows="4"
-                      value={description || ""}
-                      onChange={(e) => setDescription(e.target.value)}
-                      placeholder="Viết một vài dòng giới thiệu về nội dung tài liệu này..."
-                      className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none font-medium"
-                    ></textarea>
+                  <div className="md:col-span-2 space-y-4">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Mô tả ngắn</label>
+                    <textarea rows={uploadType === 'link' && youtubePreview ? 8 : 6} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Giới thiệu nhanh tài liệu..." className="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl px-5 py-4 focus:bg-white focus:border-emerald-500/20 outline-none transition-all resize-none font-bold text-xs shadow-inner"></textarea>
                   </div>
                 </div>
+              </div>
 
-                <div className="px-8 py-6 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-4">
-                  <p className="text-xs text-slate-400 font-medium max-w-xs italic">
-                    Tài liệu sẽ được quản trị viên kiểm duyệt trước khi hiển thị.
-                  </p>
-                  <button 
-                    type="submit"
-                    disabled={isLoading || (uploadType === 'file' && !file) || (uploadType === 'link' && !link)}
-                    className="bg-primary hover:brightness-110 disabled:opacity-50 text-white font-bold py-4 px-10 rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98] flex items-center gap-3 shrink-0"
-                  >
-                    {isLoading ? (
-                      <>
-                        <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Đang xử lý...
-                      </>
-                    ) : (
-                      <>
-                        <span>Gửi tài liệu</span>
-                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"></path></svg>
-                      </>
-                    )}
-                  </button>
+              {/* Form Footer */}
+              <div className="px-8 py-5 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/20 shrink-0">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                  </div>
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Dữ liệu được bảo vệ an toàn trên hệ thống</span>
                 </div>
-              </form>
-            </div>
-
-            <div className="lg:col-span-1 space-y-6 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-              <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm">
-                <h4 className="font-black text-slate-800 text-lg mb-6 flex items-center gap-2 uppercase tracking-tight">
-                  <svg className="text-highlight" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                  Quy định chia sẻ
-                </h4>
-                <ul className="space-y-5">
-                  {[
-                    { title: "Nội dung chính xác", desc: "Đảm bảo tài liệu có tiêu đề rõ ràng, đúng chuyên mục." },
-                    { title: "Bản quyền tri thức", desc: "Không chia sẻ các tài liệu vi phạm bản quyền hoặc thông tin mật." },
-                    { title: "Chất lượng tệp", desc: "Khuyến khích định dạng PDF để có hiển thị tốt nhất trên web." },
-                    { title: "Dung lượng tối đa", desc: "Tệp tải lên không nên vượt quá 50MB." }
-                  ].map((item, idx) => (
-                    <li key={idx} className="flex gap-4">
-                      <div className="shrink-0 w-1.5 h-1.5 rounded-full bg-primary mt-2"></div>
-                      <div>
-                        <p className="font-bold text-sm text-slate-700">{item.title}</p>
-                        <p className="text-xs text-slate-500 mt-1 leading-relaxed font-medium">{item.desc}</p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+                <button 
+                  type="submit" 
+                  disabled={isLoading}
+                  className="bg-slate-900 hover:bg-emerald-600 disabled:opacity-50 text-white font-black py-4 px-10 rounded-xl shadow-xl transition-all active:scale-[0.95] flex items-center justify-center gap-4 uppercase tracking-[0.2em] text-[10px]"
+                >
+                  {isLoading ? <div className="animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full" /> : "Gửi tài liệu ngay"}
+                  {!isLoading && <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
+                </button>
               </div>
             </div>
-          </div>
+
+            {/* Sidebar */}
+            <div className="lg:col-span-4 space-y-6">
+              <div className="bg-white rounded-[2rem] p-8 border border-slate-100 shadow-lg shadow-slate-200/30">
+                <h4 className="font-black text-slate-900 text-sm mb-6 uppercase tracking-tighter italic flex items-center gap-2">
+                  <div className="w-1.5 h-6 bg-emerald-500 rounded-full" />
+                  Quy định nhanh
+                </h4>
+                <div className="space-y-6">
+                  {[
+                    { t: "Đúng ngành", d: "Chọn đúng ngành và chuyên mục để SV khác dễ tìm." },
+                    { t: "Bản quyền", d: "Không đăng tài liệu mật hoặc vi phạm bản quyền." },
+                    { t: "Định dạng", d: "Khuyên dùng PDF hoặc Link Video chuẩn." }
+                  ].map((item, idx) => (
+                    <div key={idx} className="flex gap-4">
+                      <div className="shrink-0 w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1" />
+                      <div>
+                        <p className="font-black text-[10px] text-slate-800 uppercase mb-1">{item.t}</p>
+                        <p className="text-[10px] text-slate-400 font-bold leading-relaxed uppercase tracking-tight">{item.d}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </form>
+
         </div>
       </div>
     </ProtectedRoute>

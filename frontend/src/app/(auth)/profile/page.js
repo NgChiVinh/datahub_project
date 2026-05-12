@@ -20,7 +20,9 @@ export default function ProfilePage() {
         setIsLoadingDocs(true);
         const res = await fetch(`http://localhost:5000/api/materials?uploaderId=${user._id}`);
         const data = await res.json();
-        if (Array.isArray(data)) {
+        if (data && Array.isArray(data.materials)) {
+          setUserDocs(data.materials);
+        } else if (Array.isArray(data)) {
           setUserDocs(data);
         }
       } catch (error) {

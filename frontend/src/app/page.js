@@ -26,9 +26,15 @@ export default function Home() {
         const matData = await matRes.json();
         const catData = await catRes.json();
 
-        if (Array.isArray(matData)) {
+        // Xử lý linh hoạt cả 2 định dạng (Array cũ hoặc Object mới)
+        if (matData && Array.isArray(matData.materials)) {
+          // Định dạng mới
+          setMaterials(matData.materials.slice(0, 6));
+        } else if (Array.isArray(matData)) {
+          // Định dạng cũ
           setMaterials(matData.slice(0, 6));
         }
+
         if (Array.isArray(catData)) {
           setCategories(catData);
         }

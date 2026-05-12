@@ -106,51 +106,65 @@ const createMaterial = async (req, res) => {
   }
 };
 
-// GET ALL (Có hỗ trợ lọc, tìm kiếm và sắp xếp)
+// GET ALL (Có hỗ trợ lọc, tìm kiếm và sắp xếp + Phân trang)
 const getMaterials = async (req, res) => {
   try {
-    const { category, major, academicYear, search, status, uploaderId, sortBy, materialType } = req.query;
+    const { 
+      category, 
+      major, 
+      academicYear, 
+      search, 
+      status, 
+      uploaderId, 
+      sortBy, 
+      materialType,
+      page = 1,
+      limit = 10
+    } = req.query;
     
+    // Chuyển đổi sang số nguyên và đảm bảo giá trị hợp lệ
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.max(1, parseInt(limit) || 10);
+    const skip = (pageNum - 1) * limitNum;
+
     // Xây dựng bộ lọc dữ liệu
     let query = {};
     
-    // Lọc theo loại tài liệu (video, pdf, docx, etc.)
+    // 1. Lọc theo loại tài liệu
     if (materialType) {
       if (materialType === "not_video") {
-        query.materialType = { $ne: "video" }; // Lấy tất cả trừ video
+        query.materialType = { $ne: "video" };
       } else {
         query.materialType = materialType;
       }
     }
     
-    // Ưu tiên lọc theo uploaderId nếu có (cho trang cá nhân)
+    // 2. Lọc theo người đăng (Trang cá nhân)
     if (uploaderId) {
       query.uploaderId = uploaderId;
+      // Khi xem trang cá nhân, user thấy hết các trạng thái bài mình đăng (đã duyệt, chờ, từ chối)
       if (status && status !== "all") {
         query.status = status;
       }
     } else {
-      // Cho trang cộng đồng hoặc admin
-      if (status && status !== "all") {
+      // 3. Lọc theo trạng thái cho Public hoặc Admin
+      if (status === "all") {
+        // Admin muốn xem tất cả (không thêm query.status)
+      } else if (status) {
+        // Nếu truyền status cụ thể (approved/pending...)
         query.status = status;
-      } else if (!status) {
-        query.status = "approved"; // Mặc định chỉ lấy bài đã duyệt cho public
+      } else {
+        // MẶC ĐỊNH CHO USER: Chỉ thấy những bài ĐÃ DUYỆT
+        query.status = "approved";
       }
-      // status === "all" -> không lọc theo status (lấy hết cho Admin)
     }
 
-    if (category && category !== "all") {
-      query.categoryId = category;
-    }
+    // 4. Lọc theo danh mục, chuyên ngành, năm học
+    if (category && category !== "all") query.categoryId = category;
+    if (major && major !== "all") query.majorId = major;
+    if (academicYear && academicYear !== "all") query.academicYear = academicYear;
 
-    if (major && major !== "all") {
-      query.majorId = major;
-    }
-
-    if (academicYear && academicYear !== "all") {
-      query.academicYear = academicYear;
-    }
-
+    // 5. Tìm kiếm theo tiêu đề
     if (search) {
       query.title = { $regex: search, $options: "i" };
     }
@@ -161,14 +175,26 @@ const getMaterials = async (req, res) => {
     else if (sortBy === "most_downloaded") sortOptions = { "metrics.downloadCount": -1 };
     else if (sortBy === "top_rated") sortOptions = { "metrics.averageRating": -1 };
 
+    // Thực hiện truy vấn
+    const totalMaterials = await Material.countDocuments(query);
     const materials = await Material.find(query)
       .populate("uploaderId", "fullName email avatar")
       .populate("categoryId", "name")
       .populate("majorId", "name")
       .populate("tags", "name")
-      .sort(sortOptions);
+      .sort(sortOptions)
+      .skip(skip)
+      .limit(limitNum);
 
-    res.status(200).json(materials);
+    res.status(200).json({
+      materials,
+      pagination: {
+        totalMaterials,
+        totalPages: Math.ceil(totalMaterials / limitNum),
+        currentPage: pageNum,
+        limit: limitNum
+      }
+    });
   } catch (error) {
     console.error("Get Materials Error:", error);
     res.status(500).json({ message: "Lỗi server khi lấy danh sách tài liệu", error: error.message });
@@ -253,9 +279,19 @@ const updateMaterial = async (req, res) => {
       }
     }
 
-    // nếu upload file mới
+    // Nếu upload file mới
     if (req.file) {
       material.fileUrl = req.file.path;
+      material.sourceType = "upload";
+      
+      // Tự động cập nhật materialType dựa trên extension file mới
+      const ext = req.file.originalname.split(".").pop().toLowerCase();
+      if (["pdf"].includes(ext)) material.materialType = "pdf";
+      else if (["doc", "docx", "odt", "txt"].includes(ext)) material.materialType = "docx";
+      else if (["zip", "rar", "7z", "tar", "gz"].includes(ext)) material.materialType = "zip";
+      else if (["mp4", "mov", "avi", "mkv", "webm", "flv", "wmv"].includes(ext)) material.materialType = "video";
+      else if (["ppt", "pptx"].includes(ext)) material.materialType = "pptx";
+      else material.materialType = "other";
     }
 
     await material.save();
@@ -328,6 +364,59 @@ const toggleLike = async (req, res) => {
   }
 };
 
+// GET STATS (Dành cho Dashboard Admin)
+const getMaterialStats = async (req, res) => {
+  try {
+    // 1. Thống kê cơ bản
+    const totalMaterials = await Material.countDocuments();
+    const pendingMaterials = await Material.countDocuments({ status: "pending" });
+    
+    // 2. Tính tổng lượt tải
+    const downloadStats = await Material.aggregate([
+      { $group: { _id: null, total: { $sum: "$metrics.downloadCount" } } }
+    ]);
+    const totalDownloads = downloadStats.length > 0 ? downloadStats[0].total : 0;
+
+    // 3. Phân bổ theo chuyên ngành (Major)
+    const majorStats = await Material.aggregate([
+      {
+        $group: {
+          _id: "$majorId",
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $lookup: {
+          from: "majors", // Tên collection của Major
+          localField: "_id",
+          foreignField: "_id",
+          as: "majorInfo"
+        }
+      },
+      { $unwind: { path: "$majorInfo", preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          name: { $ifNull: ["$majorInfo.name", "Chưa phân ngành"] },
+          count: 1
+        }
+      },
+      { $sort: { count: -1 } }
+    ]);
+
+    res.status(200).json({
+      summary: {
+        totalMaterials,
+        pendingMaterials,
+        totalDownloads
+      },
+      majorDistribution: majorStats
+    });
+  } catch (error) {
+    console.error("Get Stats Error:", error);
+    res.status(500).json({ message: "Lỗi server khi lấy thống kê", error: error.message });
+  }
+};
+
 module.exports = {
   createMaterial,
   getMaterials,
@@ -335,5 +424,6 @@ module.exports = {
   updateMaterial,
   deleteMaterial,
   incrementDownload,
-  toggleLike, // Xuất hàm mới
+  toggleLike,
+  getMaterialStats, // Thêm hàm mới
 };
