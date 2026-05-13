@@ -191,7 +191,6 @@ export default function Header() {
   const navLinks = [
     { name: "Tài liệu", href: "/documents" },
     { name: "Video bài học", href: "/videos" },
-    { name: "Bài tập", href: "/assignments" },
   ];
 
   if (isAuthPage) {
@@ -218,7 +217,7 @@ export default function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white border-b border-slate-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)]">
+    <header className="sticky top-0 z-50 w-full bg-white border-b border-slate-100 shadow-sm">
       <div className="container mx-auto flex h-20 items-center justify-between px-4 lg:px-8">
         {/* Left Section: Mobile Toggle & Logo */}
         <div
@@ -235,7 +234,7 @@ export default function Header() {
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
-              strokeWidth="2.5"
+              strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
             >
@@ -270,7 +269,7 @@ export default function Header() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={handleSearchSubmit}
-                  className="w-full bg-slate-50 border-2 border-emerald-100 rounded-2xl px-5 py-2.5 text-sm focus:outline-none focus:border-emerald-500 transition-all shadow-inner"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-2.5 text-sm focus:outline-none focus:border-emerald-500 transition-all"
                 />
                 <button
                   onClick={() => {
@@ -287,7 +286,7 @@ export default function Header() {
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
-                    strokeWidth="3"
+                    strokeWidth="2.5"
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   >
@@ -303,7 +302,7 @@ export default function Header() {
                   {isSearching ? (
                     <div className="p-4 text-center">
                       <div className="animate-spin inline-block w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full mr-2"></div>
-                      <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Đang tìm...</span>
+                      <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Đang tìm...</span>
                     </div>
                   ) : (
                     <div className="flex flex-col">
@@ -317,14 +316,14 @@ export default function Header() {
                             item.materialType === "video" ? "bg-orange-100 text-orange-600" : "bg-emerald-100 text-emerald-600"
                           }`}>
                             {item.materialType === "video" ? (
-                              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                             ) : (
-                              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
                             )}
                           </div>
                           <div className="flex-1 overflow-hidden">
-                            <p className="text-xs font-bold text-slate-700 truncate uppercase">{item.title}</p>
-                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">
+                            <p className="text-sm font-semibold text-slate-700 truncate">{item.title}</p>
+                            <p className="text-[11px] font-medium text-slate-400 uppercase tracking-tight">
                               {item.materialType} • {item.uploaderId?.fullName}
                             </p>
                           </div>
@@ -337,7 +336,7 @@ export default function Header() {
                         }}
                         className="p-3 text-center bg-slate-50 hover:bg-slate-100 transition-colors"
                       >
-                        <span className="text-[10px] font-black text-primary uppercase tracking-widest">Xem tất cả kết quả cho "{searchQuery}"</span>
+                        <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-widest">Xem tất cả kết quả</span>
                       </button>
                     </div>
                   )}
@@ -345,12 +344,12 @@ export default function Header() {
               )}
             </div>
           ) : (
-            <nav className="hidden lg:flex items-center justify-center gap-6">
+            <nav className="hidden lg:flex items-center justify-center gap-8">
               {navLinks.map((link) => (
                 <Link
                   key={link.name}
                   href={link.href}
-                  className={`text-[11px] font-black uppercase tracking-[0.15em] transition-all duration-300 hover:text-emerald-600 relative group/link ${
+                  className={`text-[13px] font-bold tracking-wide transition-all duration-300 hover:text-emerald-600 relative group/link ${
                     pathname === link.href
                       ? "text-emerald-600"
                       : "text-slate-600"
@@ -365,7 +364,7 @@ export default function Header() {
 
               <Link
                 href="/ai-suggest"
-                className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 text-[11px] font-black uppercase tracking-widest text-emerald-700 shadow-sm transition-all duration-300 hover:shadow-md hover:scale-105 active:scale-95 group/ai"
+                className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-emerald-50 border border-emerald-100 text-[12px] font-bold text-emerald-700 transition-all duration-300 hover:bg-emerald-100 active:scale-95 group/ai"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -374,16 +373,12 @@ export default function Header() {
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
-                  strokeWidth="2.5"
+                  strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className="text-emerald-500 animate-pulse"
+                  className="text-emerald-500"
                 >
                   <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
-                  <path d="M5 3v4" />
-                  <path d="M19 17v4" />
-                  <path d="M3 5h4" />
-                  <path d="M17 19h4" />
                 </svg>
                 AI Gợi ý
               </Link>
@@ -405,7 +400,7 @@ export default function Header() {
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="2.5"
+                strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               >
@@ -432,7 +427,7 @@ export default function Header() {
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
-                  strokeWidth="2.5"
+                  strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 >
@@ -440,21 +435,17 @@ export default function Header() {
                   <path d="M13.73 21a2 2 0 0 1-3.46 0" />
                 </svg>
                 {unreadCount > 0 && (
-                  <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-red-500 text-white text-[8px] font-black flex items-center justify-center rounded-full border-2 border-white">
+                  <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-red-500 text-white text-[9px] font-bold flex items-center justify-center rounded-full border-2 border-white">
                     {unreadCount}
                   </span>
                 )}
               </button>
 
               {isNotifOpen && (
-                <div className="absolute right-0 mt-4 w-80 origin-top-right rounded-[1.5rem] bg-white p-2 shadow-[0_15px_40px_rgba(0,0,0,0.12)] border border-slate-100 z-[100] animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
+                <div className="absolute right-0 mt-4 w-80 origin-top-right rounded-2xl bg-white p-2 shadow-xl border border-slate-100 z-[100] animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
                   <div className="p-4 border-b border-slate-50 flex items-center justify-between">
-                    <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-800">
-                      Thông báo
-                    </h3>
-                    <span className="text-[8px] font-black bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full uppercase">
-                      Mới nhất
-                    </span>
+                    <h3 className="text-xs font-bold text-slate-800">Thông báo</h3>
+                    <span className="text-[10px] font-semibold bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full uppercase">Mới nhất</span>
                   </div>
                   <div className="max-h-80 overflow-y-auto custom-scrollbar">
                     {notifications.length > 0 ? (
@@ -464,46 +455,17 @@ export default function Header() {
                           href={n.link || "#"}
                           className={`flex gap-3 p-4 hover:bg-slate-50 transition-all rounded-xl border-b border-slate-50 last:border-0 ${!n.isRead ? "bg-emerald-50/30" : ""}`}
                         >
-                          <div
-                            className={`w-8 h-8 rounded-lg shrink-0 flex items-center justify-center ${
-                              n.type === "material_approved"
-                                ? "bg-emerald-100 text-emerald-600"
-                                : n.type === "material_rejected"
-                                  ? "bg-red-100 text-red-600"
-                                  : "bg-slate-100 text-slate-600"
-                            }`}
-                          >
-                            <svg
-                              width="16"
-                              height="16"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2.5"
-                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                              ></path>
-                            </svg>
+                          <div className={`w-8 h-8 rounded-lg shrink-0 flex items-center justify-center ${n.type === "material_approved" ? "bg-emerald-100 text-emerald-600" : "bg-slate-100 text-slate-600"}`}>
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                           </div>
                           <div className="space-y-1">
-                            <p
-                              className={`text-[11px] leading-tight ${!n.isRead ? "font-black text-slate-900" : "font-bold text-slate-600"}`}
-                            >
-                              {n.message}
-                            </p>
-                            <p className="text-[9px] text-slate-400 font-bold">
-                              {new Date(n.createdAt).toLocaleString("vi-VN")}
-                            </p>
+                            <p className={`text-[13px] leading-snug ${!n.isRead ? "font-bold text-slate-900" : "font-medium text-slate-600"}`}>{n.message}</p>
+                            <p className="text-[11px] text-slate-400 font-medium">{new Date(n.createdAt).toLocaleDateString("vi-VN")}</p>
                           </div>
                         </Link>
                       ))
                     ) : (
-                      <div className="py-10 text-center text-slate-400 text-[10px] font-black uppercase">
-                        Không có thông báo nào
-                      </div>
+                      <div className="py-10 text-center text-slate-400 text-xs font-medium">Không có thông báo nào</div>
                     )}
                   </div>
                 </div>
@@ -513,23 +475,9 @@ export default function Header() {
 
           <Link
             href="/upload"
-            className="hidden sm:flex items-center gap-2 rounded-2xl bg-emerald-500 px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-white shadow-lg shadow-emerald-500/20 transition-all duration-300 hover:bg-emerald-600 hover:scale-105 active:scale-95"
+            className="hidden sm:flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-bold text-white shadow-md transition-all hover:bg-emerald-700 active:scale-95"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="17 8 12 3 7 8" />
-              <line x1="12" x2="12" y1="3" y2="15" />
-            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
             <span className="hidden xl:inline">Tải lên</span>
           </Link>
 
@@ -538,27 +486,8 @@ export default function Header() {
               onClick={() => setIsOpen(!isOpen)}
               className="group flex items-center gap-2 rounded-2xl p-1 lg:pr-3 bg-slate-50 hover:bg-slate-100 transition-all duration-300 border border-slate-100"
             >
-              <div className="h-9 w-9 overflow-hidden rounded-xl bg-gradient-to-br from-emerald-400 to-blue-500 flex items-center justify-center shadow-md transition-transform group-hover:rotate-6">
-                {user ? (
-                  <span className="text-[11px] font-black text-white">
-                    {getInitials(user.fullName || user.email)}
-                  </span>
-                ) : (
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="white"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                    <circle cx="12" cy="7" r="4" />
-                  </svg>
-                )}
+              <div className="h-9 w-9 overflow-hidden rounded-xl bg-emerald-600 flex items-center justify-center text-white font-bold text-xs">
+                {user ? getInitials(user.fullName || user.email) : "?"}
               </div>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -567,67 +496,33 @@ export default function Header() {
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="3"
+                strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className={`hidden md:block text-slate-400 transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
+                className={`hidden md:block text-slate-400 transition-transform ${isOpen ? "rotate-180" : ""}`}
               >
                 <path d="m6 9 6 6 6-6" />
               </svg>
             </button>
 
             {isOpen && (
-              <div className="absolute right-0 mt-4 w-60 origin-top-right rounded-[1.5rem] bg-white p-2 shadow-[0_15px_40px_rgba(0,0,0,0.12)] border border-slate-100 z-[100] animate-in fade-in zoom-in-95 duration-200">
+              <div className="absolute right-0 mt-4 w-60 origin-top-right rounded-2xl bg-white p-2 shadow-xl border border-slate-100 z-[100] animate-in fade-in zoom-in-95 duration-200">
                 {!user ? (
-                  <div className="flex flex-col gap-1 p-1">
-                    <Link
-                      href="/login"
-                      className="flex items-center gap-4 px-4 py-3.5 text-xs font-black text-slate-700 hover:bg-emerald-50 hover:text-emerald-600 rounded-xl transition-all"
-                    >
-                      ĐĂNG NHẬP
-                    </Link>
-                    <Link
-                      href="/register"
-                      className="flex items-center gap-4 px-4 py-3.5 text-xs font-black text-white bg-slate-900 hover:bg-emerald-500 rounded-xl transition-all shadow-lg shadow-slate-900/10"
-                    >
-                      ĐĂNG KÝ
-                    </Link>
+                  <div className="flex flex-col gap-1">
+                    <Link href="/login" className="px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 rounded-xl">ĐĂNG NHẬP</Link>
+                    <Link href="/register" className="px-4 py-3 text-sm font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl text-center">ĐĂNG KÝ</Link>
                   </div>
                 ) : (
-                  <div className="flex flex-col gap-1 p-1">
+                  <div className="flex flex-col gap-1">
                     <div className="px-4 py-3 bg-slate-50 rounded-xl mb-1">
-                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">
-                        {user.role === "admin"
-                          ? "Quản trị viên"
-                          : "Tài khoản sinh viên"}
-                      </p>
-                      <p className="text-[13px] font-black text-slate-800 truncate uppercase tracking-tight">
-                        {user.fullName}
-                      </p>
-                      <p className="text-[10px] font-bold text-slate-400 truncate">
-                        {user.email}
-                      </p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{user.role}</p>
+                      <p className="text-sm font-bold text-slate-800 truncate">{user.fullName}</p>
                     </div>
                     {user.role === "admin" && (
-                      <Link
-                        href="/admin"
-                        className="flex items-center gap-4 px-4 py-3.5 text-xs font-black text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all border border-emerald-100/50 mb-1"
-                      >
-                        TRANG QUẢN TRỊ
-                      </Link>
+                      <Link href="/admin" className="px-4 py-3 text-sm font-bold text-emerald-600 hover:bg-emerald-50 rounded-xl">Trang quản trị</Link>
                     )}
-                    <Link
-                      href="/profile"
-                      className="flex items-center gap-4 px-4 py-3.5 text-xs font-black text-slate-700 hover:bg-emerald-50 hover:text-emerald-600 rounded-xl transition-all"
-                    >
-                      TRANG CÁ NHÂN
-                    </Link>
-                    <button
-                      onClick={handleLogout}
-                      className="flex items-center gap-4 px-4 py-3.5 text-xs font-black text-red-500 hover:bg-red-50 rounded-xl transition-all w-full text-left"
-                    >
-                      ĐĂNG XUẤT
-                    </button>
+                    <Link href="/profile" className="px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 rounded-xl">Trang cá nhân</Link>
+                    <button onClick={handleLogout} className="px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-50 rounded-xl text-left">Đăng xuất</button>
                   </div>
                 )}
               </div>

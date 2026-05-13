@@ -11,8 +11,8 @@ export default function VideoGalleryPage() {
     totalMaterials: 0
   });
   const [currentPage, setCurrentPage] = useState(1);
-  const [categories, setCategories] = useState([]);
-  const [activeCategory, setActiveCategory] = useState("all");
+  const [majors, setMajors] = useState([]);
+  const [activeMajor, setActiveMajor] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
 
   // Lấy danh mục và video
@@ -24,17 +24,17 @@ export default function VideoGalleryPage() {
         params.append("materialType", "video");
         params.append("page", currentPage);
         params.append("limit", 6);
-        if (activeCategory !== "all") params.append("category", activeCategory);
+        if (activeMajor !== "all") params.append("major", activeMajor);
 
-        const [catRes, videoRes] = await Promise.all([
-          fetch("http://localhost:5000/api/categories"),
+        const [majorRes, videoRes] = await Promise.all([
+          fetch("http://localhost:5000/api/majors"),
           fetch(`http://localhost:5000/api/materials?${params.toString()}`)
         ]);
 
-        const catData = await catRes.json();
+        const majorData = await majorRes.json();
         const videoData = await videoRes.json();
 
-        if (Array.isArray(catData)) setCategories([{ _id: "all", name: "Tất cả" }, ...catData]);
+        if (Array.isArray(majorData)) setMajors([{ _id: "all", name: "Tất cả chuyên ngành" }, ...majorData]);
 
         if (videoData && videoData.materials) {
           setVideos(videoData.materials);
@@ -58,12 +58,12 @@ export default function VideoGalleryPage() {
       }
     };
     fetchData();
-  }, [activeCategory, currentPage]);
+  }, [activeMajor, currentPage]);
 
-  // Reset về trang 1 khi đổi category
+  // Reset về trang 1 khi đổi chuyên ngành
   useEffect(() => {
     setCurrentPage(1);
-  }, [activeCategory]);
+  }, [activeMajor]);
 
   return (
     <div className="min-h-screen bg-slate-50/50 pb-20 pt-16">
@@ -77,19 +77,19 @@ export default function VideoGalleryPage() {
             Học tập mọi lúc mọi nơi với hàng trăm video bài giảng chất lượng cao từ cộng đồng sinh viên VLU IT.
           </p>
           
-          {/* Categories */}
-          <div className="flex flex-wrap justify-center gap-3">
-            {categories.map((cat) => (
+          {/* Majors Filter */}
+          <div className="flex flex-wrap justify-center gap-3 max-w-5xl mx-auto overflow-x-auto no-scrollbar pb-2">
+            {majors.map((m) => (
               <button
-                key={cat._id}
-                onClick={() => setActiveCategory(cat._id)}
-                className={`px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ${
-                  activeCategory === cat._id 
+                key={m._id}
+                onClick={() => setActiveMajor(m._id)}
+                className={`px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap ${
+                  activeMajor === m._id 
                   ? "bg-primary text-white shadow-lg shadow-primary/20" 
                   : "bg-white text-slate-500 border border-slate-100 hover:bg-slate-50 shadow-sm"
                 }`}
               >
-                {cat.name}
+                {m.name}
               </button>
             ))}
           </div>
@@ -120,7 +120,7 @@ export default function VideoGalleryPage() {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-60" />
                     <div className="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest text-slate-800 shadow-sm">
-                      {video.categoryId?.name}
+                      {video.majorId?.name || video.categoryId?.name}
                     </div>
                     
                     {/* Play Icon Overlay */}

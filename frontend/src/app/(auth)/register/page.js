@@ -96,8 +96,8 @@ export default function RegisterPage() {
       
       <div className="w-full max-w-[480px] z-10 animate-fade-in">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight italic uppercase">
-            Tham gia <span className="text-primary">Cộng đồng</span>
+          <h1 className="text-3xl font-bold text-slate-900 tracking-normal italic">
+            Tham gia <span className="text-primary uppercase tracking-tight">Cộng Đồng</span>
           </h1>
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] mt-2">Dành riêng cho sinh viên IT Văn Lang</p>
         </div>

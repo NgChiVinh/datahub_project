@@ -282,6 +282,25 @@ export default function DocumentDetailPage() {
       );
 
     if (doc.sourceType === "link") {
+      // Check if it's a YouTube link
+      const youtubeRegExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+      const match = doc.fileUrl.match(youtubeRegExp);
+      
+      if (match && match[2].length === 11) {
+        return (
+          <div className="space-y-8 animate-in fade-in duration-500">
+            <div className="aspect-video w-full bg-slate-900 rounded-[2.5rem] border-4 border-slate-800 shadow-2xl overflow-hidden relative">
+              <iframe
+                src={`https://www.youtube.com/embed/${match[2]}`}
+                className="w-full h-full border-none"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              ></iframe>
+            </div>
+          </div>
+        );
+      }
+
       return (
         <div className="space-y-8 animate-in fade-in duration-500">
           <div className="aspect-video w-full bg-slate-100 rounded-[2.5rem] border-4 border-slate-50 shadow-inner overflow-hidden flex items-center justify-center relative group">
@@ -340,19 +359,24 @@ export default function DocumentDetailPage() {
       );
     }
 
-    if (doc.materialType === "pdf") {
+    if (["pdf", "docx", "pptx"].includes(doc.materialType)) {
+      // Use Google Docs Viewer for these types
+      const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(doc.fileUrl)}&embedded=true`;
+      
       return (
         <div className="space-y-8 animate-in fade-in duration-500">
-          <div className="w-full aspect-[1/1.4] bg-slate-100 rounded-[2.5rem] border-4 border-slate-50 shadow-inner overflow-hidden relative">
+          <div className="w-full aspect-[1/1.4] bg-slate-100 rounded-[2.5rem] border-4 border-slate-50 shadow-inner overflow-hidden relative group">
             <iframe
-              src={`${doc.fileUrl}#toolbar=0&navpanes=0&scrollbar=0`}
+              src={viewerUrl}
               className="w-full h-full border-none"
               title={doc.title}
             ></iframe>
-            <div className="absolute top-0 right-0 p-6 flex gap-2">
+            
+            {/* Overlay for actions when not interacting with iframe */}
+            <div className="absolute top-0 right-0 p-6 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
               <button
                 onClick={handleDownload}
-                className="bg-white/90 backdrop-blur-xl p-4 rounded-2xl shadow-xl hover:bg-emerald-500 hover:text-white transition-all group"
+                className="bg-white/90 backdrop-blur-xl p-4 rounded-2xl shadow-xl hover:bg-emerald-500 hover:text-white transition-all pointer-events-auto"
               >
                 <svg
                   width="20"
@@ -370,6 +394,11 @@ export default function DocumentDetailPage() {
                 </svg>
               </button>
             </div>
+
+            {/* Hint overlay */}
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-6 py-2 bg-slate-900/80 backdrop-blur-md rounded-full text-[9px] font-black text-white uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
+              Đang xem bản xem trước trực tuyến
+            </div>
           </div>
         </div>
       );
@@ -385,7 +414,7 @@ export default function DocumentDetailPage() {
       );
     }
 
-    // Default for other types (docx, pptx, zip, etc.)
+    // Default for other types (zip, etc.)
     return (
       <div className="space-y-8 animate-in fade-in duration-500">
         <div className="aspect-video w-full bg-slate-50 rounded-[2.5rem] border-4 border-slate-50 shadow-inner overflow-hidden flex items-center justify-center relative group">
@@ -408,10 +437,10 @@ export default function DocumentDetailPage() {
             </div>
             <div>
               <h4 className="text-xl font-black text-slate-800 mb-2 uppercase italic">
-                Không có bản xem trước trực tiếp
+                Định dạng này cần tải về
               </h4>
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] max-w-xs mx-auto">
-                Vui lòng tải xuống tài liệu để xem nội dung đầy đủ
+                Tệp {doc.materialType?.toUpperCase()} không hỗ trợ xem trực tiếp
               </p>
             </div>
             <button

@@ -6,7 +6,7 @@ const slugify = require("slugify");
 // CREATE (upload file hoặc gửi link + lưu DB)
 const createMaterial = async (req, res) => {
   try {
-    const { title, description, materialType, categoryId, tags, link, academicYear } = req.body;
+    const { title, description, materialType, categoryId, majorId, tags, link, academicYear } = req.body;
     let finalFileUrl = "";
     let finalSourceType = "upload";
     let finalMaterialType = materialType || "other";
@@ -85,7 +85,7 @@ const createMaterial = async (req, res) => {
       sourceType: finalSourceType,
       academicYear: ["Năm 1", "Năm 2", "Năm 3", "Năm 4"].includes(academicYear) ? academicYear : "Khác",
       categoryId,
-      majorId: req.user.majorId || null, // Lưu ngành của người đăng
+      majorId: majorId || req.user.majorId || null, // Ưu tiên chọn từ form, nếu không lấy ngành của người đăng
       uploaderId: req.user._id,
       fileUrl: finalFileUrl,
       tags: processedTags,
