@@ -1,6 +1,7 @@
 "use client";
 import { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import api from "@/lib/axios";
 
 const AuthContext = createContext();
 
@@ -18,23 +19,16 @@ export function AuthProvider({ children }) {
       }
 
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/users/me`, {
-          headers: { "Authorization": `Bearer ${token}` }
-        });
-
-        if (res.ok) {
-          const userData = await res.json();
-          setUser(userData);
-          // Cập nhật lại user trong localStorage cho đồng bộ
-          localStorage.setItem("user", JSON.stringify(userData));
-        } else {
-          // Token hết hạn hoặc không hợp lệ
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
-          setUser(null);
-        }
+        const res = await api.get("/api/users/me");
+        
+        const userData = res.data;
+        setUser(userData);
+        localStorage.setItem("user", JSON.stringify(userData));
       } catch (error) {
         console.error("Lỗi xác thực phiên đăng nhập:", error);
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        setUser(null);
       } finally {
         setLoading(false);
       }

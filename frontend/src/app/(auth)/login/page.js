@@ -3,9 +3,11 @@ import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import api from "@/lib/axios";
 
 export default function LoginPage() {
   const { login, user, loading: authLoading } = useAuth();
+// ... (state giữ nguyên)
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -34,27 +36,18 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/users/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
+      const res = await api.post("/api/users/login", formData);
+      const data = res.data;
 
-      const data = await res.json();
+      login(data.user, data.token);
 
-      if (res.ok) {
-        login(data.user, data.token);
-
-        if (data.user.role === "admin") {
-          router.push("/admin");
-        } else {
-          router.push("/");
-        }
+      if (data.user.role === "admin") {
+        router.push("/admin");
       } else {
-        setError(data.message || "Email hoặc mật khẩu không chính xác.");
+        router.push("/");
       }
     } catch (err) {
-      setError("Không thể kết nối đến hệ thống. Vui lòng thử lại sau.");
+      setError(err.response?.data?.message || "Email hoặc mật khẩu không chính xác.");
     } finally {
       setIsLoading(false);
     }
