@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 export default function ReportModal({ isOpen, onClose, materialId }) {
   const [reason, setReason] = useState("");
@@ -9,19 +10,19 @@ export default function ReportModal({ isOpen, onClose, materialId }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!reason.trim()) {
-      alert("Vui lòng nhập lý do báo cáo");
+      toast.error("Vui lòng nhập lý do báo cáo");
       return;
     }
 
     const token = localStorage.getItem("token");
     if (!token) {
-      alert("Vui lòng đăng nhập để thực hiện báo cáo");
+      toast.error("Vui lòng đăng nhập để thực hiện báo cáo");
       return;
     }
 
     try {
       setIsSubmitting(true);
-      const res = await fetch("http://localhost:5000/api/reports", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/reports`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -33,16 +34,16 @@ export default function ReportModal({ isOpen, onClose, materialId }) {
         }),
       });
 
-      const data = await res.json();
       if (res.ok) {
-        alert("Cảm ơn bạn đã báo cáo. Chúng tôi sẽ xem xét nội dung này sớm nhất có thể.");
+        toast.success("Cảm ơn bạn đã báo cáo. Chúng tôi sẽ xem xét nội dung này sớm nhất có thể.");
         onClose();
         setReason("");
       } else {
-        alert(data.message || "Gửi báo cáo thất bại");
+        const data = await res.json();
+        toast.error(data.message || "Gửi báo cáo thất bại");
       }
     } catch (err) {
-      alert("Lỗi kết nối server");
+      toast.error("Lỗi kết nối server");
     } finally {
       setIsSubmitting(false);
     }

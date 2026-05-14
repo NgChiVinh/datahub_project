@@ -316,6 +316,43 @@ const resetPassword = async (req, res) => {
   }
 };
 
+const changePassword = async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({ message: "Người dùng không tồn tại" });
+    }
+
+    // So sánh mật khẩu cũ
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Mật khẩu cũ không chính xác" });
+    }
+
+    // Kiểm tra độ dài mật khẩu mới
+    if (newPassword.length < 6) {
+      return res
+        .status(400)
+        .json({ message: "Mật khẩu mới phải từ 6 ký tự trở lên" });
+    }
+
+    // Hash mật khẩu mới
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+
+    await user.save();
+
+    res.json({ message: "Đổi mật khẩu thành công" });
+  } catch (error) {
+    console.error("Change Password Error:", error);
+    res
+      .status(500)
+      .json({ message: "Lỗi hệ thống khi đổi mật khẩu", error: error.message });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -326,4 +363,5 @@ module.exports = {
   updateUserProfile,
   forgotPassword,
   resetPassword,
+  changePassword,
 };

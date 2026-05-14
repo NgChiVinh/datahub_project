@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
 export default function MajorAdmin() {
   const [majors, setMajors] = useState([]);
@@ -18,11 +19,11 @@ export default function MajorAdmin() {
   const fetchMajors = async () => {
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:5000/api/majors");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/majors`);
       const data = await res.json();
       setMajors(data);
     } catch (err) {
-      alert("Lỗi tải danh sách ngành");
+      toast.error("Lỗi tải danh sách ngành");
     } finally {
       setLoading(false);
     }
@@ -36,14 +37,14 @@ export default function MajorAdmin() {
     e.preventDefault();
 
     if (!token) {
-      alert("Bạn cần đăng nhập với quyền Admin");
+      toast.error("Bạn cần đăng nhập với quyền Admin");
       return;
     }
 
     const method = editingId ? "PUT" : "POST";
     const url = editingId
-      ? `http://localhost:5000/api/majors/${editingId}`
-      : `http://localhost:5000/api/majors`;
+      ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/majors/${editingId}`
+      : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/majors`;
 
     try {
       const res = await fetch(url, {
@@ -61,12 +62,12 @@ export default function MajorAdmin() {
         setForm({ majorCode: "", name: "", department: "" });
         setEditingId(null);
         fetchMajors();
-        alert(editingId ? "Cập nhật thành công" : "Thêm ngành mới thành công");
+        toast.success(editingId ? "Cập nhật thành công!" : "Thêm ngành mới thành công!");
       } else {
-        alert(data.message || "Có lỗi xảy ra");
+        toast.error(data.message || "Có lỗi xảy ra");
       }
     } catch (err) {
-      alert("Lỗi kết nối server");
+      toast.error("Lỗi kết nối server");
     }
   };
 
@@ -83,14 +84,23 @@ export default function MajorAdmin() {
   const handleDelete = async (id) => {
     if (!confirm("Xóa ngành này?")) return;
 
-    await fetch(`http://localhost:5000/api/majors/${id}`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/majors/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    fetchMajors();
+      if (res.ok) {
+        toast.success("Xóa ngành thành công!");
+        fetchMajors();
+      } else {
+        toast.error("Xóa ngành thất bại");
+      }
+    } catch (err) {
+      toast.error("Lỗi kết nối server");
+    }
   };
 
   return (

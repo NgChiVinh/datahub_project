@@ -36,7 +36,7 @@ export default function MaterialAdmin() {
       // Sử dụng API lọc từ backend để lấy đúng dữ liệu phân trang
       const statusParam = activeStatus === "all" ? "all" : activeStatus;
       const res = await fetch(
-        `http://localhost:5000/api/materials?status=${statusParam}&page=${page}&limit=${limit}&sortBy=latest`,
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/materials?status=${statusParam}&page=${page}&limit=${limit}&sortBy=latest`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -59,7 +59,7 @@ export default function MaterialAdmin() {
 
   const fetchMajors = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/majors");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/majors`);
       const data = await res.json();
       if (Array.isArray(data)) setMajors(data);
     } catch (err) {
@@ -69,7 +69,7 @@ export default function MaterialAdmin() {
 
   const fetchCategories = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/categories");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/categories`);
       const data = await res.json();
       if (Array.isArray(data)) setCategories(data);
     } catch (err) {
@@ -101,7 +101,7 @@ export default function MaterialAdmin() {
     const token = localStorage.getItem("token");
 
     try {
-      const res = await fetch(`http://localhost:5000/api/materials/${editingMaterial._id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/materials/${editingMaterial._id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -113,12 +113,12 @@ export default function MaterialAdmin() {
       if (res.ok) {
         setIsEditModalOpen(false);
         fetchMaterials(currentPage);
-        alert("Cập nhật thông tin tài liệu thành công!");
+        toast.success("Cập nhật thông tin tài liệu thành công!");
       } else {
-        alert("Cập nhật thất bại");
+        toast.error("Cập nhật thất bại");
       }
     } catch (err) {
-      alert("Lỗi kết nối server");
+      toast.error("Lỗi kết nối server");
     }
   };
 
@@ -126,7 +126,7 @@ export default function MaterialAdmin() {
     const token = localStorage.getItem("token");
 
     try {
-      const res = await fetch(`http://localhost:5000/api/materials/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/materials/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -136,12 +136,13 @@ export default function MaterialAdmin() {
       });
 
       if (res.ok) {
+        toast.success("Cập nhật trạng thái thành công!");
         fetchMaterials(currentPage);
       } else {
-        alert("Cập nhật trạng thái thất bại");
+        toast.error("Cập nhật trạng thái thất bại");
       }
     } catch (err) {
-      alert("Lỗi kết nối");
+      toast.error("Lỗi kết nối");
     }
   };
 
@@ -150,7 +151,7 @@ export default function MaterialAdmin() {
 
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch(`http://localhost:5000/api/materials/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/materials/${id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -158,12 +159,13 @@ export default function MaterialAdmin() {
       });
 
       if (res.ok) {
+        toast.success("Xóa tài liệu thành công!");
         fetchMaterials(currentPage);
       } else {
-        alert("Xóa thất bại");
+        toast.error("Xóa thất bại");
       }
     } catch (err) {
-      alert("Lỗi kết nối");
+      toast.error("Lỗi kết nối");
     }
   };
 

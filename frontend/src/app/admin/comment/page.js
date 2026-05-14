@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
 export default function CommentAdmin() {
   const [comments, setComments] = useState([]);
@@ -13,7 +14,7 @@ export default function CommentAdmin() {
     try {
       setLoading(true);
 
-      const res = await fetch("http://localhost:5000/api/comments", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/comments`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -22,7 +23,7 @@ export default function CommentAdmin() {
       const data = await res.json();
       setComments(data);
     } catch (err) {
-      alert("Lỗi tải comment");
+      toast.error("Lỗi tải comment");
     } finally {
       setLoading(false);
     }
@@ -35,14 +36,19 @@ export default function CommentAdmin() {
   const handleDelete = async (id) => {
     if (!confirm("Xóa comment này?")) return;
 
-    await fetch(`http://localhost:5000/api/comments/${id}`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/comments/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    fetchComments();
+      toast.success("Xóa bình luận thành công!");
+      fetchComments();
+    } catch (err) {
+      toast.error("Xóa bình luận thất bại");
+    }
   };
 
   return (

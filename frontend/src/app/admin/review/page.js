@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
 export default function ReviewAdmin() {
   const [reviews, setReviews] = useState([]);
@@ -13,7 +14,7 @@ export default function ReviewAdmin() {
     try {
       setLoading(true);
 
-      const res = await fetch("http://localhost:5000/api/reviews", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/reviews`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -22,7 +23,7 @@ export default function ReviewAdmin() {
       const data = await res.json();
       setReviews(data);
     } catch (err) {
-      alert("Lỗi tải review");
+      toast.error("Lỗi tải review");
     } finally {
       setLoading(false);
     }
@@ -35,14 +36,23 @@ export default function ReviewAdmin() {
   const handleDelete = async (id) => {
     if (!confirm("Xóa review này?")) return;
 
-    await fetch(`http://localhost:5000/api/reviews/${id}`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/reviews/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    fetchReviews();
+      if (res.ok) {
+        toast.success("Xóa đánh giá thành công!");
+        fetchReviews();
+      } else {
+        toast.error("Xóa đánh giá thất bại");
+      }
+    } catch (err) {
+      toast.error("Lỗi kết nối server");
+    }
   };
 
   const renderStars = (rating) => {

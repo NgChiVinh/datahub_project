@@ -9,6 +9,11 @@ const categorySchema = new mongoose.Schema(
       ref: "Category",
       default: null,
     },
+    majorId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Major",
+      default: null,
+    },
     description: { type: String },
   },
   { timestamps: true },

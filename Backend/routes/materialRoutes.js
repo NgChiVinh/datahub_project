@@ -17,20 +17,20 @@ const { authMiddleware, isAdmin } = require("../middleware/authMiddleware");
 
 // PUBLIC
 router.get("/", getMaterials);
-router.get("/stats", authMiddleware, isAdmin, getMaterialStats); // Thêm route stats cho Admin
+router.get("/stats", authMiddleware, isAdmin, getMaterialStats);
 router.get("/:id", getMaterialById);
-router.post("/:id/download", incrementDownload); // Route tăng lượt tải
+router.post("/:id/download", incrementDownload);
 
 // AUTH REQUIRED
-router.post("/:id/like", authMiddleware, toggleLike); // Route like/unlike
+router.post("/:id/like", authMiddleware, toggleLike);
 
-// USER upload
+// USER UPLOAD
 router.post("/", authMiddleware, upload.single("file"), createMaterial);
 
 // UPDATE
 router.put("/:id", authMiddleware, upload.single("file"), updateMaterial);
 
-// DELETE (admin)
+// DELETE
 router.delete("/:id", authMiddleware, isAdmin, deleteMaterial);
 
 module.exports = router;

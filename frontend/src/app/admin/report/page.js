@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 
 export default function ReportAdmin() {
   const [reports, setReports] = useState([]);
@@ -12,7 +13,7 @@ export default function ReportAdmin() {
       setIsLoading(true);
       const token = localStorage.getItem("token");
 
-      const res = await fetch("http://localhost:5000/api/reports", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/reports`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -23,7 +24,7 @@ export default function ReportAdmin() {
         setReports(data);
       }
     } catch (err) {
-      alert("Lỗi tải danh sách báo cáo");
+      toast.error("Lỗi tải danh sách báo cáo");
     } finally {
       setIsLoading(false);
     }
@@ -37,7 +38,7 @@ export default function ReportAdmin() {
     const token = localStorage.getItem("token");
 
     try {
-      const res = await fetch(`http://localhost:5000/api/reports/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/reports/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -47,12 +48,13 @@ export default function ReportAdmin() {
       });
 
       if (res.ok) {
+        toast.success(status === "resolved" ? "Đã xử lý và ẩn tài liệu!" : "Đã bỏ qua báo cáo");
         fetchReports();
       } else {
-        alert("Cập nhật thất bại");
+        toast.error("Cập nhật thất bại");
       }
     } catch (err) {
-      alert("Lỗi kết nối");
+      toast.error("Lỗi kết nối");
     }
   };
 
@@ -61,7 +63,7 @@ export default function ReportAdmin() {
 
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch(`http://localhost:5000/api/reports/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/reports/${id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -69,12 +71,13 @@ export default function ReportAdmin() {
       });
 
       if (res.ok) {
+        toast.success("Xóa báo cáo thành công!");
         fetchReports();
       } else {
-        alert("Xóa thất bại");
+        toast.error("Xóa thất bại");
       }
     } catch (err) {
-      alert("Lỗi kết nối");
+      toast.error("Lỗi kết nối");
     }
   };
 

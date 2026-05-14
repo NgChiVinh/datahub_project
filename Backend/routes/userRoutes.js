@@ -10,6 +10,7 @@ const {
   updateUserProfile,
   forgotPassword,
   resetPassword,
+  changePassword,
 } = require("../controllers/userController");
 const { authMiddleware, isAdmin } = require("../middleware/authMiddleware");
 const upload = require("../middleware/multer");
@@ -26,6 +27,7 @@ router.post("/login", loginUser);
 
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password/:token", resetPassword);
+router.put("/change-password", authMiddleware, changePassword);
 
 //  Chỉ người dùng đã login mới truy cập được profile
 //  Lấy thông tin cá nhân

@@ -27,7 +27,7 @@ export default function Header() {
       }
       setIsSearching(true);
       try {
-        const res = await fetch(`http://localhost:5000/api/materials?search=${searchQuery}&status=approved&limit=5`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/materials?search=${searchQuery}&status=approved&limit=5`);
         const data = await res.json();
         if (Array.isArray(data)) {
           setSuggestions(data.slice(0, 5));
@@ -48,7 +48,7 @@ export default function Header() {
       // Log search query
       try {
         const token = localStorage.getItem("token");
-        await fetch("http://localhost:5000/api/search-logs", {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/search-logs`, {
           method: "POST",
           headers: { 
             "Content-Type": "application/json",
@@ -69,7 +69,7 @@ export default function Header() {
     // Log click
     try {
       const token = localStorage.getItem("token");
-      await fetch("http://localhost:5000/api/search-logs", {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/search-logs`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -113,7 +113,7 @@ export default function Header() {
       if (!user) return;
       try {
         const token = localStorage.getItem("token");
-        const res = await fetch("http://localhost:5000/api/notifications", {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/notifications`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
@@ -131,7 +131,7 @@ export default function Header() {
   const markNotifsAsRead = async () => {
     try {
       const token = localStorage.getItem("token");
-      await fetch("http://localhost:5000/api/notifications/mark-as-read", {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/notifications/mark-as-read`, {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}` },
       });

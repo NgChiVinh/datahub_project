@@ -1,4 +1,5 @@
 const StudyCollection = require("../models/StudyCollection");
+const mongoose = require("mongoose");
 
 // CREATE
 const createCollection = async (req, res) => {
@@ -26,15 +27,44 @@ const createCollection = async (req, res) => {
 // GET tất cả collection (public + của user)
 const getCollections = async (req, res) => {
   try {
-    const collections = await StudyCollection.find({
-      $or: [{ isPublic: true }, { userId: req.user._id }],
-    })
+    const { userId } = req.query;
+    let query = {};
+
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({ message: "Chưa xác thực" });
+    }
+
+    if (userId && mongoose.Types.ObjectId.isValid(userId)) {
+      if (userId === req.user._id.toString()) {
+        query = { userId };
+      } else {
+        query = { userId, isPublic: true };
+      }
+    } else if (userId) {
+      // Nếu có userId nhưng không hợp lệ
+      return res.status(400).json({ message: "ID người dùng không hợp lệ" });
+    } else {
+      query = {
+        $or: [{ isPublic: true }, { userId: req.user._id }],
+      };
+    }
+
+    const collections = await StudyCollection.find(query)
       .populate("userId", "fullName")
-      .populate("materialIds", "title fileUrl");
+      .populate({
+        path: "materialIds",
+        select: "title fileUrl materialType metrics",
+        options: { strictPopulate: false }
+      })
+      .sort({ createdAt: -1 });
 
     res.status(200).json(collections);
   } catch (error) {
-    res.status(500).json({ message: "Lỗi server", error });
+    console.error("getCollections error details:", error);
+    res.status(500).json({ 
+      message: "Không thể tải bộ sưu tập từ máy chủ", 
+      error: error.message 
+    });
   }
 };
 
@@ -43,7 +73,10 @@ const getCollectionById = async (req, res) => {
   try {
     const collection = await StudyCollection.findById(req.params.id)
       .populate("userId", "fullName")
-      .populate("materialIds");
+      .populate({
+        path: "materialIds",
+        options: { strictPopulate: false }
+      });
 
     if (!collection) {
       return res.status(404).json({ message: "Không tìm thấy collection" });

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
 export default function TagAdmin() {
   const [tags, setTags] = useState([]);
@@ -16,13 +17,13 @@ export default function TagAdmin() {
   const fetchTags = async () => {
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:5000/api/tags");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/tags`);
       const data = await res.json();
       if (Array.isArray(data)) {
         setTags(data);
       }
     } catch (err) {
-      alert("Lỗi tải danh sách tag");
+      toast.error("Lỗi tải danh sách tag");
     } finally {
       setLoading(false);
     }
@@ -36,14 +37,14 @@ export default function TagAdmin() {
     e.preventDefault();
 
     if (!token) {
-      alert("Bạn cần đăng nhập với quyền Admin");
+      toast.error("Bạn cần đăng nhập với quyền Admin");
       return;
     }
 
     const method = editingId ? "PUT" : "POST";
     const url = editingId
-      ? `http://localhost:5000/api/tags/${editingId}`
-      : `http://localhost:5000/api/tags`;
+      ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/tags/${editingId}`
+      : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/tags`;
 
     try {
       const res = await fetch(url, {
@@ -61,12 +62,12 @@ export default function TagAdmin() {
         setForm({ name: "" });
         setEditingId(null);
         fetchTags();
-        alert(editingId ? "Cập nhật thành công" : "Thêm tag mới thành công");
+        toast.success(editingId ? "Cập nhật thành công" : "Thêm tag mới thành công");
       } else {
-        alert(data.message || "Có lỗi xảy ra");
+        toast.error(data.message || "Có lỗi xảy ra");
       }
     } catch (err) {
-      alert("Lỗi kết nối server");
+      toast.error("Lỗi kết nối server");
     }
   };
 
@@ -82,7 +83,7 @@ export default function TagAdmin() {
     if (!confirm("Xóa tag này?")) return;
 
     try {
-      const res = await fetch(`http://localhost:5000/api/tags/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/tags/${id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -91,13 +92,13 @@ export default function TagAdmin() {
 
       if (res.ok) {
         fetchTags();
-        alert("Xóa thành công");
+        toast.success("Xóa thành công");
       } else {
         const data = await res.json();
-        alert(data.message || "Xóa thất bại");
+        toast.error(data.message || "Xóa thất bại");
       }
     } catch (err) {
-      alert("Lỗi kết nối server");
+      toast.error("Lỗi kết nối server");
     }
   };
 

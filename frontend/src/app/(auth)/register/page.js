@@ -30,7 +30,7 @@ export default function RegisterPage() {
   useEffect(() => {
     const fetchMajors = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/majors");
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/majors`);
         const data = await res.json();
         if (Array.isArray(data)) {
           setMajors(data);
@@ -62,7 +62,7 @@ export default function RegisterPage() {
 
     setIsLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/api/users/register", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/users/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

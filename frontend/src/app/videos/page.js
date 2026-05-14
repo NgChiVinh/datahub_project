@@ -13,43 +13,43 @@ export default function VideoGalleryPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [majors, setMajors] = useState([]);
   const [activeMajor, setActiveMajor] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState("newest");
   const [isLoading, setIsLoading] = useState(true);
 
-  // Lấy danh mục và video
+  // Lấy danh mục (Majors)
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchMajors = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/majors`);
+        const data = await res.json();
+        if (Array.isArray(data)) setMajors(data);
+      } catch (error) {
+        console.error("Lỗi lấy chuyên ngành:", error);
+      }
+    };
+    fetchMajors();
+  }, []);
+
+  // Fetch video với đầy đủ bộ lọc
+  useEffect(() => {
+    const fetchVideos = async () => {
       try {
         setIsLoading(true);
         const params = new URLSearchParams();
         params.append("materialType", "video");
         params.append("page", currentPage);
-        params.append("limit", 6);
+        params.append("limit", 9); // 3x3 grid
         if (activeMajor !== "all") params.append("major", activeMajor);
+        if (searchQuery) params.append("search", searchQuery);
+        if (sortBy !== "newest") params.append("sortBy", sortBy);
 
-        const [majorRes, videoRes] = await Promise.all([
-          fetch("http://localhost:5000/api/majors"),
-          fetch(`http://localhost:5000/api/materials?${params.toString()}`)
-        ]);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/materials?${params.toString()}`);
+        const data = await res.json();
 
-        const majorData = await majorRes.json();
-        const videoData = await videoRes.json();
-
-        if (Array.isArray(majorData)) setMajors([{ _id: "all", name: "Tất cả chuyên ngành" }, ...majorData]);
-
-        if (videoData && videoData.materials) {
-          setVideos(videoData.materials);
-          setPagination(videoData.pagination);
-        } else if (Array.isArray(videoData)) {
-          // Fallback cho client-side pagination nếu server chưa restart
-          const itemsPerPage = 6;
-          const total = videoData.length;
-          const startIndex = (currentPage - 1) * itemsPerPage;
-          setVideos(videoData.slice(startIndex, startIndex + itemsPerPage));
-          setPagination({
-            currentPage: currentPage,
-            totalPages: Math.ceil(total / itemsPerPage),
-            totalMaterials: total
-          });
+        if (data && data.materials) {
+          setVideos(data.materials);
+          setPagination(data.pagination);
         }
       } catch (error) {
         console.error("Lỗi lấy dữ liệu video:", error);
@@ -57,159 +57,230 @@ export default function VideoGalleryPage() {
         setIsLoading(false);
       }
     };
-    fetchData();
-  }, [activeMajor, currentPage]);
 
-  // Reset về trang 1 khi đổi chuyên ngành
+    const timeoutId = setTimeout(fetchVideos, 400);
+    return () => clearTimeout(timeoutId);
+  }, [activeMajor, searchQuery, sortBy, currentPage]);
+
+  // Reset về trang 1 khi đổi bộ lọc
   useEffect(() => {
     setCurrentPage(1);
-  }, [activeMajor]);
+  }, [activeMajor, searchQuery, sortBy]);
+
+  const resetFilters = () => {
+    setActiveMajor("all");
+    setSearchQuery("");
+  };
+
+  const hasFilters = activeMajor !== "all" || searchQuery !== "";
 
   return (
-    <div className="min-h-screen bg-slate-50/50 pb-20 pt-16">
-      {/* Hero Header */}
-      <section className="bg-white border-b border-slate-100 py-16">
-        <div className="container mx-auto px-4 lg:px-8 text-center">
-          <h1 className="text-4xl lg:text-5xl font-black text-slate-900 uppercase tracking-tighter mb-4 italic">
-            Kho Bài Giảng Video
-          </h1>
-          <p className="text-slate-500 font-medium max-w-2xl mx-auto mb-10 text-lg">
-            Học tập mọi lúc mọi nơi với hàng trăm video bài giảng chất lượng cao từ cộng đồng sinh viên VLU IT.
-          </p>
-          
-          {/* Majors Filter */}
-          <div className="flex flex-wrap justify-center gap-3 max-w-5xl mx-auto overflow-x-auto no-scrollbar pb-2">
-            {majors.map((m) => (
-              <button
-                key={m._id}
-                onClick={() => setActiveMajor(m._id)}
-                className={`px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap ${
-                  activeMajor === m._id 
-                  ? "bg-primary text-white shadow-lg shadow-primary/20" 
-                  : "bg-white text-slate-500 border border-slate-100 hover:bg-slate-50 shadow-sm"
-                }`}
-              >
-                {m.name}
-              </button>
-            ))}
+    <div className="min-h-screen bg-white font-sans text-slate-900 pb-20">
+      {/* Compact Header */}
+      <section className="bg-slate-50/50 border-b border-slate-100 py-12">
+        <div className="container mx-auto max-w-7xl px-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div>
+              <nav className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
+                <Link href="/" className="hover:text-orange-500 transition-colors">Trang chủ</Link>
+                <span>/</span>
+                <span className="text-slate-600">Video bài giảng</span>
+              </nav>
+              <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Thư viện <span className="text-orange-500">Video</span></h1>
+            </div>
+            <Link href="/upload" className="inline-flex items-center gap-2 px-6 py-3.5 bg-orange-500 text-white rounded-2xl text-xs font-bold hover:bg-orange-600 transition-all active:scale-95 shadow-lg shadow-orange-100">
+              <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path d="M12 4v16m8-8H4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              Đóng góp video
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* Video Grid */}
-      <div className="container mx-auto px-4 lg:px-8 py-12">
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-20">
-            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p className="text-slate-400 font-black text-[10px] uppercase tracking-[0.2em]">Đang tải kho bài giảng...</p>
-          </div>
-        ) : videos.length > 0 ? (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {videos.map((video) => (
-                <div key={video._id} className="group bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-500">
-                  {/* Thumbnail */}
-                  <div className="relative aspect-video overflow-hidden bg-slate-900">
-                    <Image 
-                      src={video.sourceType === 'link' && video.fileUrl.includes('youtube.com') 
-                        ? `https://img.youtube.com/vi/${video.fileUrl.split('v=')[1]?.split('&')[0]}/maxresdefault.jpg`
-                        : "https://images.unsplash.com/photo-1627398242454-45a1465c2479?w=800&q=80"} 
-                      alt={video.title} 
-                      fill 
-                      className="object-cover transition-transform duration-700 group-hover:scale-110 opacity-80" 
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-60" />
-                    <div className="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest text-slate-800 shadow-sm">
-                      {video.majorId?.name || video.categoryId?.name}
-                    </div>
-                    
-                    {/* Play Icon Overlay */}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-2xl scale-90 group-hover:scale-110 group-hover:bg-primary group-hover:border-primary transition-all duration-500">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="m7 4 12 8-12 8V4z"/></svg>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Content */}
-                  <div className="p-8">
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="w-6 h-6 rounded-lg bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-500">
-                        {video.uploaderId?.fullName?.charAt(0)}
-                      </div>
-                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{video.uploaderId?.fullName}</span>
-                    </div>
-                    <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-6 line-clamp-2 min-h-[3.5rem] group-hover:text-primary transition-colors">
-                      {video.title}
-                    </h3>
-                    
-                    <div className="flex items-center justify-between pt-6 border-t border-slate-50">
-                      <div className="flex items-center gap-1.5">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{video.metrics?.viewCount} lượt xem</span>
-                      </div>
-                      <Link 
-                        href={`/videos/${video._id}`}
-                        className="flex items-center gap-2 text-xs font-black text-primary uppercase tracking-widest hover:gap-3 transition-all"
-                      >
-                        Học ngay
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="5" x2="19" y1="12" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                      </Link>
-                    </div>
-                  </div>
+      <div className="container mx-auto max-w-7xl px-4 mt-12">
+        <div className="flex flex-col lg:flex-row gap-12">
+          
+          {/* Sidebar */}
+          <aside className="w-full lg:w-72 flex-shrink-0">
+            <div className="sticky top-28 space-y-10">
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-widest">Chuyên ngành</h3>
+                  {hasFilters && (
+                    <button onClick={resetFilters} className="text-[10px] font-bold text-orange-400 hover:underline">Xóa lọc</button>
+                  )}
                 </div>
-              ))}
+
+                <div className="flex flex-col gap-1">
+                  <button
+                    onClick={() => setActiveMajor("all")}
+                    className={`text-left px-4 py-3 rounded-xl text-xs font-bold transition-all ${
+                      activeMajor === "all"
+                        ? "bg-slate-900 text-white shadow-md shadow-slate-200"
+                        : "text-slate-500 hover:bg-slate-50"
+                    }`}
+                  >
+                    Tất cả video
+                  </button>
+
+                  {majors.map((major) => (
+                    <button
+                      key={major._id}
+                      onClick={() => setActiveMajor(major._id)}
+                      className={`text-left px-4 py-3 rounded-xl text-xs font-bold transition-all ${
+                        activeMajor === major._id
+                          ? "text-orange-500 bg-orange-50"
+                          : "text-slate-500 hover:bg-slate-50"
+                      }`}
+                    >
+                      {major.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tips Card */}
+              <div className="bg-slate-900 p-8 rounded-[2rem] text-white">
+                <div className="w-10 h-10 bg-orange-100/20 rounded-xl flex items-center justify-center mb-4">
+                  <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5" className="text-orange-400"><path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                </div>
+                <h4 className="text-sm font-bold uppercase tracking-tight mb-2">Học tập trực quan</h4>
+                <p className="text-slate-400 text-[10px] leading-relaxed font-medium">Video bài giảng giúp bạn tiếp thu kiến thức nhanh hơn 40% so với đọc tài liệu thông thường.</p>
+              </div>
+            </div>
+          </aside>
+
+          {/* Main Area */}
+          <main className="flex-1 space-y-8">
+            {/* Search & Sort */}
+            <div className="flex flex-col md:flex-row items-stretch gap-4">
+              <div className="relative flex-1 group">
+                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-orange-400 transition-colors">
+                  <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm bài giảng video..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-12 pr-6 py-4 rounded-2xl bg-white border border-slate-200 focus:border-orange-200 focus:ring-4 focus:ring-orange-500/5 outline-none transition-all text-sm font-medium"
+                />
+              </div>
+
+              <div className="flex p-1 bg-slate-100 rounded-2xl">
+                {[{id:"newest", name:"Mới nhất"}, {id:"most_viewed", name:"Xem nhiều"}].map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => setSortBy(s.id)}
+                    className={`px-6 py-3 rounded-[0.8rem] text-[10px] font-bold uppercase tracking-widest transition-all ${
+                      sortBy === s.id ? "bg-white text-slate-900 shadow-sm" : "text-slate-400 hover:text-slate-600"
+                    }`}
+                  >
+                    {s.name}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {/* PAGINATION CONTROLS */}
-            {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-16 animate-fade-in">
-                <button
-                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                  disabled={currentPage === 1}
-                  className="w-12 h-12 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary/20 disabled:opacity-30 transition-all shadow-sm"
-                >
-                  <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
+            {/* Video Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {isLoading ? (
+                [...Array(6)].map((_, i) => (
+                  <div key={i} className="bg-slate-50 rounded-2xl aspect-[16/14] animate-pulse"></div>
+                ))
+              ) : videos.length > 0 ? (
+                videos.map((video) => (
+                  <div key={video._id} className="group bg-white rounded-2xl border border-slate-100 hover:border-orange-200 hover:shadow-xl hover:shadow-slate-200/40 transition-all duration-300 flex flex-col h-full overflow-hidden">
+                    {/* Thumbnail Container */}
+                    <Link href={`/videos/${video._id}`} className="block relative aspect-video overflow-hidden bg-slate-900">
+                      <Image 
+                        src={video.sourceType === 'link' && video.fileUrl.includes('youtube.com') 
+                          ? `https://img.youtube.com/vi/${video.fileUrl.split('v=')[1]?.split('&')[0]}/maxresdefault.jpg`
+                          : "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&q=80"} 
+                        alt={video.title} 
+                        fill 
+                        className="object-cover transition-transform duration-700 group-hover:scale-105 opacity-90" 
+                      />
+                      <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors"></div>
+                      
+                      {/* Badge */}
+                      <div className="absolute top-3 left-3">
+                         <span className="px-2 py-1 rounded-lg bg-white/90 backdrop-blur shadow-sm text-[8px] font-bold text-slate-800 uppercase border border-white">
+                          {video.majorId?.name || "Chung"}
+                        </span>
+                      </div>
 
+                      {/* Play Button Overlay */}
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <div className="w-12 h-12 rounded-full bg-orange-500/90 flex items-center justify-center text-white shadow-xl scale-90 group-hover:scale-100 transition-transform">
+                          <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="m7 4 12 8-12 8V4z"/></svg>
+                        </div>
+                      </div>
+
+                      {/* View Count Overlay */}
+                      <div className="absolute bottom-3 right-3 px-2 py-1 rounded bg-black/60 text-[8px] font-bold text-white uppercase tracking-widest">
+                        {video.metrics?.viewCount || 0} views
+                      </div>
+                    </Link>
+
+                    {/* Info */}
+                    <div className="p-5 flex flex-col flex-1">
+                      <p className="text-[9px] font-bold text-orange-500 uppercase tracking-widest mb-2 truncate">
+                        {video.categoryId?.name || "Bài giảng"}
+                      </p>
+                      
+                      <Link href={`/videos/${video._id}`}>
+                        <h3 className="text-sm font-bold text-slate-800 leading-snug line-clamp-2 hover:text-orange-500 transition-colors mb-6">
+                          {video.title}
+                        </h3>
+                      </Link>
+
+                      <div className="flex justify-between items-center pt-4 border-t border-slate-50 mt-auto">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-7 h-7 rounded-xl bg-slate-900 flex items-center justify-center text-[10px] font-bold text-white">
+                            {video.uploaderId?.fullName?.charAt(0) || "U"}
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-[10px] font-bold text-slate-700 leading-none">{video.uploaderId?.fullName}</span>
+                            <span className="text-[9px] text-slate-400 font-medium">{new Date(video.createdAt).toLocaleDateString("vi-VN")}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-slate-300 group-hover:text-orange-400 transition-colors">
+                           <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3"><path d="M12 4L12 20M20 12L4 12" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="col-span-full py-32 text-center bg-slate-50/50 rounded-3xl border-2 border-dashed border-slate-100">
+                  <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Hiện chưa có video nào</p>
+                  <button onClick={resetFilters} className="mt-4 text-xs font-bold text-orange-400 hover:underline">Xóa tất cả bộ lọc</button>
+                </div>
+              )}
+            </div>
+
+            {/* Pagination */}
+            {pagination.totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 pt-10">
                 {[...Array(pagination.totalPages)].map((_, i) => (
                   <button
                     key={i + 1}
                     onClick={() => setCurrentPage(i + 1)}
-                    className={`w-12 h-12 rounded-2xl text-[10px] font-black transition-all shadow-sm ${
-                      currentPage === i + 1
-                        ? "bg-slate-900 text-white"
-                        : "bg-white border border-slate-100 text-slate-400 hover:text-primary hover:border-primary/20"
+                    className={`w-10 h-10 rounded-xl text-xs font-bold transition-all ${
+                      currentPage === i + 1 
+                        ? "bg-slate-900 text-white shadow-lg" 
+                        : "bg-white border border-slate-200 text-slate-400 hover:border-slate-400 hover:text-slate-600"
                     }`}
                   >
                     {i + 1}
                   </button>
                 ))}
-
-                <button
-                  onClick={() => setCurrentPage((prev) => Math.min(pagination.totalPages, prev + 1))}
-                  disabled={currentPage === pagination.totalPages}
-                  className="w-12 h-12 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary/20 disabled:opacity-30 transition-all shadow-sm"
-                >
-                  <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
               </div>
             )}
-          </>
-        ) : (
-          <div className="py-32 text-center bg-white rounded-[3rem] border-2 border-dashed border-slate-100 shadow-inner">
-            <div className="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center text-slate-200 mx-auto mb-6">
-              <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-            </div>
-            <h3 className="text-xl font-black text-slate-400 uppercase italic tracking-tighter">Hiện chưa có video bài giảng nào...</h3>
-            <Link href="/upload" className="inline-block mt-6 px-8 py-3 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-primary transition-all">Đóng góp video đầu tiên</Link>
-          </div>
-        )}
+          </main>
+        </div>
       </div>
     </div>
   );
 }
+

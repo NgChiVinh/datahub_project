@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import axios from "axios";
@@ -36,26 +36,32 @@ export default function UploadPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [catRes, majorRes, tagRes] = await Promise.all([
-          axios.get("http://localhost:5000/api/categories"),
-          axios.get("http://localhost:5000/api/majors"),
-          axios.get("http://localhost:5000/api/tags")
+        const [catRes, tagRes, majorRes] = await Promise.all([
+          axios.get(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/categories`),
+          axios.get(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/tags`),
+          axios.get(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/majors`)
         ]);
         if (Array.isArray(catRes.data)) {
           setCategories(catRes.data);
-          if (catRes.data.length > 0) setCategoryId(catRes.data[0]._id);
         }
+        if (Array.isArray(tagRes.data)) setAllTags(tagRes.data);
         if (Array.isArray(majorRes.data)) {
           setMajors(majorRes.data);
           if (majorRes.data.length > 0) setMajorId(majorRes.data[0]._id);
         }
-        if (Array.isArray(tagRes.data)) setAllTags(tagRes.data);
       } catch (error) {
         console.error("Lỗi lấy dữ liệu:", error);
       }
     };
     fetchData();
   }, []);
+
+  // Lọc danh mục (Môn học) dựa trên Chuyên ngành đã chọn
+  const filteredCategories = useMemo(() => {
+    if (!majorId) return [];
+    // Lọc các category có majorId khớp với majorId đang chọn
+    return categories.filter(c => (c.majorId?._id || c.majorId) === majorId);
+  }, [majorId, categories]);
 
   useEffect(() => {
     if (uploadType === "link" && link) {
@@ -106,7 +112,7 @@ export default function UploadPage() {
       return;
     }
     if (!categoryId) {
-      toast.error("Vui lòng chọn chuyên mục!");
+      toast.error("Vui lòng chọn môn học!");
       return;
     }
     if (uploadType === "file" && !file) {
@@ -126,25 +132,44 @@ export default function UploadPage() {
       let res;
       if (uploadType === "file") {
         const formData = new FormData();
-        formData.append("title", title); formData.append("description", description);
-        formData.append("categoryId", categoryId); formData.append("majorId", majorId);
-        formData.append("academicYear", academicYear); formData.append("file", file);
+        formData.append("title", title);
+        formData.append("description", description);
+        formData.append("categoryId", categoryId);
+        formData.append("majorId", majorId);
+        formData.append("academicYear", academicYear);
+        formData.append("file", file);
         formData.append("tags", JSON.stringify(tagIds));
-        res = await axios.post("http://localhost:5000/api/materials", formData, {
-          headers: { "Authorization": `Bearer ${token}`, "Content-Type": "multipart/form-data" }
+        res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/materials`, formData, {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
         });
       } else {
-        res = await axios.post("http://localhost:5000/api/materials", {
-          title, description, categoryId, majorId, academicYear, link, tags: tagIds
-        }, { headers: { "Authorization": `Bearer ${token}` } });
+        res = await axios.post(
+          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/materials`,
+          {
+            title,
+            description,
+            categoryId,
+            majorId,
+            academicYear,
+            link,
+            tags: tagIds,
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
       }
+
       if (res.status === 201 || res.status === 200) {
         toast.success("Tải lên thành công! Đang chờ kiểm duyệt.", { id: loadingToast });
         router.push("/documents");
       }
     } catch (error) {
       toast.error(error.response?.data?.message || "Lỗi khi tải lên", { id: loadingToast });
-    } finally { setIsLoading(false); }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -178,21 +203,49 @@ export default function UploadPage() {
                   <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="VD: Slide bài giảng Chương 1 - Java Core" className="w-full bg-slate-50 border-2 border-slate-50 rounded-xl px-5 py-3.5 focus:bg-white focus:border-emerald-500/20 outline-none transition-all font-bold text-sm shadow-inner" />
                 </div>
 
-                {/* Row 2: Selects Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {[
-                    { label: "Ngành học", val: majorId, set: setMajorId, options: majors },
-                    { label: "Chuyên mục", val: categoryId, set: setCategoryId, options: categories },
-                    { label: "Học kỳ/Năm", val: academicYear, set: setAcademicYear, options: [{_id: "Năm 1", name: "Năm 1"}, {_id: "Năm 2", name: "Năm 2"}, {_id: "Năm 3", name: "Năm 3"}, {_id: "Năm 4", name: "Năm 4"}] }
-                  ].map((field, i) => (
-                    <div key={i} className="space-y-3">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{field.label}</label>
-                      <select value={field.val} onChange={(e) => field.set(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-50 rounded-xl px-4 py-3 focus:bg-white focus:border-emerald-500/20 outline-none cursor-pointer font-bold text-xs shadow-inner appearance-none">
-                        <option value="">Chọn...</option>
-                        {field.options.map(opt => <option key={opt._id} value={opt._id}>{opt.name}</option>)}
-                      </select>
+                {/* Row 2: Dropdown Major Selection */}
+                <div className="space-y-4">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Chọn Chuyên ngành <span className="text-red-500">*</span></label>
+                  <div className="relative group">
+                    <select 
+                      value={majorId} 
+                      onChange={(e) => setMajorId(e.target.value)} 
+                      className="w-full bg-slate-50 border-2 border-slate-50 rounded-xl px-5 py-4 focus:bg-white focus:border-emerald-500/20 outline-none cursor-pointer font-bold text-xs shadow-inner appearance-none transition-all"
+                    >
+                      <option value="" disabled>-- Chọn chuyên ngành --</option>
+                      {majors.map((m) => (
+                        <option key={m._id} value={m._id}>
+                          {m.name} ({m.majorCode})
+                        </option>
+                      ))}
+                    </select>
+                    <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 group-focus-within:text-emerald-500 transition-colors">
+                      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3"><path d="M19 9l-7 7-7-7" strokeLinecap="round" strokeLinejoin="round"></path></svg>
                     </div>
-                  ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Môn học <span className="text-red-500">*</span></label>
+                    <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-50 rounded-xl px-4 py-3 focus:bg-white focus:border-emerald-500/20 outline-none cursor-pointer font-bold text-xs shadow-inner appearance-none">
+                      <option value="">Chọn môn học...</option>
+                      {filteredCategories.filter(c => !c.parentId).map(parent => (
+                        <optgroup key={parent._id} label={parent.name}>
+                          {filteredCategories.filter(c => (c.parentId?._id || c.parentId) === parent._id).map(sub => (
+                            <option key={sub._id} value={sub._id}>{sub.name}</option>
+                          ))}
+                        </optgroup>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Học kỳ/Năm</label>
+                    <select value={academicYear} onChange={(e) => setAcademicYear(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-50 rounded-xl px-4 py-3 focus:bg-white focus:border-emerald-500/20 outline-none cursor-pointer font-bold text-xs shadow-inner appearance-none">
+                      {[{_id: "Năm 1", name: "Năm 1"}, {_id: "Năm 2", name: "Năm 2"}, {_id: "Năm 3", name: "Năm 3"}, {_id: "Năm 4", name: "Năm 4"}, {_id: "Khác", name: "Khác"}].map(opt => <option key={opt._id} value={opt._id}>{opt.name}</option>)}
+                    </select>
+                  </div>
                 </div>
 
                 {/* Row 3: Tags */}

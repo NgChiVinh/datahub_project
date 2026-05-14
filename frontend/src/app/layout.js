@@ -22,7 +22,30 @@ const geistMono = Geist_Mono({
 
 export const metadata = {
   title: "DataHub - Khoa CNTT Văn Lang",
-  description: "Nền tảng chia sẻ tài liệu học thuật cho sinh viên IT Văn Lang",
+  description: "Hệ thống chia sẻ tri thức số hóa dành riêng cho sinh viên IT Văn Lang. Khám phá kho tài liệu, bài giảng và đồ án chất lượng cao.",
+  keywords: ["DataHub", "VLU", "IT Văn Lang", "Tài liệu CNTT", "Đại học Văn Lang"],
+  openGraph: {
+    title: "DataHub - Trạm Tri Thức IT Văn Lang",
+    description: "Nền tảng chia sẻ tài liệu và video bài giảng hàng đầu cho sinh viên IT VLU.",
+    url: "https://datahub-vlu.edu.vn", // Thay bằng domain thật của bạn sau này
+    siteName: "DataHub VLU",
+    images: [
+      {
+        url: "/images/banner_datahub.jpg",
+        width: 1200,
+        height: 630,
+        alt: "DataHub - Trạm Tri Thức IT Văn Lang",
+      },
+    ],
+    locale: "vi_VN",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "DataHub - Trạm Tri Thức IT Văn Lang",
+    description: "Khám phá kho tri thức số dành riêng cho sinh viên IT VLU.",
+    images: ["/images/banner_datahub.jpg"],
+  },
 };
 
 export default function RootLayout({ children }) {

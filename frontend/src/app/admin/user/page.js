@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
 export default function UserAdmin() {
   const [users, setUsers] = useState([]);
@@ -11,7 +12,7 @@ export default function UserAdmin() {
       setLoading(true);
       const token = localStorage.getItem("token");
 
-      const res = await fetch("http://localhost:5000/api/users", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/users`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -20,7 +21,7 @@ export default function UserAdmin() {
       const data = await res.json();
       setUsers(data);
     } catch (err) {
-      alert("Lỗi tải danh sách user");
+      toast.error("Lỗi tải danh sách user");
     } finally {
       setLoading(false);
     }
@@ -31,33 +32,51 @@ export default function UserAdmin() {
   }, []);
 
   const handleChangeRole = async (id, role) => {
-    const token = localStorage.getItem("token");
+    try {
+      const token = localStorage.getItem("token");
 
-    await fetch(`http://localhost:5000/api/users/${id}/role`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ role }),
-    });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/users/${id}/role`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ role }),
+      });
 
-    fetchUsers();
+      if (res.ok) {
+        toast.success("Cập nhật vai trò thành công!");
+        fetchUsers();
+      } else {
+        toast.error("Cập nhật vai trò thất bại");
+      }
+    } catch (err) {
+      toast.error("Lỗi kết nối");
+    }
   };
 
   const handleDelete = async (id) => {
     if (!confirm("Bạn có chắc muốn xoá user này?")) return;
 
-    const token = localStorage.getItem("token");
+    try {
+      const token = localStorage.getItem("token");
 
-    await fetch(`http://localhost:5000/api/users/${id}`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/users/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    fetchUsers();
+      if (res.ok) {
+        toast.success("Xóa người dùng thành công!");
+        fetchUsers();
+      } else {
+        toast.error("Xóa người dùng thất bại");
+      }
+    } catch (err) {
+      toast.error("Lỗi kết nối");
+    }
   };
 
   return (

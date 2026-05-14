@@ -5,6 +5,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import ReportModal from "@/components/ReportModal";
+import AddToCollectionModal from "@/components/AddToCollectionModal";
+import toast from "react-hot-toast";
 
 export default function DocumentDetailPage() {
   const params = useParams();
@@ -21,6 +23,7 @@ export default function DocumentDetailPage() {
   const [commentInput, setCommentInput] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isCollectionModalOpen, setIsCollectionModalOpen] = useState(false);
 
   // 1. Fetch dữ liệu từ API
   useEffect(() => {
@@ -28,9 +31,9 @@ export default function DocumentDetailPage() {
       try {
         setIsLoading(true);
         const [docRes, commentRes, reviewRes] = await Promise.all([
-          fetch(`http://localhost:5000/api/materials/${params.id}`),
-          fetch(`http://localhost:5000/api/comments/material/${params.id}`),
-          fetch(`http://localhost:5000/api/reviews/material/${params.id}`),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/materials/${params.id}`),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/comments/material/${params.id}`),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/reviews/material/${params.id}`),
         ]);
 
         if (!docRes.ok) throw new Error("Không tìm thấy tài liệu!");
@@ -46,7 +49,7 @@ export default function DocumentDetailPage() {
         // Fetch related documents
         if (docData.categoryId?._id) {
           const relatedRes = await fetch(
-            `http://localhost:5000/api/materials?category=${docData.categoryId._id}&limit=5`,
+            `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/materials?category=${docData.categoryId._id}&limit=5`,
           );
           const relatedData = await relatedRes.json();
           if (Array.isArray(relatedData)) {
@@ -68,7 +71,7 @@ export default function DocumentDetailPage() {
       // Gọi API tăng lượt tải
       try {
         await fetch(
-          `http://localhost:5000/api/materials/${params.id}/download`,
+          `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/materials/${params.id}/download`,
           { method: "POST" },
         );
         setDoc((prev) => ({
@@ -86,23 +89,23 @@ export default function DocumentDetailPage() {
 
   const handleSubmitReview = async () => {
     if (!userRating) {
-      alert("Vui lòng chọn số sao đánh giá!");
+      toast.error("Vui lòng chọn số sao đánh giá!");
       return;
     }
     if (!commentInput.trim()) {
-      alert("Vui lòng nhập nội dung đánh giá!");
+      toast.error("Vui lòng nhập nội dung đánh giá!");
       return;
     }
 
     const token = localStorage.getItem("token");
     if (!token) {
-      alert("Vui lòng đăng nhập để gửi đánh giá!");
+      toast.error("Vui lòng đăng nhập để gửi đánh giá!");
       return;
     }
 
     try {
       setIsSubmitting(true);
-      const reviewRes = await fetch("http://localhost:5000/api/reviews", {
+      const reviewRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/reviews`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -116,25 +119,25 @@ export default function DocumentDetailPage() {
       });
 
       if (reviewRes.ok) {
-        alert("Cảm ơn bạn đã đánh giá tài liệu!");
+        toast.success("Cảm ơn bạn đã đánh giá tài liệu!");
         setCommentInput("");
         setUserRating(0);
         const updatedReviews = await fetch(
-          `http://localhost:5000/api/reviews/material/${params.id}`,
+          `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/reviews/material/${params.id}`,
         ).then((res) => res.json());
         setReviews(updatedReviews);
         // Cập nhật lại thông tin tài liệu để lấy rating trung bình mới
         const updatedDoc = await fetch(
-          `http://localhost:5000/api/materials/${params.id}`,
+          `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/materials/${params.id}`,
         ).then((res) => res.json());
         setDoc(updatedDoc);
       } else {
         const errorData = await reviewRes.json();
-        alert(errorData.message || "Lỗi khi gửi đánh giá.");
+        toast.error(errorData.message || "Lỗi khi gửi đánh giá.");
       }
     } catch (err) {
       console.error("Review error:", err);
-      alert("Lỗi kết nối server.");
+      toast.error("Lỗi kết nối server.");
     } finally {
       setIsSubmitting(false);
     }
@@ -142,14 +145,17 @@ export default function DocumentDetailPage() {
 
   const handleLike = async () => {
     const token = localStorage.getItem("token");
-    if (!token) {
-      alert("Vui lòng đăng nhập để thích tài liệu!");
+    const userData = localStorage.getItem("user");
+    if (!token || !userData) {
+      toast.error("Vui lòng đăng nhập để thích tài liệu!");
       return;
     }
 
+    const currentUser = JSON.parse(userData);
+
     try {
       const res = await fetch(
-        `http://localhost:5000/api/materials/${params.id}/like`,
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/materials/${params.id}/like`,
         {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
@@ -158,12 +164,20 @@ export default function DocumentDetailPage() {
       const data = await res.json();
       if (res.ok) {
         setIsLiked(data.isLiked);
-        setDoc((prev) => ({
-          ...prev,
-          likes: data.isLiked
-            ? [...(prev.likes || []), "user-id"]
-            : (prev.likes || []).filter((id) => id !== "user-id"),
-        }));
+        if (data.isLiked) {
+          toast.success("Đã thêm vào danh sách yêu thích");
+        }
+        setDoc((prev) => {
+          const currentLikes = prev.likes || [];
+          const updatedLikes = data.isLiked
+            ? [...currentLikes, currentUser._id]
+            : currentLikes.filter((id) => id !== currentUser._id);
+          
+          return {
+            ...prev,
+            likes: updatedLikes
+          };
+        });
       }
     } catch (err) {
       console.error("Like error:", err);
@@ -178,13 +192,13 @@ export default function DocumentDetailPage() {
 
     const token = localStorage.getItem("token");
     if (!token) {
-      alert("Vui lòng đăng nhập để bình luận!");
+      toast.error("Vui lòng đăng nhập để bình luận!");
       return;
     }
 
     try {
       setIsSubmitting(true);
-      const res = await fetch("http://localhost:5000/api/comments", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/comments`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -198,19 +212,25 @@ export default function DocumentDetailPage() {
       });
 
       if (res.ok) {
+        toast.success("Đã gửi bình luận");
         setCommentText("");
         setReplyingTo(null);
         const updatedComments = await fetch(
-          `http://localhost:5000/api/comments/material/${params.id}`,
+          `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/comments/material/${params.id}`,
         ).then((res) => res.json());
         setComments(updatedComments);
+      } else {
+        toast.error("Gửi bình luận thất bại");
       }
     } catch (err) {
       console.error("Comment error:", err);
+      toast.error("Lỗi kết nối server");
     } finally {
       setIsSubmitting(false);
     }
   };
+
+
 
   // Cập nhật trạng thái like ban đầu
   useEffect(() => {
@@ -289,7 +309,7 @@ export default function DocumentDetailPage() {
       if (match && match[2].length === 11) {
         return (
           <div className="space-y-8 animate-in fade-in duration-500">
-            <div className="aspect-video w-full bg-slate-900 rounded-[2.5rem] border-4 border-slate-800 shadow-2xl overflow-hidden relative">
+            <div className="max-w-4xl mx-auto aspect-video w-full bg-slate-900 rounded-[2.5rem] border-4 border-slate-800 shadow-2xl overflow-hidden relative">
               <iframe
                 src={`https://www.youtube.com/embed/${match[2]}`}
                 className="w-full h-full border-none"
@@ -303,13 +323,13 @@ export default function DocumentDetailPage() {
 
       return (
         <div className="space-y-8 animate-in fade-in duration-500">
-          <div className="aspect-video w-full bg-slate-100 rounded-[2.5rem] border-4 border-slate-50 shadow-inner overflow-hidden flex items-center justify-center relative group">
+          <div className="max-w-3xl mx-auto aspect-video w-full bg-slate-100 rounded-[2.5rem] border-4 border-slate-50 shadow-inner overflow-hidden flex items-center justify-center relative group">
             <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-blue-500/10 group-hover:opacity-100 transition-opacity"></div>
             <div className="relative z-10 text-center space-y-6 px-10">
-              <div className="w-20 h-20 bg-white rounded-3xl shadow-xl flex items-center justify-center mx-auto text-emerald-500 group-hover:scale-110 transition-transform">
+              <div className="w-16 h-16 bg-white rounded-2xl shadow-xl flex items-center justify-center mx-auto text-emerald-500 group-hover:scale-110 transition-transform">
                 <svg
-                  width="40"
-                  height="40"
+                  width="32"
+                  height="32"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -323,10 +343,10 @@ export default function DocumentDetailPage() {
                 </svg>
               </div>
               <div>
-                <h4 className="text-xl font-black text-slate-800 mb-2 uppercase italic">
+                <h4 className="text-lg font-black text-slate-800 mb-2 uppercase italic">
                   Tài liệu từ nguồn bên ngoài
                 </h4>
-                <p className="text-sm font-bold text-slate-400 uppercase tracking-widest max-w-md mx-auto">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest max-w-xs mx-auto">
                   Tài liệu này được lưu trữ tại một trang web khác. Nhấn nút bên
                   dưới để truy cập.
                 </p>
@@ -335,12 +355,12 @@ export default function DocumentDetailPage() {
                 href={doc.fileUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-4 bg-slate-900 text-white px-10 py-5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-2xl shadow-slate-900/20 hover:bg-emerald-500 hover:shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all"
+                className="inline-flex items-center gap-3 bg-slate-900 text-white px-8 py-4 rounded-xl font-black text-[9px] uppercase tracking-[0.2em] shadow-2xl shadow-slate-900/20 hover:bg-emerald-500 hover:shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all"
               >
                 Mở liên kết gốc
                 <svg
-                  width="18"
-                  height="18"
+                  width="14"
+                  height="14"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -365,7 +385,7 @@ export default function DocumentDetailPage() {
       
       return (
         <div className="space-y-8 animate-in fade-in duration-500">
-          <div className="w-full aspect-[1/1.4] bg-slate-100 rounded-[2.5rem] border-4 border-slate-50 shadow-inner overflow-hidden relative group">
+          <div className="max-w-[760px] mx-auto w-full aspect-[3/4] max-h-[800px] bg-slate-100 rounded-[2.5rem] border-4 border-slate-50 shadow-inner overflow-hidden relative group">
             <iframe
               src={viewerUrl}
               className="w-full h-full border-none"
@@ -407,12 +427,13 @@ export default function DocumentDetailPage() {
     if (doc.materialType === "video") {
       return (
         <div className="space-y-8 animate-in fade-in duration-500">
-          <div className="aspect-video w-full bg-slate-900 rounded-[2.5rem] border-4 border-slate-800 shadow-2xl overflow-hidden relative group">
+          <div className="max-w-4xl mx-auto aspect-video w-full bg-slate-900 rounded-[2.5rem] border-4 border-slate-800 shadow-2xl overflow-hidden relative group">
             <video src={doc.fileUrl} controls className="w-full h-full"></video>
           </div>
         </div>
       );
     }
+
 
     // Default for other types (zip, etc.)
     return (
@@ -564,6 +585,15 @@ export default function DocumentDetailPage() {
                 ></path>
               </svg>
             </button>
+            {/* <button 
+              onClick={() => setIsCollectionModalOpen(true)}
+              className="p-3 rounded-2xl bg-white border border-slate-100 text-slate-400 hover:text-emerald-500 hover:border-emerald-100 transition-all active:scale-90"
+              title="Thêm vào bộ sưu tập"
+            >
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
+              </svg>
+            </button> */}
             <button 
               onClick={() => setIsReportModalOpen(true)}
               className="p-3 rounded-2xl bg-white border border-slate-100 text-slate-400 hover:text-red-500 hover:border-red-100 transition-all active:scale-90"
@@ -754,137 +784,193 @@ export default function DocumentDetailPage() {
                 )}
 
                 {activeTab === "comments" && (
-                  <div className="space-y-12 animate-in fade-in duration-500">
-                    <div className="flex flex-col gap-6 p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100 shadow-inner">
-                      <div className="flex items-center justify-between flex-wrap gap-4">
-                        <div className="flex items-center gap-4">
-                          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-blue-500 flex items-center justify-center text-white font-black text-xl shadow-lg shrink-0">
-                            B
-                          </div>
-                          <div>
-                            <p className="text-sm font-black text-slate-800 uppercase tracking-tight">
-                              Đánh giá của bạn
-                            </p>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                              Hãy cho mọi người biết cảm nhận của bạn
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-1">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <button
-                              key={star}
-                              onMouseEnter={() => setHoverRating(star)}
-                              onMouseLeave={() => setHoverRating(0)}
-                              onClick={() => setUserRating(star)}
-                              className="p-1 transition-transform active:scale-90"
-                            >
-                              <svg
-                                width="28"
-                                height="28"
-                                viewBox="0 0 24 24"
-                                fill={
-                                  (hoverRating || userRating) >= star
-                                    ? "#fbbf24"
-                                    : "none"
-                                }
-                                stroke={
-                                  (hoverRating || userRating) >= star
-                                    ? "#fbbf24"
-                                    : "#cbd5e1"
-                                }
-                                strokeWidth="2"
-                              >
-                                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                              </svg>
-                            </button>
-                          ))}
-                          {userRating > 0 && (
-                            <span className="ml-2 text-xs font-black text-amber-500">
-                              {userRating}.0
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="space-y-6">
-                        <textarea
-                          placeholder="Chia sẻ cảm nghĩ của bạn về tài liệu này..."
-                          value={commentInput || ""}
-                          onChange={(e) => setCommentInput(e.target.value)}
-                          className="w-full bg-white border-2 border-slate-100 rounded-3xl px-8 py-6 font-bold text-slate-700 outline-none focus:ring-8 focus:ring-emerald-500/5 focus:border-emerald-500/20 transition-all resize-none shadow-sm placeholder:text-slate-300"
-                          rows="4"
-                        ></textarea>
-                        <div className="flex justify-end">
-                          <button
-                            onClick={handleSubmitReview}
-                            disabled={isSubmitting}
-                            className="bg-slate-900 text-white font-black text-[10px] uppercase tracking-[0.2em] px-10 py-5 rounded-2xl shadow-xl shadow-slate-900/20 hover:bg-emerald-500 hover:shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
-                          >
-                            {isSubmitting ? "Đang gửi..." : "Gửi thảo luận"}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
+                  <div className="space-y-16 animate-in fade-in duration-500">
+                    {/* Phần Đánh giá (Reviews) */}
                     <div className="space-y-10">
-                      <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] mb-10">
-                        TẤT CẢ ĐÁNH GIÁ ({reviews.length})
-                      </h4>
-
-                      {reviews.length > 0 ? (
-                        reviews.map((rev) => (
-                          <div key={rev._id} className="flex gap-6 group">
-                            <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-500 font-black text-lg border border-slate-200 shrink-0 group-hover:bg-primary group-hover:text-white transition-all">
-                              {rev.userId?.fullName?.charAt(0) || "U"}
+                      <div className="flex flex-col gap-6 p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100 shadow-inner">
+                        <div className="flex items-center justify-between flex-wrap gap-4">
+                          <div className="flex items-center gap-4">
+                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-blue-500 flex items-center justify-center text-white font-black text-xl shadow-lg shrink-0">
+                              ★
                             </div>
-                            <div className="flex-1 space-y-3 pb-8 border-b border-slate-50">
-                              <div className="flex items-center justify-between">
-                                <div>
-                                  <h5 className="text-sm font-black text-slate-800 uppercase tracking-tight">
-                                    {rev.userId?.fullName}
-                                  </h5>
-                                  <div className="flex items-center gap-1 mt-1">
-                                    {[1, 2, 3, 4, 5].map((s) => (
-                                      <svg
-                                        key={s}
-                                        width="12"
-                                        height="12"
-                                        fill={
-                                          s <= rev.rating
-                                            ? "#fbbf24"
-                                            : "#e2e8f0"
-                                        }
-                                        viewBox="0 0 24 24"
-                                      >
-                                        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                                      </svg>
-                                    ))}
-                                  </div>
-                                </div>
-                                <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">
-                                  {new Date(rev.createdAt).toLocaleDateString(
-                                    "vi-VN",
-                                  )}
-                                </span>
-                              </div>
-                              <p className="text-sm text-slate-600 font-medium leading-relaxed">
-                                {rev.content}
+                            <div>
+                              <p className="text-sm font-black text-slate-800 uppercase tracking-tight">
+                                Đánh giá tài liệu
+                              </p>
+                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                Chia sẻ trải nghiệm và số sao của bạn
                               </p>
                             </div>
                           </div>
-                        ))
-                      ) : (
-                        <div className="text-center py-10 bg-white rounded-3xl border-2 border-dashed border-slate-100">
-                          <p className="text-slate-300 font-black text-[10px] uppercase tracking-widest">
-                            Chưa có đánh giá nào cho tài liệu này
-                          </p>
+
+                          <div className="flex items-center gap-1">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <button
+                                key={star}
+                                onMouseEnter={() => setHoverRating(star)}
+                                onMouseLeave={() => setHoverRating(0)}
+                                onClick={() => setUserRating(star)}
+                                className="p-1 transition-transform active:scale-90"
+                              >
+                                <svg
+                                  width="28"
+                                  height="28"
+                                  viewBox="0 0 24 24"
+                                  fill={
+                                    (hoverRating || userRating) >= star
+                                      ? "#fbbf24"
+                                      : "none"
+                                  }
+                                  stroke={
+                                    (hoverRating || userRating) >= star
+                                      ? "#fbbf24"
+                                      : "#cbd5e1"
+                                  }
+                                  strokeWidth="2"
+                                >
+                                  <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                                </svg>
+                              </button>
+                            ))}
+                          </div>
                         </div>
-                      )}
+
+                        <div className="space-y-6">
+                          <textarea
+                            placeholder="Tài liệu này có hữu ích không? Hãy cho mọi người biết..."
+                            value={commentInput || ""}
+                            onChange={(e) => setCommentInput(e.target.value)}
+                            className="w-full bg-white border-2 border-slate-100 rounded-3xl px-8 py-6 font-bold text-slate-700 outline-none focus:ring-8 focus:ring-emerald-500/5 focus:border-emerald-500/20 transition-all resize-none shadow-sm placeholder:text-slate-300"
+                            rows="3"
+                          ></textarea>
+                          <div className="flex justify-end">
+                            <button
+                              onClick={handleSubmitReview}
+                              disabled={isSubmitting}
+                              className="bg-slate-900 text-white font-black text-[10px] uppercase tracking-[0.2em] px-10 py-5 rounded-2xl shadow-xl shadow-slate-900/20 hover:bg-emerald-500 hover:shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+                            >
+                              Gửi đánh giá
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-8">
+                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">
+                          ĐÁNH GIÁ TỪ CỘNG ĐỒNG ({reviews.length})
+                        </h4>
+
+                        {reviews.length > 0 ? (
+                          <div className="grid grid-cols-1 gap-6">
+                            {reviews.map((rev) => (
+                              <div key={rev._id} className="p-8 bg-white border border-slate-50 rounded-[2rem] shadow-sm hover:shadow-md transition-all group">
+                                <div className="flex items-start justify-between mb-4">
+                                  <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 font-black text-sm">
+                                      {rev.userId?.fullName?.charAt(0) || "U"}
+                                    </div>
+                                    <div>
+                                      <h5 className="text-[11px] font-black text-slate-800 uppercase">
+                                        {rev.userId?.fullName}
+                                      </h5>
+                                      <div className="flex items-center gap-0.5">
+                                        {[1, 2, 3, 4, 5].map((s) => (
+                                          <svg
+                                            key={s}
+                                            width="10"
+                                            height="10"
+                                            fill={s <= rev.rating ? "#fbbf24" : "#e2e8f0"}
+                                            viewBox="0 0 24 24"
+                                          >
+                                            <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                                          </svg>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <span className="text-[9px] font-bold text-slate-300 uppercase">
+                                    {new Date(rev.createdAt).toLocaleDateString("vi-VN")}
+                                  </span>
+                                </div>
+                                <p className="text-sm text-slate-600 font-medium leading-relaxed italic">
+                                  "{rev.content}"
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-10 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-100">
+                            <p className="text-slate-300 font-black text-[10px] uppercase tracking-widest">
+                              Chưa có đánh giá nào
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Dải phân cách */}
+                    <div className="relative py-4">
+                      <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-slate-100"></div>
+                      </div>
+                      <div className="relative flex justify-center">
+                        <span className="bg-white px-6 text-[10px] font-black text-slate-300 uppercase tracking-[0.5em]">Hỏi đáp & Thảo luận</span>
+                      </div>
+                    </div>
+
+                    {/* Phần Bình luận (Comments) */}
+                    <div id="comment-form" className="space-y-10">
+                      <div className="space-y-6">
+                        {replyingTo && (
+                          <div className="flex items-center justify-between px-6 py-3 bg-emerald-50 rounded-xl border border-emerald-100 animate-in slide-in-from-top-2">
+                            <p className="text-[10px] font-black text-emerald-600 uppercase">
+                              Đang trả lời: <span className="italic">{replyingTo.name}</span>
+                            </p>
+                            <button 
+                              onClick={() => setReplyingTo(null)}
+                              className="text-[9px] font-black text-slate-400 hover:text-red-500 uppercase"
+                            >
+                              Hủy
+                            </button>
+                          </div>
+                        )}
+                        <div className="relative">
+                          <textarea
+                            placeholder="Đặt câu hỏi hoặc thảo luận về tài liệu này..."
+                            value={commentText}
+                            onChange={(e) => setCommentText(e.target.value)}
+                            className="w-full bg-white border-2 border-slate-100 rounded-3xl px-8 py-6 font-bold text-slate-700 outline-none focus:ring-8 focus:ring-blue-500/5 focus:border-blue-500/20 transition-all resize-none shadow-sm placeholder:text-slate-300"
+                            rows="3"
+                          ></textarea>
+                          <button
+                            onClick={handleSubmitComment}
+                            disabled={isSubmitting || !commentText.trim()}
+                            className="absolute bottom-4 right-4 bg-blue-600 text-white p-4 rounded-2xl shadow-lg hover:bg-blue-500 active:scale-95 transition-all disabled:opacity-30"
+                          >
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        {comments.length > 0 ? (
+                          comments.map((comment) => (
+                            <CommentItem key={comment._id} comment={comment} />
+                          ))
+                        ) : (
+                          <div className="text-center py-10">
+                            <p className="text-slate-300 font-black text-[10px] uppercase tracking-widest">
+                              Chưa có thảo luận nào
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
+
               </div>
             </div>
           </div>
@@ -1088,6 +1174,11 @@ export default function DocumentDetailPage() {
         isOpen={isReportModalOpen} 
         onClose={() => setIsReportModalOpen(false)} 
         materialId={params.id} 
+      />
+      <AddToCollectionModal
+        isOpen={isCollectionModalOpen}
+        onClose={() => setIsCollectionModalOpen(false)}
+        materialId={params.id}
       />
     </div>
   );

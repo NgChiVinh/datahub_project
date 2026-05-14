@@ -17,13 +17,13 @@ export default function VideoWatchPage() {
     const fetchVideoData = async () => {
       try {
         setIsLoading(true);
-        const res = await fetch(`http://localhost:5000/api/materials/${id}`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/materials/${id}`);
         const data = await res.json();
         setVideo(data);
 
         // Lấy video liên quan (cùng category)
         if (data.categoryId?._id) {
-          const relatedRes = await fetch(`http://localhost:5000/api/materials?materialType=video&category=${data.categoryId._id}`);
+          const relatedRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/materials?materialType=video&category=${data.categoryId._id}`);
           const relatedData = await relatedRes.json();
           setRelatedVideos(relatedData.filter(v => v._id !== id));
         }
@@ -102,6 +102,9 @@ export default function VideoWatchPage() {
             
             <div className="bg-white rounded-[3rem] p-8 md:p-12 shadow-xl shadow-slate-200/50 border border-slate-100">
               <div className="flex flex-wrap gap-3 mb-6">
+                <span className="px-4 py-1.5 rounded-xl bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest border border-slate-900 shadow-lg shadow-slate-200">
+                  {video.majorId?.name || "Chung"}
+                </span>
                 <span className="px-4 py-1.5 rounded-xl bg-emerald-50 text-emerald-600 text-[9px] font-black uppercase tracking-widest border border-emerald-100">
                   {video.categoryId?.name}
                 </span>

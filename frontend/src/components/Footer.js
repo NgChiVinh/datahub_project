@@ -109,14 +109,19 @@ export default function Footer() {
         {/* Info Bar & Copyright */}
         <div className="pt-12 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-10">
           <div className="flex items-center gap-8">
-            <div className="relative h-12 w-32 transition-all duration-500">
+            <a 
+              href="https://www.vlu.edu.vn/" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="relative h-12 w-32 transition-all duration-500 hover:scale-105 block"
+            >
               <Image 
                 src="/images/logo_vlu.png" 
                 alt="VLU Logo" 
                 fill
                 className="object-contain object-left"
               />
-            </div>
+            </a>
             <div className="hidden sm:block h-8 w-px bg-slate-200"></div>
             <div className="flex flex-col">
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Khoa Công nghệ Thông tin</span>

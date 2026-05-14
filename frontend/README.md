@@ -1,3 +1,15 @@
+# DataHub - Website Chia sẻ Tài liệu Học tập
+
+Thiết kế website chia sẻ tài liệu học tập cho sinh viên Khoa Công nghệ thông tin, Đại học Văn Lang, cung cấp các nền tảng chia sẻ tài liệu, bài tập, video bài học... cho sinh viên.
+
+## Tính năng chính
+- **AI Gợi ý nội dung (Personalized Recommendation)**: Đề xuất tài liệu, bài tập, video phù hợp dựa trên lịch sử tìm kiếm và sở thích của sinh viên.
+- **AI Phân loại (Automated Classification)**: Phân loại tài liệu theo chủ đề, cấp độ hoặc thể loại.
+- **Chia sẻ tài liệu**: Sinh viên có thể chia sẻ tài liệu của mình với người học khác.
+- **Đánh giá tài liệu**: Cho phép sinh viên đánh giá tài liệu học tập qua quá trình chia sẻ.
+
+---
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started
