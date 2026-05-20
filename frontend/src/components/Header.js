@@ -29,7 +29,10 @@ export default function Header() {
       try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/materials?search=${searchQuery}&status=approved&limit=5`);
         const data = await res.json();
-        if (Array.isArray(data)) {
+        // Backend returns { materials: [...], pagination: {...} } or [...]
+        if (data && Array.isArray(data.materials)) {
+          setSuggestions(data.materials);
+        } else if (Array.isArray(data)) {
           setSuggestions(data.slice(0, 5));
         }
       } catch (error) {
@@ -45,21 +48,6 @@ export default function Header() {
 
   const handleSearchSubmit = async (e) => {
     if (e.key === "Enter" && searchQuery.trim()) {
-      // Log search query
-      try {
-        const token = localStorage.getItem("token");
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/search-logs`, {
-          method: "POST",
-          headers: { 
-            "Content-Type": "application/json",
-            "Authorization": token ? `Bearer ${token}` : "" 
-          },
-          body: JSON.stringify({ searchQuery: searchQuery.trim() }),
-        });
-      } catch (err) {
-        console.error("Lỗi log search:", err);
-      }
-      
       setIsSearchOpen(false);
       router.push(`/documents?search=${encodeURIComponent(searchQuery.trim())}`);
     }
@@ -76,7 +64,7 @@ export default function Header() {
           "Authorization": token ? `Bearer ${token}` : "" 
         },
         body: JSON.stringify({ 
-          searchQuery: searchQuery,
+          searchQuery: searchQuery.trim(),
           clickedMaterialId: material._id 
         }),
       });

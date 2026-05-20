@@ -17,6 +17,27 @@ export default function VideoGalleryPage() {
   const [sortBy, setSortBy] = useState("newest");
   const [isLoading, setIsLoading] = useState(true);
 
+  const logClick = async (materialId, materialTitle) => {
+    if (!searchQuery.trim()) return; // Chỉ log khi người dùng có thực hiện tìm kiếm
+
+    try {
+      const token = localStorage.getItem("token");
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/search-logs`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": token ? `Bearer ${token}` : "" 
+        },
+        body: JSON.stringify({ 
+          searchQuery: searchQuery.trim(),
+          clickedMaterialId: materialId 
+        }),
+      });
+    } catch (err) {
+      console.error("Lỗi log click:", err);
+    }
+  };
+
   // Lấy danh mục (Majors)
   useEffect(() => {
     const fetchMajors = async () => {
@@ -191,7 +212,11 @@ export default function VideoGalleryPage() {
                 videos.map((video) => (
                   <div key={video._id} className="group bg-white rounded-2xl border border-slate-100 hover:border-orange-200 hover:shadow-xl hover:shadow-slate-200/40 transition-all duration-300 flex flex-col h-full overflow-hidden">
                     {/* Thumbnail Container */}
-                    <Link href={`/videos/${video._id}`} className="block relative aspect-video overflow-hidden bg-slate-900">
+                    <Link 
+                      href={`/videos/${video._id}`} 
+                      className="block relative aspect-video overflow-hidden bg-slate-900"
+                      onClick={() => logClick(video._id, video.title)}
+                    >
                       <Image 
                         src={video.sourceType === 'link' && video.fileUrl.includes('youtube.com') 
                           ? `https://img.youtube.com/vi/${video.fileUrl.split('v=')[1]?.split('&')[0]}/maxresdefault.jpg`
@@ -228,7 +253,10 @@ export default function VideoGalleryPage() {
                         {video.categoryId?.name || "Bài giảng"}
                       </p>
                       
-                      <Link href={`/videos/${video._id}`}>
+                      <Link 
+                        href={`/videos/${video._id}`}
+                        onClick={() => logClick(video._id, video.title)}
+                      >
                         <h3 className="text-sm font-bold text-slate-800 leading-snug line-clamp-2 hover:text-orange-500 transition-colors mb-6">
                           {video.title}
                         </h3>

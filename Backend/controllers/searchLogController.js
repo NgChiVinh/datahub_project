@@ -4,9 +4,24 @@ const SearchLog = require("../models/SearchLog");
 exports.createSearchLog = async (req, res) => {
   try {
     const { searchQuery, clickedMaterialId } = req.body;
+    const userId = req.user ? req.user._id : null;
+
+    // Giới hạn 10 bản ghi cho mỗi người dùng (nếu đã đăng nhập)
+    if (userId) {
+      const logCount = await SearchLog.countDocuments({ userId });
+      if (logCount >= 10) {
+        // Tìm và xóa các bản ghi cũ nhất để chỉ còn lại tối đa 9 bản ghi trước khi lưu bản ghi mới
+        const oldestLogs = await SearchLog.find({ userId })
+          .sort({ createdAt: 1 })
+          .limit(logCount - 9);
+        
+        const oldestIds = oldestLogs.map(log => log._id);
+        await SearchLog.deleteMany({ _id: { $in: oldestIds } });
+      }
+    }
 
     const log = new SearchLog({
-      userId: req.user ? req.user._id : null, // nếu chưa login vẫn log được
+      userId, // nếu chưa login vẫn log được
       searchQuery,
       clickedMaterialId: clickedMaterialId || null,
     });

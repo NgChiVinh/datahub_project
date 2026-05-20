@@ -36,6 +36,27 @@ const authMiddleware = async (req, res, next) => {
   }
 };
 
+const optionalAuth = async (req, res, next) => {
+  let token = req.header("Authorization");
+
+  if (!token || !token.startsWith("Bearer ")) {
+    req.user = null;
+    return next();
+  }
+
+  token = token.slice(7);
+
+  try {
+    const decoded = jwt.verify(token, process.env.SECRET_KEY);
+    const user = await User.findById(decoded.userId).select("-password");
+    req.user = user || null;
+    next();
+  } catch (error) {
+    req.user = null;
+    next();
+  }
+};
+
 const isAdmin = async (req, res, next) => {
   let token = req.header("Authorization");
   if (!token) return res.status(401).json({ message: "Chưa đăng nhập" });
@@ -59,4 +80,4 @@ const isAdmin = async (req, res, next) => {
   }
 };
 
-module.exports = { authMiddleware, isAdmin };
+module.exports = { authMiddleware, optionalAuth, isAdmin };

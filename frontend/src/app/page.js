@@ -13,6 +13,27 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
+  const logClick = async (materialId, materialTitle) => {
+    if (!searchQuery.trim()) return; // Chỉ log khi người dùng có thực hiện tìm kiếm
+
+    try {
+      const token = localStorage.getItem("token");
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/search-logs`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": token ? `Bearer ${token}` : "" 
+        },
+        body: JSON.stringify({ 
+          searchQuery: searchQuery.trim(),
+          clickedMaterialId: materialId 
+        }),
+      });
+    } catch (err) {
+      console.error("Lỗi log click:", err);
+    }
+  };
+
   // Lấy dữ liệu từ Backend
   useEffect(() => {
     const fetchData = async () => {
@@ -182,7 +203,12 @@ export default function Home() {
                   const config = configs[item.materialType] || configs.pdf;
 
                   return (
-                    <Link href={`/documents/${item._id}`} key={item._id} className="group flex flex-col bg-white rounded-[2rem] border border-slate-100 hover:border-emerald-500/30 hover:shadow-[0_20px_40px_-15px_rgba(16,185,129,0.1)] transition-all duration-500 hover:-translate-y-1.5 overflow-hidden relative">
+                    <Link 
+                      href={`/documents/${item._id}`} 
+                      key={item._id} 
+                      className="group flex flex-col bg-white rounded-[2rem] border border-slate-100 hover:border-emerald-500/30 hover:shadow-[0_20px_40px_-15px_rgba(16,185,129,0.1)] transition-all duration-500 hover:-translate-y-1.5 overflow-hidden relative"
+                      onClick={() => logClick(item._id, item.title)}
+                    >
                       <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-full blur-2xl -mr-10 -mt-10 z-0"></div>
                       
                       <div className="p-6 sm:p-8 flex flex-col flex-1 relative z-10">

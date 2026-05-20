@@ -24,6 +24,27 @@ export default function DocumentsContent() {
   const [isLoading, setIsLoading] = useState(true);
 
   const searchParams = useSearchParams();
+
+  const logClick = async (materialId, materialTitle) => {
+    if (!searchQuery.trim()) return; // Chỉ log khi người dùng có thực hiện tìm kiếm
+
+    try {
+      const token = localStorage.getItem("token");
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/search-logs`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": token ? `Bearer ${token}` : "" 
+        },
+        body: JSON.stringify({ 
+          searchQuery: searchQuery.trim(),
+          clickedMaterialId: materialId 
+        }),
+      });
+    } catch (err) {
+      console.error("Lỗi log click:", err);
+    }
+  };
   
   // 1. Lấy dữ liệu ban đầu và đồng bộ từ URL
   useEffect(() => {
@@ -370,7 +391,11 @@ export default function DocumentsContent() {
               ) : materials.length > 0 ? (
                 materials.map((doc) => (
                   <div key={doc._id} className="group bg-white rounded-2xl border border-slate-100 hover:border-emerald-500/20 hover:shadow-xl hover:shadow-slate-200/40 transition-all duration-300 flex flex-col h-full overflow-hidden">
-                    <Link href={`/documents/${doc._id}`} className="block relative aspect-[16/11] overflow-hidden">
+                    <Link 
+                      href={`/documents/${doc._id}`} 
+                      className="block relative aspect-[16/11] overflow-hidden"
+                      onClick={() => logClick(doc._id, doc.title)}
+                    >
                       <div className={`w-full h-full flex flex-col items-center justify-center bg-gradient-to-br transition-transform duration-500 group-hover:scale-105 ${getTypeStyles(doc.materialType)}`}>
                         <div className="mb-2 opacity-80 group-hover:opacity-100 transition-opacity">
                           {getFileIcon(doc.materialType)}
@@ -389,7 +414,10 @@ export default function DocumentsContent() {
                         {doc.categoryId?.name}
                       </p>
                       
-                      <Link href={`/documents/${doc._id}`}>
+                      <Link 
+                        href={`/documents/${doc._id}`}
+                        onClick={() => logClick(doc._id, doc.title)}
+                      >
                         <h3 className="text-sm font-bold text-slate-800 leading-snug line-clamp-2 hover:text-emerald-600 transition-colors mb-4">
                           {doc.title}
                         </h3>

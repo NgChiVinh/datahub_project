@@ -9,10 +9,10 @@ const {
   getTopSearchKeywords,
 } = require("../controllers/searchLogController");
 
-const { authMiddleware } = require("../middleware/authMiddleware");
+const { authMiddleware, optionalAuth } = require("../middleware/authMiddleware");
 const adminMiddleware = require("../middleware/adminMiddleware");
 
-router.post("/", authMiddleware, createSearchLog);
+router.post("/", optionalAuth, createSearchLog);
 
 router.get("/me", authMiddleware, getMySearchLogs);
 
