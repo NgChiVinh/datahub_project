@@ -35,10 +35,11 @@ const getCollections = async (req, res) => {
     }
 
     if (userId && mongoose.Types.ObjectId.isValid(userId)) {
-      if (userId === req.user._id.toString()) {
-        query = { userId };
+      const userObjectId = new mongoose.Types.ObjectId(userId);
+      if (userObjectId.equals(req.user._id)) {
+        query = { userId: userObjectId };
       } else {
-        query = { userId, isPublic: true };
+        query = { userId: userObjectId, isPublic: true };
       }
     } else if (userId) {
       // Nếu có userId nhưng không hợp lệ
@@ -164,7 +165,7 @@ const addMaterialToCollection = async (req, res) => {
       return res.status(403).json({ message: "Không có quyền" });
     }
 
-    if (!collection.materialIds.includes(materialId)) {
+    if (!collection.materialIds.some((id) => id.toString() === materialId)) {
       collection.materialIds.push(materialId);
       await collection.save();
     }

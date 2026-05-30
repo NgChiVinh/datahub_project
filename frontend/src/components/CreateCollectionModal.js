@@ -42,7 +42,7 @@ export default function CreateCollectionModal({ isOpen, onClose, onSuccess }) {
 
       if (res.ok) {
         toast.success("Tạo bộ sưu tập thành công!");
-        onSuccess(data.collection);
+        if (onSuccess) onSuccess(data.collection);
         onClose();
         setName("");
         setDescription("");

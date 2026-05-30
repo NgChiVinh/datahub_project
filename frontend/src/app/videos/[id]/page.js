@@ -4,6 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import ReportModal from "@/components/ReportModal";
+import AddToCollectionModal from "@/components/AddToCollectionModal";
+import toast from "react-hot-toast";
 
 export default function VideoWatchPage() {
   const { id } = useParams();
@@ -11,6 +13,7 @@ export default function VideoWatchPage() {
   const [relatedVideos, setRelatedVideos] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isCollectionModalOpen, setIsCollectionModalOpen] = useState(false);
 
   // 1. Lấy dữ liệu video chi tiết
   useEffect(() => {
@@ -136,6 +139,15 @@ export default function VideoWatchPage() {
                       <p className="text-[9px] font-bold text-slate-300 uppercase tracking-widest">Đánh giá</p>
                    </div>
                    <button 
+                    onClick={() => setIsCollectionModalOpen(true)}
+                    className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-300 hover:bg-emerald-50 hover:text-emerald-500 transition-all active:scale-95"
+                    title="Thêm vào bộ sưu tập"
+                   >
+                     <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
+                     </svg>
+                   </button>
+                   <button 
                     onClick={() => setIsReportModalOpen(true)}
                     className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-300 hover:bg-red-50 hover:text-red-500 transition-all active:scale-95"
                     title="Báo cáo vi phạm"
@@ -214,6 +226,11 @@ export default function VideoWatchPage() {
         isOpen={isReportModalOpen} 
         onClose={() => setIsReportModalOpen(false)} 
         materialId={id} 
+      />
+      <AddToCollectionModal
+        isOpen={isCollectionModalOpen}
+        onClose={() => setIsCollectionModalOpen(false)}
+        materialId={id}
       />
     </div>
   );

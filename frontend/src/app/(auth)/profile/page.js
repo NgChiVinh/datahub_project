@@ -269,7 +269,7 @@ export default function ProfilePage() {
               {[
                 { id: "uploads", label: "Tài liệu của tôi" },
                 { id: "favorites", label: "Tài liệu đã thích" },
-                // { id: "collections", label: "Bộ sưu tập" },
+                { id: "collections", label: "Bộ sưu tập" },
                 { id: "settings", label: "Cài đặt" },
               ].map((tab) => (
                 <button
@@ -286,14 +286,14 @@ export default function ProfilePage() {
               ))}
             </div>
 
-            {/* {activeTab === "collections" && (
+            {activeTab === "collections" && (
               <button
                 onClick={() => setIsCollectionModalOpen(true)}
                 className="px-8 py-4 bg-emerald-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-900 transition-all shadow-lg flex items-center justify-center gap-2"
               >
                 Tạo bộ sưu tập
               </button>
-            )} */}
+            )}
           </div>
 
           <div className="min-h-[400px]">

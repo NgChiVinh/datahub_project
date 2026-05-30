@@ -30,17 +30,20 @@ export default function ChangePasswordModal({ isOpen, onClose }) {
 
     try {
       setIsSubmitting(true);
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/users/change-password`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/users/change-password`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            oldPassword,
+            newPassword,
+          }),
         },
-        body: JSON.stringify({
-          oldPassword,
-          newPassword,
-        }),
-      });
+      );
 
       const data = await res.json();
 
@@ -70,19 +73,32 @@ export default function ChangePasswordModal({ isOpen, onClose }) {
             <h3 className="text-xl font-black text-slate-900 uppercase italic tracking-tight">
               Đổi <span className="text-emerald-500">Mật khẩu</span>
             </h3>
-            <button 
+            <button
               onClick={onClose}
               className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all"
             >
-              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
+              <svg
+                width="20"
+                height="20"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2.5"
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-3">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Mật khẩu cũ</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                Mật khẩu cũ
+              </label>
               <input
                 type="password"
                 value={oldPassword}
@@ -93,7 +109,9 @@ export default function ChangePasswordModal({ isOpen, onClose }) {
             </div>
 
             <div className="space-y-3">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Mật khẩu mới</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                Mật khẩu mới
+              </label>
               <input
                 type="password"
                 value={newPassword}
@@ -104,7 +122,9 @@ export default function ChangePasswordModal({ isOpen, onClose }) {
             </div>
 
             <div className="space-y-3">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Xác nhận mật khẩu mới</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                Xác nhận mật khẩu mới
+              </label>
               <input
                 type="password"
                 value={confirmPassword}

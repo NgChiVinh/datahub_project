@@ -24,6 +24,7 @@ const commentRoutes = require("./routes/commentRoutes");
 const reportRoutes = require("./routes/reportRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const searchLogRoutes = require("./routes/searchLogRoutes");
+const studyCollectionRoutes = require("./routes/studyCollectionRoutes");
 
 // Sử dụng API routes
 app.use("/api/users", userRoutes);
@@ -36,6 +37,7 @@ app.use("/api/comments", commentRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/search-logs", searchLogRoutes);
+app.use("/api/collections", studyCollectionRoutes);
 
 // Default route
 app.get("/", (req, res) => {

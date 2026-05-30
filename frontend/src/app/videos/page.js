@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import AddToCollectionModal from "@/components/AddToCollectionModal";
 
 export default function VideoGalleryPage() {
   const [videos, setVideos] = useState([]);
@@ -16,6 +17,17 @@ export default function VideoGalleryPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("newest");
   const [isLoading, setIsLoading] = useState(true);
+
+  // Collection Modal State
+  const [isCollectionModalOpen, setIsCollectionModalOpen] = useState(false);
+  const [selectedVideoId, setSelectedVideoId] = useState(null);
+
+  const handleAddToCollection = (e, id) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSelectedVideoId(id);
+    setIsCollectionModalOpen(true);
+  };
 
   const logClick = async (materialId, materialTitle) => {
     if (!searchQuery.trim()) return; // Chỉ log khi người dùng có thực hiện tìm kiếm
@@ -272,8 +284,20 @@ export default function VideoGalleryPage() {
                             <span className="text-[9px] text-slate-400 font-medium">{new Date(video.createdAt).toLocaleDateString("vi-VN")}</span>
                           </div>
                         </div>
-                        <div className="flex items-center gap-1.5 text-slate-300 group-hover:text-orange-400 transition-colors">
-                           <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3"><path d="M12 4L12 20M20 12L4 12" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        <div className="flex items-center gap-3">
+                           <button 
+                             onClick={(e) => handleAddToCollection(e, video._id)}
+                             className="p-2 text-slate-300 hover:text-orange-500 transition-colors"
+                             title="Thêm vào bộ sưu tập"
+                           >
+                              <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                                 <path d="M12 4L12 20M20 12L4 12" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                           </button>
+                           <div className="flex items-center gap-1.5 text-slate-300">
+                              <span className="text-[11px] font-bold text-slate-900">{video.metrics?.viewCount || 0}</span>
+                              <span className="text-[9px] font-bold text-slate-300 uppercase tracking-tighter">Xem</span>
+                           </div>
                         </div>
                       </div>
                     </div>
@@ -308,6 +332,12 @@ export default function VideoGalleryPage() {
           </main>
         </div>
       </div>
+
+      <AddToCollectionModal 
+        isOpen={isCollectionModalOpen}
+        onClose={() => setIsCollectionModalOpen(false)}
+        materialId={selectedVideoId}
+      />
     </div>
   );
 }
