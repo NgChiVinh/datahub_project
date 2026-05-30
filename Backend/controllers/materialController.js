@@ -4,6 +4,7 @@ const Category = require("../models/Category");
 const Notification = require("../models/Notification");
 const slugify = require("slugify");
 const mongoose = require("mongoose");
+const uploadFile = require("../utils/uploadFile");
 
 // CREATE (upload file hoặc gửi link + lưu DB)
 const createMaterial = async (req, res) => {
@@ -24,8 +25,17 @@ const createMaterial = async (req, res) => {
     let finalMaterialType = materialType || "other";
 
     if (req.file) {
-      finalFileUrl = req.file.path;
-      finalSourceType = "upload";
+      try {
+        const uploadResult = await uploadFile(req.file);
+        finalFileUrl = uploadResult.url;
+        finalSourceType = "upload";
+      } catch (uploadError) {
+        console.error("Upload error:", uploadError);
+        return res.status(500).json({
+          message: "Lỗi khi tải file lên hệ thống lưu trữ",
+          error: uploadError.message,
+        });
+      }
 
       if (!materialType || materialType === "other") {
         const ext = req.file.originalname.split(".").pop().toLowerCase();
@@ -358,6 +368,30 @@ const updateMaterial = async (req, res) => {
     if (categoryId) material.categoryId = categoryId;
     if (majorId) material.majorId = majorId;
     if (academicYear) material.academicYear = academicYear;
+
+    if (req.file) {
+      try {
+        const uploadResult = await uploadFile(req.file);
+        material.fileUrl = uploadResult.url;
+        material.sourceType = "upload";
+
+        // Cập nhật materialType nếu chưa có hoặc là 'other'
+        if (!materialType || materialType === "other") {
+          const ext = req.file.originalname.split(".").pop().toLowerCase();
+          if (["pdf"].includes(ext)) material.materialType = "pdf";
+          else if (["doc", "docx", "odt", "txt"].includes(ext)) material.materialType = "docx";
+          else if (["zip", "rar", "7z", "tar", "gz"].includes(ext)) material.materialType = "zip";
+          else if (["mp4", "mov", "avi", "mkv", "webm", "flv", "wmv"].includes(ext)) material.materialType = "video";
+          else if (["ppt", "pptx"].includes(ext)) material.materialType = "pptx";
+        }
+      } catch (uploadError) {
+        console.error("Update upload error:", uploadError);
+        return res.status(500).json({
+          message: "Lỗi khi tải file mới lên",
+          error: uploadError.message,
+        });
+      }
+    }
 
     if (status && req.user.role === "admin") {
       material.status = status;

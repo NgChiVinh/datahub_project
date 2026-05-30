@@ -1,48 +1,41 @@
-// middleware/multer.js
 const multer = require("multer");
-const { CloudinaryStorage } = require("multer-storage-cloudinary");
-const cloudinary = require("../config/cloudinary");
 
-const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: async (req, file) => {
-    let folder = "materials";
+const storage = multer.memoryStorage();
 
-    let resource_type = "auto"; // cho phép mọi loại file
-
-    return {
-      folder: folder,
-      resource_type: resource_type,
-      public_id: Date.now() + "-" + file.originalname,
-    };
-  },
-});
-
-// filter loại file
 const fileFilter = (req, file, cb) => {
   const allowedTypes = [
     "application/pdf",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
-    "application/msword", // .doc
+
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/msword",
+
+    "application/vnd.ms-powerpoint",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+
     "application/zip",
     "application/x-zip-compressed",
-    "application/vnd.openxmlformats-officedocument.presentationml.presentation", // .pptx
+
     "video/mp4",
+    "video/webm",
+    "video/quicktime",
+
     "image/jpeg",
-    "image/png"
+    "image/png",
   ];
 
   if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error("Định dạng file không được hỗ trợ!"), false);
+    cb(new Error("Định dạng file không được hỗ trợ"), false);
   }
 };
 
 const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 100 * 1024 * 1024 }, // max 100MB
+  limits: {
+    fileSize: 100 * 1024 * 1024,
+  },
 });
 
 module.exports = upload;

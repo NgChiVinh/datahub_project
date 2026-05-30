@@ -27,7 +27,9 @@ export default function Header() {
       }
       setIsSearching(true);
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/materials?search=${searchQuery}&status=approved&limit=5`);
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/materials?search=${searchQuery}&status=approved&limit=5`,
+        );
         const data = await res.json();
         // Backend returns { materials: [...], pagination: {...} } or [...]
         if (data && Array.isArray(data.materials)) {
@@ -49,7 +51,9 @@ export default function Header() {
   const handleSearchSubmit = async (e) => {
     if (e.key === "Enter" && searchQuery.trim()) {
       setIsSearchOpen(false);
-      router.push(`/documents?search=${encodeURIComponent(searchQuery.trim())}`);
+      router.push(
+        `/documents?search=${encodeURIComponent(searchQuery.trim())}`,
+      );
     }
   };
 
@@ -57,17 +61,20 @@ export default function Header() {
     // Log click
     try {
       const token = localStorage.getItem("token");
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/search-logs`, {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": token ? `Bearer ${token}` : "" 
+      await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/search-logs`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token ? `Bearer ${token}` : "",
+          },
+          body: JSON.stringify({
+            searchQuery: searchQuery.trim(),
+            clickedMaterialId: material._id,
+          }),
         },
-        body: JSON.stringify({ 
-          searchQuery: searchQuery.trim(),
-          clickedMaterialId: material._id 
-        }),
-      });
+      );
     } catch (err) {
       console.error("Lỗi log click:", err);
     }
@@ -101,9 +108,12 @@ export default function Header() {
       if (!user) return;
       try {
         const token = localStorage.getItem("token");
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/notifications`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/notifications`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
         const data = await res.json();
         if (Array.isArray(data)) setNotifications(data);
       } catch (error) {
@@ -119,10 +129,13 @@ export default function Header() {
   const markNotifsAsRead = async () => {
     try {
       const token = localStorage.getItem("token");
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/notifications/mark-as-read`, {
-        method: "PUT",
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/notifications/mark-as-read`,
+        {
+          method: "PUT",
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       setNotifications(notifications.map((n) => ({ ...n, isRead: true })));
     } catch (error) {
       console.error("Lỗi đánh dấu đã đọc:", error);
@@ -232,7 +245,11 @@ export default function Header() {
             </svg>
           </button>
 
-          <Link href="/" onClick={handleLogoClick} className="flex items-center group min-w-[120px]">
+          <Link
+            href="/"
+            onClick={handleLogoClick}
+            className="flex items-center group min-w-[120px]"
+          >
             <div className="relative h-10 w-32 lg:h-12 lg:w-40 transition-all duration-300 group-hover:scale-105">
               <Image
                 src="/images/logo_datahub.png"
@@ -290,7 +307,9 @@ export default function Header() {
                   {isSearching ? (
                     <div className="p-4 text-center">
                       <div className="animate-spin inline-block w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full mr-2"></div>
-                      <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Đang tìm...</span>
+                      <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
+                        Đang tìm...
+                      </span>
                     </div>
                   ) : (
                     <div className="flex flex-col">
@@ -300,31 +319,65 @@ export default function Header() {
                           onClick={() => handleSuggestionClick(item)}
                           className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 text-left transition-colors border-b border-slate-50 last:border-0"
                         >
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                            item.materialType === "video" ? "bg-orange-100 text-orange-600" : "bg-emerald-100 text-emerald-600"
-                          }`}>
+                          <div
+                            className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                              item.materialType === "video"
+                                ? "bg-orange-100 text-orange-600"
+                                : "bg-emerald-100 text-emerald-600"
+                            }`}
+                          >
                             {item.materialType === "video" ? (
-                              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                              <svg
+                                width="14"
+                                height="14"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                                ></path>
+                              </svg>
                             ) : (
-                              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                              <svg
+                                width="14"
+                                height="14"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                                ></path>
+                              </svg>
                             )}
                           </div>
                           <div className="flex-1 overflow-hidden">
-                            <p className="text-sm font-semibold text-slate-700 truncate">{item.title}</p>
+                            <p className="text-sm font-semibold text-slate-700 truncate">
+                              {item.title}
+                            </p>
                             <p className="text-[11px] font-medium text-slate-400 uppercase tracking-tight">
                               {item.materialType} • {item.uploaderId?.fullName}
                             </p>
                           </div>
                         </button>
                       ))}
-                      <button 
+                      <button
                         onClick={() => {
                           const e = { key: "Enter" };
                           handleSearchSubmit(e);
                         }}
                         className="p-3 text-center bg-slate-50 hover:bg-slate-100 transition-colors"
                       >
-                        <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-widest">Xem tất cả kết quả</span>
+                        <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-widest">
+                          Xem tất cả kết quả
+                        </span>
                       </button>
                     </div>
                   )}
@@ -432,8 +485,12 @@ export default function Header() {
               {isNotifOpen && (
                 <div className="absolute right-0 mt-4 w-80 origin-top-right rounded-2xl bg-white p-2 shadow-xl border border-slate-100 z-[100] animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
                   <div className="p-4 border-b border-slate-50 flex items-center justify-between">
-                    <h3 className="text-xs font-bold text-slate-800">Thông báo</h3>
-                    <span className="text-[10px] font-semibold bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full uppercase">Mới nhất</span>
+                    <h3 className="text-xs font-bold text-slate-800">
+                      Thông báo
+                    </h3>
+                    <span className="text-[10px] font-semibold bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full uppercase">
+                      Mới nhất
+                    </span>
                   </div>
                   <div className="max-h-80 overflow-y-auto custom-scrollbar">
                     {notifications.length > 0 ? (
@@ -443,17 +500,42 @@ export default function Header() {
                           href={n.link || "#"}
                           className={`flex gap-3 p-4 hover:bg-slate-50 transition-all rounded-xl border-b border-slate-50 last:border-0 ${!n.isRead ? "bg-emerald-50/30" : ""}`}
                         >
-                          <div className={`w-8 h-8 rounded-lg shrink-0 flex items-center justify-center ${n.type === "material_approved" ? "bg-emerald-100 text-emerald-600" : "bg-slate-100 text-slate-600"}`}>
-                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                          <div
+                            className={`w-8 h-8 rounded-lg shrink-0 flex items-center justify-center ${n.type === "material_approved" ? "bg-emerald-100 text-emerald-600" : "bg-slate-100 text-slate-600"}`}
+                          >
+                            <svg
+                              width="16"
+                              height="16"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                              ></path>
+                            </svg>
                           </div>
                           <div className="space-y-1">
-                            <p className={`text-[13px] leading-snug ${!n.isRead ? "font-bold text-slate-900" : "font-medium text-slate-600"}`}>{n.message}</p>
-                            <p className="text-[11px] text-slate-400 font-medium">{new Date(n.createdAt).toLocaleDateString("vi-VN")}</p>
+                            <p
+                              className={`text-[13px] leading-snug ${!n.isRead ? "font-bold text-slate-900" : "font-medium text-slate-600"}`}
+                            >
+                              {n.message}
+                            </p>
+                            <p className="text-[11px] text-slate-400 font-medium">
+                              {new Date(n.createdAt).toLocaleDateString(
+                                "vi-VN",
+                              )}
+                            </p>
                           </div>
                         </Link>
                       ))
                     ) : (
-                      <div className="py-10 text-center text-slate-400 text-xs font-medium">Không có thông báo nào</div>
+                      <div className="py-10 text-center text-slate-400 text-xs font-medium">
+                        Không có thông báo nào
+                      </div>
                     )}
                   </div>
                 </div>
@@ -465,7 +547,21 @@ export default function Header() {
             href="/upload"
             className="hidden sm:flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-bold text-white shadow-md transition-all hover:bg-emerald-700 active:scale-95"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" x2="12" y1="3" y2="15" />
+            </svg>
             <span className="hidden xl:inline">Tải lên</span>
           </Link>
 
@@ -497,20 +593,49 @@ export default function Header() {
               <div className="absolute right-0 mt-4 w-60 origin-top-right rounded-2xl bg-white p-2 shadow-xl border border-slate-100 z-[100] animate-in fade-in zoom-in-95 duration-200">
                 {!user ? (
                   <div className="flex flex-col gap-1">
-                    <Link href="/login" className="px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 rounded-xl">ĐĂNG NHẬP</Link>
-                    <Link href="/register" className="px-4 py-3 text-sm font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl text-center">ĐĂNG KÝ</Link>
+                    <Link
+                      href="/login"
+                      className="px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 rounded-xl"
+                    >
+                      ĐĂNG NHẬP
+                    </Link>
+                    <Link
+                      href="/register"
+                      className="px-4 py-3 text-sm font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl text-center"
+                    >
+                      ĐĂNG KÝ
+                    </Link>
                   </div>
                 ) : (
                   <div className="flex flex-col gap-1">
                     <div className="px-4 py-3 bg-slate-50 rounded-xl mb-1">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{user.role}</p>
-                      <p className="text-sm font-bold text-slate-800 truncate">{user.fullName}</p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        {user.role}
+                      </p>
+                      <p className="text-sm font-bold text-slate-800 truncate">
+                        {user.fullName}
+                      </p>
                     </div>
                     {user.role === "admin" && (
-                      <Link href="/admin" className="px-4 py-3 text-sm font-bold text-emerald-600 hover:bg-emerald-50 rounded-xl">Trang quản trị</Link>
+                      <Link
+                        href="/admin"
+                        className="px-4 py-3 text-sm font-bold text-emerald-600 hover:bg-emerald-50 rounded-xl"
+                      >
+                        Trang quản trị
+                      </Link>
                     )}
-                    <Link href="/profile" className="px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 rounded-xl">Trang cá nhân</Link>
-                    <button onClick={handleLogout} className="px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-50 rounded-xl text-left">Đăng xuất</button>
+                    <Link
+                      href="/profile"
+                      className="px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 rounded-xl"
+                    >
+                      Trang cá nhân
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-50 rounded-xl text-left"
+                    >
+                      Đăng xuất
+                    </button>
                   </div>
                 )}
               </div>
