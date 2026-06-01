@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 
 export default function MaterialAdmin() {
   const [allMaterials, setAllMaterials] = useState([]);
