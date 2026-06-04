@@ -4,8 +4,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import ReportModal from "@/components/ReportModal";
+<<<<<<< HEAD
 import AddToCollectionModal from "@/components/AddToCollectionModal";
 import toast from "react-hot-toast";
+=======
+import { getYoutubeEmbedUrl, getYoutubeThumbnail, isYoutube } from "@/lib/youtube";
+>>>>>>> fixing-code
 
 export default function VideoWatchPage() {
   const { id } = useParams();
@@ -28,7 +32,12 @@ export default function VideoWatchPage() {
         if (data.categoryId?._id) {
           const relatedRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/materials?materialType=video&category=${data.categoryId._id}`);
           const relatedData = await relatedRes.json();
-          setRelatedVideos(relatedData.filter(v => v._id !== id));
+          const relatedList = Array.isArray(relatedData?.materials)
+            ? relatedData.materials
+            : Array.isArray(relatedData)
+              ? relatedData
+              : [];
+          setRelatedVideos(relatedList.filter((v) => v._id !== id));
         }
       } catch (error) {
         console.error("Lỗi lấy dữ liệu video:", error);
@@ -40,18 +49,7 @@ export default function VideoWatchPage() {
   }, [id]);
 
   // Hàm xử lý link YouTube sang mã nhúng
-  const getEmbedUrl = (url) => {
-    if (!url) return "";
-    if (url.includes("youtube.com/watch?v=")) {
-      const videoId = url.split("v=")[1]?.split("&")[0];
-      return `https://www.youtube.com/embed/${videoId}?autoplay=1`;
-    }
-    if (url.includes("youtu.be/")) {
-      const videoId = url.split("youtu.be/")[1]?.split("?")[0];
-      return `https://www.youtube.com/embed/${videoId}?autoplay=1`;
-    }
-    return url;
-  };
+  const getEmbedUrl = (url) => getYoutubeEmbedUrl(url, { autoplay: true });
 
   if (isLoading) return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -75,7 +73,7 @@ export default function VideoWatchPage() {
       <div className="container mx-auto px-4 lg:px-8 py-8 lg:py-12">
         
         {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-[10px] font-black text-slate-300 uppercase tracking-widest mb-8">
+        <nav className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-8">
             <Link href="/videos" className="hover:text-primary transition-colors">Kho video</Link>
             <span>/</span>
             <span className="text-primary">{video.categoryId?.name}</span>
@@ -132,11 +130,11 @@ export default function VideoWatchPage() {
                 <div className="flex items-center gap-10">
                    <div className="text-center">
                       <p className="text-sm font-black text-slate-800">{video.metrics?.viewCount?.toLocaleString()}</p>
-                      <p className="text-[9px] font-bold text-slate-300 uppercase tracking-widest">Lượt xem</p>
+                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Lượt xem</p>
                    </div>
                    <div className="text-center">
                       <p className="text-sm font-black text-emerald-500">{video.metrics?.averageRating || 0}</p>
-                      <p className="text-[9px] font-bold text-slate-300 uppercase tracking-widest">Đánh giá</p>
+                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Đánh giá</p>
                    </div>
                    <button 
                     onClick={() => setIsCollectionModalOpen(true)}
@@ -179,13 +177,12 @@ export default function VideoWatchPage() {
                 {relatedVideos.length > 0 ? relatedVideos.map((item) => (
                   <Link href={`/videos/${item._id}`} key={item._id} className="group flex gap-4 transition-all">
                     <div className="relative w-28 h-16 shrink-0 rounded-2xl overflow-hidden bg-slate-900 shadow-sm group-hover:shadow-lg transition-all">
-                      <Image 
-                        src={item.sourceType === 'link' && item.fileUrl.includes('youtube.com') 
-                          ? `https://img.youtube.com/vi/${item.fileUrl.split('v=')[1]?.split('&')[0]}/default.jpg`
-                          : "https://images.unsplash.com/photo-1627398242454-45a1465c2479?w=400&q=80"} 
-                        alt={item.title} 
-                        fill 
-                        className="object-cover opacity-80 group-hover:scale-110 transition-transform duration-500" 
+                      <Image
+                        src={getYoutubeThumbnail(item.fileUrl, "default")
+                          || "https://images.unsplash.com/photo-1627398242454-45a1465c2479?w=400&q=80"}
+                        alt={item.title}
+                        fill
+                        className="object-cover opacity-80 group-hover:scale-110 transition-transform duration-500"
                       />
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="m7 4 12 8-12 8V4z"/></svg>
@@ -198,7 +195,7 @@ export default function VideoWatchPage() {
                   </Link>
                 )) : (
                   <div className="text-center py-10 bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-100">
-                    <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Không còn video liên quan</p>
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Không còn video liên quan</p>
                   </div>
                 )}
               </div>

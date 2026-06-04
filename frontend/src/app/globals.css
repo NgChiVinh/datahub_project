@@ -3,7 +3,8 @@
 :root {
   --background: #ffffff;
   --foreground: #0f172a;
-  --primary: #004d40; /* Teal branding */
+  --primary: #059669; /* Emerald 600 — brand color, đồng bộ toàn app */
+  --primary-rgb: 5, 150, 105;
   --secondary: #880e4f;
   --accent: #0ea5e9; /* Sky Blue for tech feel */
   --highlight: #f59e0b; /* Amber for AI */

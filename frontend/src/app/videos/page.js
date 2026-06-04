@@ -2,7 +2,11 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+<<<<<<< HEAD
 import AddToCollectionModal from "@/components/AddToCollectionModal";
+=======
+import { getYoutubeThumbnail } from "@/lib/youtube";
+>>>>>>> fixing-code
 
 export default function VideoGalleryPage() {
   const [videos, setVideos] = useState([]);
@@ -106,6 +110,19 @@ export default function VideoGalleryPage() {
   };
 
   const hasFilters = activeMajor !== "all" || searchQuery !== "";
+
+  // Tạo dải số trang có rút gọn: 1 … 4 5 [6] 7 8 … 20
+  const getPageRange = (current, total) => {
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+    const pages = [1];
+    const start = Math.max(2, current - 1);
+    const end = Math.min(total - 1, current + 1);
+    if (start > 2) pages.push("...");
+    for (let i = start; i <= end; i++) pages.push(i);
+    if (end < total - 1) pages.push("...");
+    pages.push(total);
+    return pages;
+  };
 
   return (
     <div className="min-h-screen bg-white font-sans text-slate-900 pb-20">
@@ -229,19 +246,18 @@ export default function VideoGalleryPage() {
                       className="block relative aspect-video overflow-hidden bg-slate-900"
                       onClick={() => logClick(video._id, video.title)}
                     >
-                      <Image 
-                        src={video.sourceType === 'link' && video.fileUrl.includes('youtube.com') 
-                          ? `https://img.youtube.com/vi/${video.fileUrl.split('v=')[1]?.split('&')[0]}/maxresdefault.jpg`
-                          : "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&q=80"} 
-                        alt={video.title} 
-                        fill 
-                        className="object-cover transition-transform duration-700 group-hover:scale-105 opacity-90" 
+                      <Image
+                        src={getYoutubeThumbnail(video.fileUrl, "maxresdefault")
+                          || "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&q=80"}
+                        alt={video.title}
+                        fill
+                        className="object-cover transition-transform duration-700 group-hover:scale-105 opacity-90"
                       />
                       <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors"></div>
                       
                       {/* Badge */}
                       <div className="absolute top-3 left-3">
-                         <span className="px-2 py-1 rounded-lg bg-white/90 backdrop-blur shadow-sm text-[8px] font-bold text-slate-800 uppercase border border-white">
+                         <span className="px-2 py-1 rounded-lg bg-white/90 backdrop-blur shadow-sm text-[10px] font-bold text-slate-800 uppercase border border-white">
                           {video.majorId?.name || "Chung"}
                         </span>
                       </div>
@@ -254,7 +270,7 @@ export default function VideoGalleryPage() {
                       </div>
 
                       {/* View Count Overlay */}
-                      <div className="absolute bottom-3 right-3 px-2 py-1 rounded bg-black/60 text-[8px] font-bold text-white uppercase tracking-widest">
+                      <div className="absolute bottom-3 right-3 px-2 py-1 rounded bg-black/60 text-[10px] font-bold text-white uppercase tracking-widest">
                         {video.metrics?.viewCount || 0} views
                       </div>
                     </Link>
@@ -314,19 +330,45 @@ export default function VideoGalleryPage() {
             {/* Pagination */}
             {pagination.totalPages > 1 && (
               <div className="flex items-center justify-center gap-2 pt-10">
-                {[...Array(pagination.totalPages)].map((_, i) => (
-                  <button
-                    key={i + 1}
-                    onClick={() => setCurrentPage(i + 1)}
-                    className={`w-10 h-10 rounded-xl text-xs font-bold transition-all ${
-                      currentPage === i + 1 
-                        ? "bg-slate-900 text-white shadow-lg" 
-                        : "bg-white border border-slate-200 text-slate-400 hover:border-slate-400 hover:text-slate-600"
-                    }`}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  aria-label="Trang trước"
+                  className="w-10 h-10 rounded-xl flex items-center justify-center bg-white border border-slate-200 text-slate-400 hover:border-slate-400 hover:text-slate-600 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-slate-200 disabled:hover:text-slate-400"
+                >
+                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3"><path d="M15 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                </button>
+
+                {getPageRange(currentPage, pagination.totalPages).map((p, i) =>
+                  p === "..." ? (
+                    <span key={`gap-${i}`} className="w-10 h-10 flex items-center justify-center text-slate-300 font-bold">
+                      …
+                    </span>
+                  ) : (
+                    <button
+                      key={p}
+                      onClick={() => setCurrentPage(p)}
+                      aria-label={`Trang ${p}`}
+                      aria-current={currentPage === p ? "page" : undefined}
+                      className={`w-10 h-10 rounded-xl text-xs font-bold transition-all ${
+                        currentPage === p
+                          ? "bg-slate-900 text-white shadow-lg"
+                          : "bg-white border border-slate-200 text-slate-400 hover:border-slate-400 hover:text-slate-600"
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  ),
+                )}
+
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(pagination.totalPages, p + 1))}
+                  disabled={currentPage === pagination.totalPages}
+                  aria-label="Trang sau"
+                  className="w-10 h-10 rounded-xl flex items-center justify-center bg-white border border-slate-200 text-slate-400 hover:border-slate-400 hover:text-slate-600 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-slate-200 disabled:hover:text-slate-400"
+                >
+                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3"><path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                </button>
               </div>
             )}
           </main>

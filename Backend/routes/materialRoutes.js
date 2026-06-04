@@ -13,13 +13,13 @@ const {
 } = require("../controllers/materialController");
 
 const upload = require("../middleware/multer");
-const { authMiddleware, isAdmin } = require("../middleware/authMiddleware");
+const { authMiddleware, isAdmin, optionalAuth } = require("../middleware/authMiddleware");
 
 // PUBLIC
 router.get("/", getMaterials);
 router.get("/stats", authMiddleware, isAdmin, getMaterialStats);
-router.get("/:id", getMaterialById);
-router.post("/:id/download", incrementDownload);
+router.get("/:id", optionalAuth, getMaterialById);
+router.post("/:id/download", optionalAuth, incrementDownload);
 
 // AUTH REQUIRED
 router.post("/:id/like", authMiddleware, toggleLike);
@@ -30,7 +30,7 @@ router.post("/", authMiddleware, upload.single("file"), createMaterial);
 // UPDATE
 router.put("/:id", authMiddleware, upload.single("file"), updateMaterial);
 
-// DELETE
-router.delete("/:id", authMiddleware, isAdmin, deleteMaterial);
+// DELETE (chủ sở hữu hoặc admin — kiểm tra quyền trong controller)
+router.delete("/:id", authMiddleware, deleteMaterial);
 
 module.exports = router;

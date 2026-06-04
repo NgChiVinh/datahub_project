@@ -9,21 +9,20 @@ const {
   getTopSearchKeywords,
 } = require("../controllers/searchLogController");
 
-const { authMiddleware, optionalAuth } = require("../middleware/authMiddleware");
-const adminMiddleware = require("../middleware/adminMiddleware");
+const { authMiddleware, optionalAuth, isAdmin } = require("../middleware/authMiddleware");
 
 router.post("/", optionalAuth, createSearchLog);
 
 router.get("/me", authMiddleware, getMySearchLogs);
 
-router.get("/", authMiddleware, adminMiddleware, getAllSearchLogs);
+router.get("/", authMiddleware, isAdmin, getAllSearchLogs);
 
-router.delete("/:id", authMiddleware, adminMiddleware, deleteSearchLog);
+router.delete("/:id", authMiddleware, isAdmin, deleteSearchLog);
 
 router.get(
   "/top/keywords",
   authMiddleware,
-  adminMiddleware,
+  isAdmin,
   getTopSearchKeywords,
 );
 

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import toast from "react-hot-toast";
 
 export default function RegisterPage() {
   const { login, user, loading: authLoading } = useAuth();
@@ -57,8 +58,15 @@ export default function RegisterPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    
-    // ... (giữ nguyên các bước validate password)
+
+    if (formData.password.length < 6) {
+      setError("Mật khẩu phải có ít nhất 6 ký tự.");
+      return;
+    }
+    if (formData.password !== formData.confirmPassword) {
+      setError("Mật khẩu xác nhận không khớp.");
+      return;
+    }
 
     setIsLoading(true);
     try {
@@ -77,7 +85,7 @@ export default function RegisterPage() {
       const data = await res.json();
 
       if (res.ok) {
-        alert("Đăng ký thành công! Chào mừng bạn gia nhập cộng đồng IT VLU.");
+        toast.success("Đăng ký thành công! Chào mừng bạn gia nhập cộng đồng IT VLU.");
         // Tự động đăng nhập với token nhận được từ Backend
         login(data.user, data.token);
       } else {

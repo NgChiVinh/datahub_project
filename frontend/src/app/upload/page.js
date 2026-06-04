@@ -623,7 +623,7 @@ export default function UploadPage() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="bg-slate-900 hover:bg-emerald-600 disabled:opacity-50 text-white font-black py-4 px-10 rounded-xl shadow-xl transition-all active:scale-[0.95] flex items-center justify-center gap-4 uppercase tracking-[0.2em] text-[10px]"
+                  className="bg-slate-900 hover:bg-primary disabled:opacity-50 text-white font-black py-4 px-10 rounded-xl shadow-xl transition-all active:scale-[0.95] flex items-center justify-center gap-4 uppercase tracking-[0.2em] text-[10px]"
                 >
                   {isLoading ? (
                     <div className="animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full" />

@@ -14,7 +14,7 @@ const interactionSchema = new mongoose.Schema(
     },
     actionType: {
       type: String,
-      enum: ["view", "download", "save_to_collection", "share"],
+      enum: ["view", "download", "like", "save_to_collection", "share"],
       required: true,
     },
     weight: { type: Number, required: true },

@@ -47,6 +47,13 @@ const materialSchema = new mongoose.Schema(
       averageRating: { type: Number, default: 0 },
       reviewCount: { type: Number, default: 0 },
     },
+    embedding: { type: [Number], default: [] },
+    // Text trích từ nội dung file (PDF/docx) - dùng cho hybrid filter (lọc từ khóa)
+    // và là nền cho full-text search. Không hiển thị trực tiếp cho người dùng.
+    contentText: { type: String, default: "", select: false },
+    // Embedding CHỈ từ tiêu đề + mô tả (baseline để đánh giá so sánh trước/sau
+    // khi đưa nội dung file vào embedding). Chỉ dùng cho script đánh giá.
+    embeddingTitleOnly: { type: [Number], default: [], select: false },
   },
   { timestamps: true },
 );

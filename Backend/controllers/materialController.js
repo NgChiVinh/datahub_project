@@ -2,9 +2,55 @@ const Material = require("../models/Material");
 const Tag = require("../models/Tag");
 const Category = require("../models/Category");
 const Notification = require("../models/Notification");
+const Interaction = require("../models/Interaction");
+const Review = require("../models/Review");
+const Comment = require("../models/Comment");
+const Report = require("../models/Report");
+const StudyCollection = require("../models/StudyCollection");
+const SearchLog = require("../models/SearchLog");
+const User = require("../models/User");
 const slugify = require("slugify");
 const mongoose = require("mongoose");
 const uploadFile = require("../utils/uploadFile");
+const { deleteFile } = require("../utils/uploadFile");
+const { extractText } = require("../utils/extractText");
+const { generateEmbedding } = require("../services/geminiService");
+
+// Dựng chuỗi văn bản để sinh embedding từ tiêu đề + mô tả + nội dung trích từ file.
+// Nội dung file là tín hiệu ngữ nghĩa quan trọng nhất; tiêu đề/mô tả bổ trợ.
+const buildEmbeddingText = (title, description, content) => {
+  let text = "Tiêu đề: " + (title || "") + ". Mô tả: " + (description || "");
+  if (content) text += ". Nội dung: " + content;
+  return text;
+};
+
+// Sinh embedding an toàn: trả mảng rỗng nếu lỗi (đã log bên trong generateEmbedding).
+const safeGenerateEmbedding = async (title, description, content) => {
+  try {
+    return await generateEmbedding(buildEmbeddingText(title, description, content));
+  } catch (aiError) {
+    console.error("AI Embedding error:", aiError.message);
+    return [];
+  }
+};
+
+// Ghi lại tương tác của người dùng để phục vụ gợi ý cá nhân hóa.
+// Dùng upsert theo (userId, materialId, actionType) để mỗi loại tương tác trên
+// một tài liệu chỉ có 1 bản ghi -> tránh 1 tài liệu xem nhiều lần lấn át hồ sơ sở thích.
+// timestamps tự cập nhật updatedAt nên lần tương tác mới nhất được ưu tiên về recency.
+// Không chặn response chính nếu ghi thất bại.
+const recordInteraction = async (userId, materialId, actionType, weight) => {
+  if (!userId) return;
+  try {
+    await Interaction.findOneAndUpdate(
+      { userId, materialId, actionType },
+      { $set: { weight } },
+      { upsert: true, new: true },
+    );
+  } catch (err) {
+    console.error("Lỗi ghi interaction:", err.message);
+  }
+};
 
 // CREATE (upload file hoặc gửi link + lưu DB)
 const createMaterial = async (req, res) => {
@@ -98,6 +144,24 @@ const createMaterial = async (req, res) => {
       }
     }
 
+    // AI Embedding Integration: ưu tiên trích nội dung file (PDF/docx) để embedding
+    // phản ánh đúng nội dung tài liệu, không chỉ tiêu đề/mô tả.
+    let fileContent = "";
+    if (req.file && req.file.buffer) {
+      fileContent = await extractText(
+        req.file.buffer,
+        req.file.originalname,
+        req.file.mimetype,
+      );
+    }
+
+    const vector = await safeGenerateEmbedding(title, description, fileContent);
+    if (!vector || vector.length === 0) {
+      console.warn(
+        `[Embedding] Tài liệu "${title}" được tạo với embedding rỗng — sẽ không xuất hiện trong tìm kiếm AI cho tới khi chạy lại script generate_embeddings.`,
+      );
+    }
+
     const material = new Material({
       title,
       description,
@@ -110,6 +174,8 @@ const createMaterial = async (req, res) => {
       fileUrl: finalFileUrl,
       tags: processedTags,
       status: "pending",
+      embedding: vector,
+      contentText: fileContent || "",
     });
 
     const savedMaterial = await material.save();
@@ -333,6 +399,9 @@ const getMaterialById = async (req, res) => {
 
     await material.save();
 
+    // Ghi tương tác xem (chỉ khi đã đăng nhập)
+    recordInteraction(req.user?._id, material._id, "view", 1);
+
     return res.status(200).json(material);
   } catch (error) {
     return res.status(500).json({
@@ -352,6 +421,16 @@ const updateMaterial = async (req, res) => {
       });
     }
 
+    // Chỉ chủ sở hữu hoặc admin được sửa tài liệu
+    if (
+      material.uploaderId.toString() !== req.user._id.toString() &&
+      req.user.role !== "admin"
+    ) {
+      return res
+        .status(403)
+        .json({ message: "Bạn không có quyền sửa tài liệu này" });
+    }
+
     const {
       title,
       description,
@@ -369,8 +448,16 @@ const updateMaterial = async (req, res) => {
     if (majorId) material.majorId = majorId;
     if (academicYear) material.academicYear = academicYear;
 
+    let newFileContent = "";
     if (req.file) {
       try {
+        // Trích nội dung file mới TRƯỚC khi upload (buffer còn trong RAM)
+        newFileContent = await extractText(
+          req.file.buffer,
+          req.file.originalname,
+          req.file.mimetype,
+        );
+
         const uploadResult = await uploadFile(req.file);
         material.fileUrl = uploadResult.url;
         material.sourceType = "upload";
@@ -393,6 +480,31 @@ const updateMaterial = async (req, res) => {
       }
     }
 
+    // Sinh lại embedding nếu: đổi tiêu đề/mô tả, đổi file, hoặc embedding đang rỗng.
+    // Re-embed đặt SAU xử lý file để gồm được nội dung file mới (nếu có).
+    const contentChanged =
+      (title !== undefined && title !== "") ||
+      (description !== undefined && description !== "") ||
+      !!req.file;
+    const embeddingMissing =
+      !Array.isArray(material.embedding) || material.embedding.length === 0;
+
+    if (contentChanged || embeddingMissing) {
+      const newVector = await safeGenerateEmbedding(
+        material.title,
+        material.description,
+        newFileContent,
+      );
+      if (newVector && newVector.length > 0) {
+        material.embedding = newVector;
+      }
+    }
+
+    // Cập nhật contentText khi có file mới được trích nội dung.
+    if (req.file && newFileContent) {
+      material.contentText = newFileContent;
+    }
+
     if (status && req.user.role === "admin") {
       material.status = status;
     }
@@ -413,7 +525,45 @@ const updateMaterial = async (req, res) => {
 
 const deleteMaterial = async (req, res) => {
   try {
-    await Material.findByIdAndDelete(req.params.id);
+    const material = await Material.findById(req.params.id);
+
+    if (!material) {
+      return res.status(404).json({
+        message: "Không tìm thấy tài liệu",
+      });
+    }
+
+    // Chỉ chủ sở hữu hoặc admin được xóa tài liệu
+    if (
+      material.uploaderId.toString() !== req.user._id.toString() &&
+      req.user.role !== "admin"
+    ) {
+      return res
+        .status(403)
+        .json({ message: "Bạn không có quyền xóa tài liệu này" });
+    }
+
+    const materialId = material._id;
+
+    // Xóa file vật lý (chỉ với tài liệu upload; link ngoài tự bỏ qua trong deleteFile)
+    if (material.sourceType === "upload") {
+      await deleteFile(material.fileUrl);
+    }
+
+    // Dọn dữ liệu liên quan để tránh bản ghi mồ côi
+    await Promise.all([
+      Review.deleteMany({ materialId }),
+      Comment.deleteMany({ materialId }),
+      Report.deleteMany({ materialId }),
+      Interaction.deleteMany({ materialId }),
+      SearchLog.deleteMany({ clickedMaterialId: materialId }),
+      StudyCollection.updateMany(
+        { materialIds: materialId },
+        { $pull: { materialIds: materialId } },
+      ),
+    ]);
+
+    await material.deleteOne();
 
     return res.status(200).json({
       message: "Xóa thành công",
@@ -439,6 +589,9 @@ const incrementDownload = async (req, res) => {
     material.metrics.downloadCount += 1;
 
     await material.save();
+
+    // Ghi tương tác tải (chỉ khi đã đăng nhập)
+    recordInteraction(req.user?._id, material._id, "download", 3);
 
     return res.status(200).json({
       message: "Tăng lượt tải",
@@ -480,6 +633,11 @@ const toggleLike = async (req, res) => {
 
     await material.save();
 
+    // Ghi tương tác thích (chỉ khi vừa thích, không ghi khi bỏ thích)
+    if (isLiked) {
+      recordInteraction(req.user._id, material._id, "like", 5);
+    }
+
     return res.status(200).json({
       message: "OK",
       likesCount: material.likes.length,
@@ -498,6 +656,7 @@ const getMaterialStats = async (req, res) => {
     const total = await Material.countDocuments();
     const pending = await Material.countDocuments({ status: "pending" });
     const approved = await Material.countDocuments({ status: "approved" });
+    const totalUsers = await User.countDocuments();
 
     // 1. Thống kê tổng lượt xem và tải
     const metrics = await Material.aggregate([
@@ -572,6 +731,7 @@ const getMaterialStats = async (req, res) => {
         totalMaterials: total,
         pendingMaterials: pending,
         approvedMaterials: approved,
+        totalUsers,
         totalViews,
         totalDownloads,
       },

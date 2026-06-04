@@ -166,7 +166,7 @@ export default function CollectionDetailPage() {
                 <div className="flex items-center gap-3">
                   <Link
                     href={`/documents/${doc._id}`}
-                    className="px-8 py-4 bg-slate-900 text-white rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-emerald-500 transition-all shadow-lg shadow-slate-900/10"
+                    className="px-8 py-4 bg-slate-900 text-white rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-primary transition-all shadow-lg shadow-slate-900/10"
                   >
                     Xem chi tiết
                   </Link>
