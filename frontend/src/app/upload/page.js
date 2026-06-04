@@ -439,7 +439,7 @@ export default function UploadPage() {
                             ))
                         ) : (
                           <span className="text-[10px] font-bold text-slate-400 px-2 py-1">
-                            Nhấn Enter để tạo mới tag "{tagInput}"
+                            Nhấn Enter để tạo mới tag &quot;{tagInput}&quot;
                           </span>
                         )}
                       </div>

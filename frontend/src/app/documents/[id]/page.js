@@ -668,7 +668,6 @@ export default function DocumentDetailPage() {
                 ></path>
               </svg>
             </button>
-<<<<<<< HEAD
             <button 
               onClick={() => setIsCollectionModalOpen(true)}
               className="p-3 rounded-2xl bg-white border border-slate-100 text-slate-400 hover:text-emerald-500 hover:border-emerald-100 transition-all active:scale-90"
@@ -678,10 +677,7 @@ export default function DocumentDetailPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
               </svg>
             </button>
-            <button 
-=======
             <button
->>>>>>> fixing-code
               onClick={() => setIsReportModalOpen(true)}
               aria-label="Báo cáo vi phạm"
               title="Báo cáo vi phạm"

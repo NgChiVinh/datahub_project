@@ -218,7 +218,7 @@ export default function ReportAdmin() {
                     </td>
                     <td className="px-6 py-4">
                       <p className="text-sm text-slate-600 italic">
-                        "{report.reason}"
+                        &quot;{report.reason}&quot;
                       </p>
                     </td>
                     <td className="px-6 py-4">

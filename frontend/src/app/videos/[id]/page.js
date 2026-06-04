@@ -4,12 +4,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import ReportModal from "@/components/ReportModal";
-<<<<<<< HEAD
 import AddToCollectionModal from "@/components/AddToCollectionModal";
 import toast from "react-hot-toast";
-=======
 import { getYoutubeEmbedUrl, getYoutubeThumbnail, isYoutube } from "@/lib/youtube";
->>>>>>> fixing-code
 
 export default function VideoWatchPage() {
   const { id } = useParams();

@@ -8,7 +8,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
  */
 const generateMetadata = async (contentText, categories = [], majors = []) => {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
     
     const categoriesList = categories.map(c => `- ${c.name} (ID: ${c._id})`).join("\n");
     const majorsList = majors.map(m => `- ${m.name} (ID: ${m._id})`).join("\n");

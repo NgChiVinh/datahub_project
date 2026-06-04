@@ -2,11 +2,8 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-<<<<<<< HEAD
 import AddToCollectionModal from "@/components/AddToCollectionModal";
-=======
 import { getYoutubeThumbnail } from "@/lib/youtube";
->>>>>>> fixing-code
 
 export default function VideoGalleryPage() {
   const [videos, setVideos] = useState([]);
