@@ -2,12 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeFilter, setActiveFilter] = useState("all");
   const [materials, setMaterials] = useState([]);
   const [majors, setMajors] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -75,28 +74,12 @@ export default function Home() {
   };
 
   const filters = [
-    { id: "all", label: "Tất cả", icon: "square" },
-    { id: "video", label: "Video bài giảng", icon: "play" },
-    { id: "pdf", label: "Tài liệu PDF", icon: "file-text" },
-    { id: "docx", label: "File Word", icon: "file-text" },
-    { id: "zip", label: "Bài tập & Code", icon: "code" },
+    { id: "all", label: "Tất cả", href: "/documents" },
+    { id: "video", label: "Video bài giảng", href: "/videos" },
+    { id: "pdf", label: "Tài liệu PDF", href: "/documents?type=pdf" },
+    { id: "docx", label: "File Word", href: "/documents?type=docx" },
+    { id: "zip", label: "Bài tập & Code", href: "/documents?type=zip" },
   ];
-
-  const filteredDocuments = useMemo(() => {
-    let docs = materials;
-    
-    if (searchQuery.trim()) {
-      docs = docs.filter((doc) =>
-        doc.title.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    if (activeFilter !== "all") {
-      docs = docs.filter((doc) => doc.materialType === activeFilter);
-    }
-
-    return docs;
-  }, [searchQuery, activeFilter, materials]);
 
   return (
     <div className="bg-white font-sans text-slate-900 overflow-x-hidden">
@@ -145,7 +128,7 @@ export default function Home() {
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
                   </div>
-                  <button type="submit" className="rounded-xl bg-emerald-600 px-8 py-3.5 text-sm font-bold text-white shadow-lg hover:bg-emerald-700 active:scale-95 transition-all">
+                  <button type="submit" className="rounded-xl bg-primary px-8 py-3.5 text-sm font-bold text-white shadow-lg hover:brightness-110 active:scale-95 transition-all">
                      TÌM KIẾM
                   </button>
                 </div>
@@ -164,23 +147,19 @@ export default function Home() {
                   Tri thức mới nhất
                 </div>
                 <h2 className="text-3xl font-bold text-slate-900 tracking-tight">
-                  {searchQuery ? `Kết quả tìm kiếm cho "${searchQuery}"` : "Tài liệu vừa cập nhật"}
+                  Tài liệu vừa cập nhật
                 </h2>
               </div>
-              
+
               <div className="hidden lg:flex items-center gap-2 bg-slate-50 p-1 rounded-2xl border border-slate-100">
                 {filters.map((f) => (
-                  <button
+                  <Link
                     key={f.id}
-                    onClick={() => setActiveFilter(f.id)}
-                    className={`px-5 py-2 text-[12px] font-bold rounded-xl transition-all ${
-                      activeFilter === f.id
-                        ? "bg-white text-emerald-600 shadow-sm"
-                        : "text-slate-400 hover:text-slate-600"
-                    }`}
+                    href={f.href}
+                    className="px-5 py-2 text-[12px] font-bold rounded-xl transition-all text-slate-400 hover:text-emerald-600 hover:bg-white"
                   >
                     {f.label}
-                  </button>
+                  </Link>
                 ))}
               </div>
             </div>
@@ -191,9 +170,9 @@ export default function Home() {
                   <div key={i} className="h-80 bg-slate-50 rounded-3xl animate-pulse"></div>
                 ))}
               </div>
-            ) : filteredDocuments.length > 0 ? (
+            ) : materials.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {filteredDocuments.map((item) => {
+                {materials.map((item) => {
                   const configs = {
                     pdf: { icon: "M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z", color: "text-rose-500", bg: "bg-rose-50" },
                     video: { icon: "M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z", color: "text-blue-500", bg: "bg-blue-50" },
@@ -274,7 +253,7 @@ export default function Home() {
             )}
             
             <div className="mt-16 text-center">
-              <Link href="/documents" className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-slate-900 text-white text-xs font-bold uppercase tracking-widest hover:bg-emerald-600 transition-all active:scale-95 group">
+              <Link href="/documents" className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-slate-900 text-white text-xs font-bold uppercase tracking-widest hover:bg-primary transition-all active:scale-95 group">
                 Xem tất cả tài liệu
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-1 transition-transform"><line x1="5" x2="19" y1="12" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
               </Link>
@@ -438,7 +417,7 @@ export default function Home() {
               <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
                 <Link 
                   href="/upload" 
-                  className="group relative inline-flex items-center gap-4 px-12 py-7 rounded-[2rem] bg-slate-900 text-white font-black text-sm uppercase tracking-[0.2em] shadow-2xl hover:bg-emerald-600 hover:-translate-y-1.5 transition-all duration-500 active:scale-95 overflow-hidden"
+                  className="group relative inline-flex items-center gap-4 px-12 py-7 rounded-[2rem] bg-slate-900 text-white font-black text-sm uppercase tracking-[0.2em] shadow-2xl hover:bg-primary hover:-translate-y-1.5 transition-all duration-500 active:scale-95 overflow-hidden"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="group-hover:-translate-y-1 transition-transform"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
                   Đóng góp ngay

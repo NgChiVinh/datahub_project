@@ -428,7 +428,7 @@ function DocumentList({ docs = [], onDelete, isOwner }) {
           <div className="flex items-center gap-3">
             <Link
               href={`/documents/${doc._id}`}
-              className="px-6 py-3 bg-slate-50 hover:bg-emerald-500 hover:text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all"
+              className="px-6 py-3 bg-slate-50 hover:bg-primary hover:text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all"
             >
               Chi tiết
             </Link>
@@ -492,7 +492,7 @@ function CollectionList({ items = [], onDelete, user }) {
               </span>
 
               <span
-                className={`text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded-md ${
+                className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-md ${
                   col.isPublic
                     ? "bg-emerald-50 text-emerald-600"
                     : "bg-slate-100 text-slate-500"
@@ -567,7 +567,7 @@ function SettingsForm({
         <button
           type="submit"
           disabled={isUpdating}
-          className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] shadow-xl hover:bg-emerald-500 transition-all active:scale-95 disabled:opacity-50"
+          className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] shadow-xl hover:bg-primary transition-all active:scale-95 disabled:opacity-50"
         >
           {isUpdating ? "Đang cập nhật..." : "Lưu thay đổi"}
         </button>

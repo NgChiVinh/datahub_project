@@ -104,7 +104,7 @@ export default function CreateCollectionModal({ isOpen, onClose, onSuccess }) {
             <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
               <div className="flex flex-col">
                 <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Chế độ công khai</span>
-                <span className="text-[8px] text-slate-400 font-bold uppercase">Ai cũng có thể xem bộ sưu tập này</span>
+                <span className="text-[10px] text-slate-400 font-bold uppercase">Ai cũng có thể xem bộ sưu tập này</span>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input 

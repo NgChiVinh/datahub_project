@@ -118,7 +118,7 @@ export default function ChangePasswordModal({ isOpen, onClose }) {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] shadow-xl hover:bg-emerald-500 transition-all active:scale-95 disabled:opacity-50"
+                className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] shadow-xl hover:bg-primary transition-all active:scale-95 disabled:opacity-50"
               >
                 {isSubmitting ? "Đang cập nhật..." : "Lưu mật khẩu mới"}
               </button>

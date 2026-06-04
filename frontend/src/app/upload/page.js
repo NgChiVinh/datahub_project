@@ -333,7 +333,7 @@ export default function UploadPage() {
                 <button 
                   type="submit" 
                   disabled={isLoading}
-                  className="bg-slate-900 hover:bg-emerald-600 disabled:opacity-50 text-white font-black py-4 px-10 rounded-xl shadow-xl transition-all active:scale-[0.95] flex items-center justify-center gap-4 uppercase tracking-[0.2em] text-[10px]"
+                  className="bg-slate-900 hover:bg-primary disabled:opacity-50 text-white font-black py-4 px-10 rounded-xl shadow-xl transition-all active:scale-[0.95] flex items-center justify-center gap-4 uppercase tracking-[0.2em] text-[10px]"
                 >
                   {isLoading ? <div className="animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full" /> : "Gửi tài liệu ngay"}
                   {!isLoading && <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}

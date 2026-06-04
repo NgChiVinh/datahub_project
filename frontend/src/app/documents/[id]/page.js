@@ -5,13 +5,74 @@ import Link from "next/link";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import ReportModal from "@/components/ReportModal";
-import AddToCollectionModal from "@/components/AddToCollectionModal";
 import toast from "react-hot-toast";
+import api from "@/lib/axios";
+import { getYoutubeId, getYoutubeEmbedUrl } from "@/lib/youtube";
+
+const TAB_ICONS = {
+  eye: "M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z",
+  info: "M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
+  message:
+    "M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.86 9.86 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z",
+};
+
+
+// Một bình luận (đệ quy cho phần trả lời). Đặt ngoài component cha để không bị
+// tạo lại type mới mỗi render — nếu để bên trong, React remount cả cây comment
+// mỗi lần state đổi, gây mất focus và giật.
+function CommentItem({ comment, isReply = false, onReply }) {
+  return (
+    <div className={`flex gap-4 ${isReply ? "ml-12 mt-4" : "mt-8"}`}>
+      <div
+        className={`${isReply ? "w-8 h-8" : "w-10 h-10"} rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 font-black text-xs border border-slate-200 shrink-0`}
+      >
+        {comment.userId?.fullName?.charAt(0) || "U"}
+      </div>
+      <div className="flex-1 space-y-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+        <h5 className="text-xs font-bold text-slate-800">
+          {comment.userId?.fullName}
+        </h5>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              {new Date(comment.createdAt).toLocaleDateString("vi-VN")}
+            </span>
+          </div>
+          <button
+            onClick={() =>
+              onReply({ id: comment._id, name: comment.userId?.fullName })
+            }
+            className="text-[9px] font-black text-emerald-500 uppercase tracking-widest hover:underline rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
+          >
+            Trả lời
+          </button>
+        </div>
+        <p className="text-xs text-slate-600 font-medium leading-relaxed">
+          {comment.content}
+        </p>
+
+        {comment.replies && comment.replies.length > 0 && (
+          <div className="space-y-4">
+            {comment.replies.map((reply) => (
+              <CommentItem
+                key={reply._id}
+                comment={reply}
+                isReply={true}
+                onReply={onReply}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function DocumentDetailPage() {
   const params = useParams();
   const [doc, setDoc] = useState(null);
   const [relatedDocs, setRelatedDocs] = useState([]);
+  const [relatedIsAI, setRelatedIsAI] = useState(false);
   const [comments, setComments] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -23,41 +84,65 @@ export default function DocumentDetailPage() {
   const [commentInput, setCommentInput] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-  const [isCollectionModalOpen, setIsCollectionModalOpen] = useState(false);
+  const [likePending, setLikePending] = useState(false);
 
   // 1. Fetch dữ liệu từ API
   useEffect(() => {
     const fetchDocData = async () => {
       try {
         setIsLoading(true);
-        const [docRes, commentRes, reviewRes] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/materials/${params.id}`),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/comments/material/${params.id}`),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/reviews/material/${params.id}`),
+        setError(null);
+
+        // Tài liệu là dữ liệu bắt buộc — nếu lỗi thì coi như cả trang lỗi.
+        const docData = (await api.get(`/api/materials/${params.id}`)).data;
+        setDoc(docData);
+
+        // Các phần phụ (bình luận, đánh giá, liên quan) tải độc lập:
+        // một phần lỗi không được làm hỏng phần còn lại.
+        const [commentRes, reviewRes] = await Promise.allSettled([
+          api.get(`/api/comments/material/${params.id}`),
+          api.get(`/api/reviews/material/${params.id}`),
         ]);
 
-        if (!docRes.ok) throw new Error("Không tìm thấy tài liệu!");
-
-        const docData = await docRes.json();
-        const commentData = await commentRes.json();
-        const reviewData = await reviewRes.json();
-
-        setDoc(docData);
+        const commentData = commentRes.value?.data;
+        const reviewData = reviewRes.value?.data;
         setComments(Array.isArray(commentData) ? commentData : []);
         setReviews(Array.isArray(reviewData) ? reviewData : []);
 
-        // Fetch related documents
-        if (docData.categoryId?._id) {
-          const relatedRes = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/materials?category=${docData.categoryId._id}&limit=5`,
-          );
-          const relatedData = await relatedRes.json();
-          if (Array.isArray(relatedData)) {
-            setRelatedDocs(relatedData.filter((m) => m._id !== params.id));
+        // Tài liệu liên quan: ưu tiên gợi ý AI (vector similarity),
+        // fallback về cùng chuyên mục nếu tài liệu chưa có embedding.
+        try {
+          const similarJson = (
+            await api.get(`/api/recommendations/similar/${params.id}?limit=5`)
+          ).data;
+          const aiDocs = Array.isArray(similarJson?.data) ? similarJson.data : [];
+
+          if (aiDocs.length > 0) {
+            setRelatedDocs(aiDocs);
+            setRelatedIsAI(true);
+          } else if (docData.categoryId?._id) {
+            const relatedJson = (
+              await api.get(
+                `/api/materials?category=${docData.categoryId._id}&limit=6`,
+              )
+            ).data;
+            const fallbackDocs = Array.isArray(relatedJson?.materials)
+              ? relatedJson.materials
+              : [];
+            setRelatedDocs(
+              fallbackDocs.filter((m) => m._id !== params.id).slice(0, 5),
+            );
+            setRelatedIsAI(false);
           }
+        } catch (relatedErr) {
+          console.error("Lỗi lấy tài liệu liên quan:", relatedErr);
         }
       } catch (err) {
-        setError(err.message);
+        setError(
+          err.response?.status === 404
+            ? "Không tìm thấy tài liệu!"
+            : "Không tải được tài liệu. Vui lòng thử lại.",
+        );
       } finally {
         setIsLoading(false);
       }
@@ -70,10 +155,7 @@ export default function DocumentDetailPage() {
       window.open(doc.fileUrl, "_blank");
       // Gọi API tăng lượt tải
       try {
-        await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/materials/${params.id}/download`,
-          { method: "POST" },
-        );
+        await api.post(`/api/materials/${params.id}/download`);
         setDoc((prev) => ({
           ...prev,
           metrics: {
@@ -105,39 +187,31 @@ export default function DocumentDetailPage() {
 
     try {
       setIsSubmitting(true);
-      const reviewRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/reviews`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          materialId: params.id,
-          rating: userRating,
-          content: commentInput,
-        }),
+      await api.post(`/api/reviews`, {
+        materialId: params.id,
+        rating: userRating,
+        content: commentInput,
       });
 
-      if (reviewRes.ok) {
-        toast.success("Cảm ơn bạn đã đánh giá tài liệu!");
-        setCommentInput("");
-        setUserRating(0);
-        const updatedReviews = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/reviews/material/${params.id}`,
-        ).then((res) => res.json());
-        setReviews(updatedReviews);
-        // Cập nhật lại thông tin tài liệu để lấy rating trung bình mới
-        const updatedDoc = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/materials/${params.id}`,
-        ).then((res) => res.json());
-        setDoc(updatedDoc);
-      } else {
-        const errorData = await reviewRes.json();
-        toast.error(errorData.message || "Lỗi khi gửi đánh giá.");
+      toast.success("Cảm ơn bạn đã đánh giá tài liệu!");
+      setCommentInput("");
+      setUserRating(0);
+
+      const [updatedReviews, updatedDoc] = await Promise.allSettled([
+        api.get(`/api/reviews/material/${params.id}`),
+        api.get(`/api/materials/${params.id}`),
+      ]);
+      if (updatedReviews.status === "fulfilled") {
+        const data = updatedReviews.value.data;
+        setReviews(Array.isArray(data) ? data : []);
+      }
+      // Cập nhật lại tài liệu để lấy rating trung bình mới
+      if (updatedDoc.status === "fulfilled") {
+        setDoc(updatedDoc.value.data);
       }
     } catch (err) {
       console.error("Review error:", err);
-      toast.error("Lỗi kết nối server.");
+      toast.error(err.response?.data?.message || "Lỗi khi gửi đánh giá.");
     } finally {
       setIsSubmitting(false);
     }
@@ -150,37 +224,29 @@ export default function DocumentDetailPage() {
       toast.error("Vui lòng đăng nhập để thích tài liệu!");
       return;
     }
+    if (likePending) return; // chặn double-click làm lệch trạng thái/đếm
 
     const currentUser = JSON.parse(userData);
 
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/materials/${params.id}/like`,
-        {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
-      const data = await res.json();
-      if (res.ok) {
-        setIsLiked(data.isLiked);
-        if (data.isLiked) {
-          toast.success("Đã thêm vào danh sách yêu thích");
-        }
-        setDoc((prev) => {
-          const currentLikes = prev.likes || [];
-          const updatedLikes = data.isLiked
-            ? [...currentLikes, currentUser._id]
-            : currentLikes.filter((id) => id !== currentUser._id);
-          
-          return {
-            ...prev,
-            likes: updatedLikes
-          };
-        });
+      setLikePending(true);
+      const { data } = await api.post(`/api/materials/${params.id}/like`);
+      setIsLiked(data.isLiked);
+      if (data.isLiked) {
+        toast.success("Đã thêm vào danh sách yêu thích");
       }
+      setDoc((prev) => {
+        const currentLikes = prev.likes || [];
+        const updatedLikes = data.isLiked
+          ? [...currentLikes, currentUser._id]
+          : currentLikes.filter((id) => id !== currentUser._id);
+
+        return { ...prev, likes: updatedLikes };
+      });
     } catch (err) {
       console.error("Like error:", err);
+    } finally {
+      setLikePending(false);
     }
   };
 
@@ -198,33 +264,26 @@ export default function DocumentDetailPage() {
 
     try {
       setIsSubmitting(true);
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/comments`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          materialId: params.id,
-          content: commentText,
-          parentId: replyingTo?.id || null,
-        }),
+      await api.post(`/api/comments`, {
+        materialId: params.id,
+        content: commentText,
+        parentId: replyingTo?.id || null,
       });
 
-      if (res.ok) {
-        toast.success("Đã gửi bình luận");
-        setCommentText("");
-        setReplyingTo(null);
-        const updatedComments = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/comments/material/${params.id}`,
-        ).then((res) => res.json());
-        setComments(updatedComments);
-      } else {
-        toast.error("Gửi bình luận thất bại");
+      toast.success("Đã gửi bình luận");
+      setCommentText("");
+      setReplyingTo(null);
+      try {
+        const { data } = await api.get(
+          `/api/comments/material/${params.id}`,
+        );
+        setComments(Array.isArray(data) ? data : []);
+      } catch {
+        // refetch lỗi không sao — bình luận đã gửi thành công
       }
     } catch (err) {
       console.error("Comment error:", err);
-      toast.error("Lỗi kết nối server");
+      toast.error("Gửi bình luận thất bại");
     } finally {
       setIsSubmitting(false);
     }
@@ -240,56 +299,33 @@ export default function DocumentDetailPage() {
     }
   }, [doc]);
 
-  // Render Comment Component (Recursive for Replies)
-  const CommentItem = ({ comment, isReply = false }) => (
-    <div className={`flex gap-4 ${isReply ? "ml-12 mt-4" : "mt-8"}`}>
-      <div
-        className={`${isReply ? "w-8 h-8" : "w-10 h-10"} rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 font-black text-xs border border-slate-200 shrink-0`}
-      >
-        {comment.userId?.fullName?.charAt(0) || "U"}
-      </div>
-      <div className="flex-1 space-y-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h5 className="text-[11px] font-black text-slate-800 uppercase tracking-tight">
-              {comment.userId?.fullName}
-            </h5>
-            <span className="text-[8px] font-bold text-slate-300 uppercase tracking-widest">
-              {new Date(comment.createdAt).toLocaleDateString("vi-VN")}
-            </span>
-          </div>
-          <button
-            onClick={() => {
-              setReplyingTo({
-                id: comment._id,
-                name: comment.userId?.fullName,
-              });
-              setActiveTab("comments");
-              window.scrollTo({
-                top: document.getElementById("comment-form").offsetTop - 100,
-                behavior: "smooth",
-              });
-            }}
-            className="text-[9px] font-black text-emerald-500 uppercase tracking-widest hover:underline"
-          >
-            Trả lời
-          </button>
-        </div>
-        <p className="text-xs text-slate-600 font-medium leading-relaxed">
-          {comment.content}
-        </p>
+  const handleReply = ({ id, name }) => {
+    setReplyingTo({ id, name });
+    setActiveTab("comments");
+    const form = document.getElementById("comment-form");
+    if (form) {
+      window.scrollTo({ top: form.offsetTop - 100, behavior: "smooth" });
+    }
+  };
 
-        {/* Render Replies */}
-        {comment.replies && comment.replies.length > 0 && (
-          <div className="space-y-4">
-            {comment.replies.map((reply) => (
-              <CommentItem key={reply._id} comment={reply} isReply={true} />
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
+  const handleShare = async () => {
+    const url = typeof window !== "undefined" ? window.location.href : "";
+    // Web Share API trên mobile; fallback copy link trên desktop.
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: doc?.title, url });
+      } catch {
+        // người dùng hủy hộp thoại share — bỏ qua
+      }
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Đã sao chép liên kết tài liệu");
+    } catch {
+      toast.error("Không sao chép được liên kết");
+    }
+  };
 
   const renderPreview = () => {
     if (!doc?.fileUrl)
@@ -302,16 +338,14 @@ export default function DocumentDetailPage() {
       );
 
     if (doc.sourceType === "link") {
-      // Check if it's a YouTube link
-      const youtubeRegExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-      const match = doc.fileUrl.match(youtubeRegExp);
-      
-      if (match && match[2].length === 11) {
+      const ytId = getYoutubeId(doc.fileUrl);
+
+      if (ytId) {
         return (
           <div className="space-y-8 animate-in fade-in duration-500">
             <div className="max-w-4xl mx-auto aspect-video w-full bg-slate-900 rounded-[2.5rem] border-4 border-slate-800 shadow-2xl overflow-hidden relative">
               <iframe
-                src={`https://www.youtube.com/embed/${match[2]}`}
+                src={getYoutubeEmbedUrl(doc.fileUrl)}
                 className="w-full h-full border-none"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
@@ -355,7 +389,7 @@ export default function DocumentDetailPage() {
                 href={doc.fileUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-3 bg-slate-900 text-white px-8 py-4 rounded-xl font-black text-[9px] uppercase tracking-[0.2em] shadow-2xl shadow-slate-900/20 hover:bg-emerald-500 hover:shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all"
+                className="inline-flex items-center gap-3 bg-slate-900 text-white px-8 py-4 rounded-xl font-black text-[9px] uppercase tracking-[0.2em] shadow-2xl shadow-slate-900/20 hover:bg-primary hover:shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all"
               >
                 Mở liên kết gốc
                 <svg
@@ -380,8 +414,12 @@ export default function DocumentDetailPage() {
     }
 
     if (["pdf", "docx", "pptx"].includes(doc.materialType)) {
-      // Use Google Docs Viewer for these types
-      const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(doc.fileUrl)}&embedded=true`;
+      // Ưu tiên Microsoft Office Online Viewer cho các định dạng Word/PPT vì độ ổn định cao hơn.
+      // PDF vẫn sử dụng Google Docs Viewer do Microsoft không hỗ trợ định dạng này.
+      const isOfficeFile = doc.fileUrl.match(/\.(docx|doc|pptx|ppt)$/i);
+      const viewerUrl = isOfficeFile
+        ? `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(doc.fileUrl)}`
+        : `https://docs.google.com/viewer?url=${encodeURIComponent(doc.fileUrl)}&embedded=true`;
       
       return (
         <div className="space-y-8 animate-in fade-in duration-500">
@@ -466,7 +504,7 @@ export default function DocumentDetailPage() {
             </div>
             <button
               onClick={handleDownload}
-              className="inline-flex items-center gap-4 bg-emerald-500 text-white px-10 py-5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-2xl shadow-emerald-500/20 hover:bg-emerald-400 hover:scale-105 active:scale-95 transition-all"
+              className="inline-flex items-center gap-4 bg-primary text-white px-10 py-5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-2xl shadow-emerald-500/20 hover:brightness-110 hover:scale-105 active:scale-95 transition-all"
             >
               Tải tài liệu ngay
               <svg
@@ -492,21 +530,58 @@ export default function DocumentDetailPage() {
 
   if (isLoading)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">
-            Đang tải dữ liệu...
-          </p>
+      <div className="min-h-screen bg-[#fafbfc] pt-24 pb-20">
+        <div className="container mx-auto max-w-7xl px-4 lg:px-12 py-10">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start animate-pulse">
+            <div className="lg:col-span-2 space-y-10">
+              <div className="bg-white rounded-[3rem] p-10 md:p-14 border border-slate-100 space-y-8">
+                <div className="flex gap-3">
+                  <div className="h-8 w-24 rounded-2xl bg-slate-100"></div>
+                  <div className="h-8 w-28 rounded-2xl bg-slate-100"></div>
+                  <div className="h-8 w-20 rounded-2xl bg-slate-100"></div>
+                </div>
+                <div className="space-y-4">
+                  <div className="h-10 w-3/4 rounded-2xl bg-slate-100"></div>
+                  <div className="h-10 w-1/2 rounded-2xl bg-slate-100"></div>
+                </div>
+                <div className="flex gap-10 border-t border-slate-50 pt-10">
+                  {[0, 1, 2, 3].map((i) => (
+                    <div key={i} className="h-5 w-20 rounded-lg bg-slate-100"></div>
+                  ))}
+                </div>
+              </div>
+              <div className="bg-white rounded-[3rem] border border-slate-100 p-10 md:p-14">
+                <div className="aspect-[3/4] max-h-[800px] w-full max-w-[760px] mx-auto rounded-[2.5rem] bg-slate-100"></div>
+              </div>
+            </div>
+            <aside className="space-y-12">
+              <div className="bg-slate-900/90 rounded-[3rem] p-10 space-y-8">
+                <div className="h-7 w-32 rounded-xl bg-white/10"></div>
+                <div className="h-20 w-full rounded-3xl bg-white/10"></div>
+                <div className="h-16 w-full rounded-3xl bg-emerald-500/30"></div>
+              </div>
+              <div className="bg-white rounded-[3rem] border border-slate-100 p-10 space-y-6">
+                <div className="h-6 w-40 rounded-lg bg-slate-100"></div>
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="h-14 w-full rounded-2xl bg-slate-50"></div>
+                ))}
+              </div>
+            </aside>
+          </div>
         </div>
       </div>
     );
 
   if (error || !doc)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="text-center p-10 bg-white rounded-[3rem] shadow-xl border border-slate-100">
-          <h2 className="text-2xl font-black text-slate-800 mb-4">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+        <div className="text-center p-10 md:p-14 bg-white rounded-[3rem] shadow-xl border border-slate-100 max-w-md">
+          <div className="w-20 h-20 rounded-[2rem] bg-red-50 text-red-500 flex items-center justify-center mx-auto mb-8">
+            <svg width="36" height="36" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-black text-slate-800 mb-4 uppercase italic">
             Ối! Có lỗi xảy ra
           </h2>
           <p className="text-slate-500 mb-8 font-medium">
@@ -514,7 +589,7 @@ export default function DocumentDetailPage() {
           </p>
           <Link
             href="/documents"
-            className="px-8 py-4 bg-primary text-white rounded-2xl font-bold shadow-lg shadow-primary/20"
+            className="inline-block px-8 py-4 bg-primary text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-lg shadow-emerald-500/20 hover:brightness-110 hover:scale-105 active:scale-95 transition-all"
           >
             Quay lại Thư viện
           </Link>
@@ -525,7 +600,7 @@ export default function DocumentDetailPage() {
   return (
     <div className="min-h-screen bg-[#fafbfc] font-sans text-slate-900 pb-20 pt-24">
       {/* Top Breadcrumb & Actions */}
-      <div className="bg-white/70 backdrop-blur-xl border-b border-slate-100 sticky top-16 z-40 transition-all duration-300">
+      <div className="bg-white/70 backdrop-blur-xl border-b border-slate-100 sticky top-20 z-40 transition-all duration-300">
         <div className="container mx-auto max-w-7xl px-4 py-4 lg:px-12 flex items-center justify-between">
           <Link
             href="/documents"
@@ -552,7 +627,10 @@ export default function DocumentDetailPage() {
           <div className="flex items-center gap-4">
             <button
               onClick={handleLike}
-              className={`p-3 rounded-2xl border transition-all duration-300 active:scale-90 ${isLiked ? "bg-red-50 border-red-100 text-red-500 shadow-lg shadow-red-500/10" : "bg-white border-slate-100 text-slate-400 hover:text-red-500 hover:border-red-100"}`}
+              disabled={likePending}
+              aria-label={isLiked ? "Bỏ thích tài liệu" : "Thích tài liệu"}
+              aria-pressed={isLiked}
+              className={`p-3 rounded-2xl border transition-all duration-300 active:scale-90 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40 ${isLiked ? "bg-red-50 border-red-100 text-red-500 shadow-lg shadow-red-500/10" : "bg-white border-slate-100 text-slate-400 hover:text-red-500 hover:border-red-100"}`}
             >
               <svg
                 width="20"
@@ -569,7 +647,12 @@ export default function DocumentDetailPage() {
                 ></path>
               </svg>
             </button>
-            <button className="p-3 rounded-2xl bg-white border border-slate-100 text-slate-400 hover:text-emerald-500 hover:border-emerald-100 transition-all active:scale-90">
+            <button
+              onClick={handleShare}
+              aria-label="Chia sẻ tài liệu"
+              title="Chia sẻ"
+              className="p-3 rounded-2xl bg-white border border-slate-100 text-slate-400 hover:text-emerald-500 hover:border-emerald-100 transition-all active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
+            >
               <svg
                 width="20"
                 height="20"
@@ -585,19 +668,11 @@ export default function DocumentDetailPage() {
                 ></path>
               </svg>
             </button>
-            {/* <button 
-              onClick={() => setIsCollectionModalOpen(true)}
-              className="p-3 rounded-2xl bg-white border border-slate-100 text-slate-400 hover:text-emerald-500 hover:border-emerald-100 transition-all active:scale-90"
-              title="Thêm vào bộ sưu tập"
-            >
-              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
-              </svg>
-            </button> */}
-            <button 
+            <button
               onClick={() => setIsReportModalOpen(true)}
-              className="p-3 rounded-2xl bg-white border border-slate-100 text-slate-400 hover:text-red-500 hover:border-red-100 transition-all active:scale-90"
+              aria-label="Báo cáo vi phạm"
               title="Báo cáo vi phạm"
+              className="p-3 rounded-2xl bg-white border border-slate-100 text-slate-400 hover:text-red-500 hover:border-red-100 transition-all active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40"
             >
               <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -628,7 +703,7 @@ export default function DocumentDetailPage() {
                 </span>
               </div>
 
-              <h1 className="text-3xl md:text-5xl font-black text-slate-900 leading-[1.15] tracking-tighter mb-10 relative z-10 uppercase italic">
+              <h1 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight tracking-tight mb-10 relative z-10">
                 {doc.title}
               </h1>
 
@@ -723,26 +798,64 @@ export default function DocumentDetailPage() {
 
             {/* Document Content Area */}
             <div className="bg-white rounded-[3rem] border border-slate-100 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.02)] overflow-hidden">
-              <div className="flex border-b border-slate-50 px-10 pt-8 gap-4 overflow-x-auto no-scrollbar">
+              <div className="flex border-b border-slate-50 px-10 pt-8 gap-4 overflow-x-auto no-scrollbar" role="tablist">
                 {[
                   { id: "preview", label: "XEM TRƯỚC", icon: "eye" },
                   { id: "info", label: "CHI TIẾT", icon: "info" },
-                  { id: "comments", label: "THẢO LUẬN", icon: "message" },
-                ].map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`px-10 py-5 text-[10px] font-black uppercase tracking-[0.2em] transition-all relative flex items-center gap-3 whitespace-nowrap ${activeTab === tab.id ? "text-emerald-600" : "text-slate-400 hover:text-slate-700"}`}
-                  >
-                    {tab.label}
-                    {activeTab === tab.id && (
-                      <div className="absolute bottom-0 left-0 w-full h-1 bg-emerald-500 rounded-t-full shadow-[0_-4px_10px_rgba(16,185,129,0.3)]"></div>
-                    )}
-                  </button>
-                ))}
+                  {
+                    id: "comments",
+                    label: "THẢO LUẬN",
+                    icon: "message",
+                    count: reviews.length + comments.length,
+                  },
+                ].map((tab) => {
+                  const isActive = activeTab === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      role="tab"
+                      id={`tab-${tab.id}`}
+                      aria-controls={`tabpanel-${tab.id}`}
+                      aria-selected={isActive}
+                      className={`px-10 py-5 text-[10px] font-black uppercase tracking-[0.2em] transition-all relative flex items-center gap-2.5 whitespace-nowrap focus-visible:outline-none focus-visible:text-emerald-600 ${isActive ? "text-emerald-600" : "text-slate-400 hover:text-slate-700"}`}
+                    >
+                      <svg
+                        width="15"
+                        height="15"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2.5"
+                          d={TAB_ICONS[tab.icon]}
+                        />
+                      </svg>
+                      {tab.label}
+                      {tab.count > 0 && (
+                        <span
+                          className={`min-w-[18px] h-[18px] px-1 rounded-full text-[9px] flex items-center justify-center transition-colors ${isActive ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-400"}`}
+                        >
+                          {tab.count}
+                        </span>
+                      )}
+                      {isActive && (
+                        <div className="absolute bottom-0 left-0 w-full h-1 bg-emerald-500 rounded-t-full shadow-[0_-4px_10px_rgba(16,185,129,0.3)]"></div>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
 
-              <div className="p-10 md:p-14 min-h-[500px]">
+              <div
+                className="p-10 md:p-14 min-h-[500px]"
+                role="tabpanel"
+                id={`tabpanel-${activeTab}`}
+                aria-labelledby={`tab-${activeTab}`}
+              >
                 {activeTab === "preview" && renderPreview()}
 
                 {activeTab === "info" && (
@@ -754,7 +867,7 @@ export default function DocumentDetailPage() {
                       <h4 className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.3em] mb-6">
                         Mô tả tài liệu
                       </h4>
-                      <p className="text-slate-700 leading-[2] font-semibold text-xl italic border-l-8 border-emerald-500/20 pl-10">
+                      <p className="text-slate-700 leading-relaxed font-medium text-lg border-l-4 border-emerald-500/30 pl-8">
                         {doc.description || "Không có mô tả cho tài liệu này."}
                       </p>
                     </div>
@@ -847,9 +960,12 @@ export default function DocumentDetailPage() {
                             <button
                               onClick={handleSubmitReview}
                               disabled={isSubmitting}
-                              className="bg-slate-900 text-white font-black text-[10px] uppercase tracking-[0.2em] px-10 py-5 rounded-2xl shadow-xl shadow-slate-900/20 hover:bg-emerald-500 hover:shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+                              className="inline-flex items-center gap-3 bg-slate-900 text-white font-black text-[10px] uppercase tracking-[0.2em] px-10 py-5 rounded-2xl shadow-xl shadow-slate-900/20 hover:bg-primary hover:shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
                             >
-                              Gửi đánh giá
+                              {isSubmitting && (
+                                <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
+                              )}
+                              {isSubmitting ? "Đang gửi..." : "Gửi đánh giá"}
                             </button>
                           </div>
                         </div>
@@ -870,7 +986,7 @@ export default function DocumentDetailPage() {
                                       {rev.userId?.fullName?.charAt(0) || "U"}
                                     </div>
                                     <div>
-                                      <h5 className="text-[11px] font-black text-slate-800 uppercase">
+                                      <h5 className="text-xs font-bold text-slate-800">
                                         {rev.userId?.fullName}
                                       </h5>
                                       <div className="flex items-center gap-0.5">
@@ -888,19 +1004,19 @@ export default function DocumentDetailPage() {
                                       </div>
                                     </div>
                                   </div>
-                                  <span className="text-[9px] font-bold text-slate-300 uppercase">
+                                  <span className="text-[9px] font-bold text-slate-400 uppercase">
                                     {new Date(rev.createdAt).toLocaleDateString("vi-VN")}
                                   </span>
                                 </div>
-                                <p className="text-sm text-slate-600 font-medium leading-relaxed italic">
-                                  "{rev.content}"
+                                <p className="text-sm text-slate-600 font-medium leading-relaxed">
+                                  {rev.content}
                                 </p>
                               </div>
                             ))}
                           </div>
                         ) : (
                           <div className="text-center py-10 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-100">
-                            <p className="text-slate-300 font-black text-[10px] uppercase tracking-widest">
+                            <p className="text-slate-400 font-black text-[10px] uppercase tracking-widest">
                               Chưa có đánh giá nào
                             </p>
                           </div>
@@ -914,7 +1030,7 @@ export default function DocumentDetailPage() {
                         <div className="w-full border-t border-slate-100"></div>
                       </div>
                       <div className="relative flex justify-center">
-                        <span className="bg-white px-6 text-[10px] font-black text-slate-300 uppercase tracking-[0.5em]">Hỏi đáp & Thảo luận</span>
+                        <span className="bg-white px-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.5em]">Hỏi đáp & Thảo luận</span>
                       </div>
                     </div>
 
@@ -945,11 +1061,16 @@ export default function DocumentDetailPage() {
                           <button
                             onClick={handleSubmitComment}
                             disabled={isSubmitting || !commentText.trim()}
-                            className="absolute bottom-4 right-4 bg-blue-600 text-white p-4 rounded-2xl shadow-lg hover:bg-blue-500 active:scale-95 transition-all disabled:opacity-30"
+                            aria-label="Gửi bình luận"
+                            className="absolute bottom-4 right-4 bg-blue-600 text-white p-4 rounded-2xl shadow-lg hover:bg-blue-500 active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
                           >
-                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                            </svg>
+                            {isSubmitting ? (
+                              <span className="block w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
+                            ) : (
+                              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                              </svg>
+                            )}
                           </button>
                         </div>
                       </div>
@@ -957,11 +1078,15 @@ export default function DocumentDetailPage() {
                       <div className="space-y-2">
                         {comments.length > 0 ? (
                           comments.map((comment) => (
-                            <CommentItem key={comment._id} comment={comment} />
+                            <CommentItem
+                              key={comment._id}
+                              comment={comment}
+                              onReply={handleReply}
+                            />
                           ))
                         ) : (
                           <div className="text-center py-10">
-                            <p className="text-slate-300 font-black text-[10px] uppercase tracking-widest">
+                            <p className="text-slate-400 font-black text-[10px] uppercase tracking-widest">
                               Chưa có thảo luận nào
                             </p>
                           </div>
@@ -1024,7 +1149,7 @@ export default function DocumentDetailPage() {
 
               <button
                 onClick={handleDownload}
-                className="w-full bg-emerald-500 text-white py-6 rounded-3xl font-black text-lg shadow-2xl shadow-emerald-500/20 hover:bg-emerald-400 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-4 relative z-10"
+                className="w-full bg-primary text-white py-6 rounded-3xl font-black text-lg shadow-2xl shadow-emerald-500/20 hover:brightness-110 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-4 relative z-10"
               >
                 <span>
                   {doc.sourceType === "link" ? "TRUY CẬP" : "TẢI NGAY"}
@@ -1051,7 +1176,7 @@ export default function DocumentDetailPage() {
               <div className="bg-white rounded-[3rem] p-10 border border-slate-100 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.03)] relative overflow-hidden group">
                 <h3 className="text-xl font-black text-slate-800 mb-8 uppercase tracking-tighter italic flex items-center gap-3">
                   <span className="w-2 h-6 bg-emerald-500 rounded-full"></span>
-                  Tài liệu cùng chuyên mục
+                  {relatedIsAI ? "Tài liệu liên quan (AI)" : "Tài liệu cùng chuyên mục"}
                 </h3>
                 <div className="space-y-6">
                   {relatedDocs.map((rd) => (
@@ -1090,13 +1215,19 @@ export default function DocumentDetailPage() {
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-black text-slate-700 uppercase leading-tight line-clamp-2 group-hover/item:text-emerald-600 transition-colors">
+                          <p className="text-sm font-bold text-slate-700 leading-tight line-clamp-2 group-hover/item:text-emerald-600 transition-colors">
                             {rd.title}
                           </p>
                           <div className="flex items-center gap-3 mt-2">
-                            <span className="text-[9px] font-bold text-slate-300 uppercase tracking-widest">
-                              {rd.academicYear}
-                            </span>
+                            {relatedIsAI ? (
+                              <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">
+                                {Math.round((rd.score || 0) * 100)}% liên quan
+                              </span>
+                            ) : (
+                              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                                {rd.academicYear}
+                              </span>
+                            )}
                             <span className="w-1 h-1 rounded-full bg-slate-200"></span>
                             <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest">
                               {rd.materialType}
@@ -1145,7 +1276,7 @@ export default function DocumentDetailPage() {
                 </div>
               </div>
 
-              <h3 className="text-2xl font-black text-slate-900 mb-2 tracking-tight uppercase italic">
+              <h3 className="text-2xl font-bold text-slate-900 mb-2 tracking-tight">
                 {doc.uploaderId?.fullName}
               </h3>
               <p className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.3em] mb-10">
@@ -1154,7 +1285,7 @@ export default function DocumentDetailPage() {
 
               <div className="grid grid-cols-1 gap-4 border-y border-slate-50 py-8 mb-10">
                 <div>
-                  <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-2">
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">
                     EMAIL
                   </p>
                   <p className="text-sm font-black text-slate-800 truncate px-4">
@@ -1170,14 +1301,9 @@ export default function DocumentDetailPage() {
           </aside>
         </div>
       </div>
-      <ReportModal 
-        isOpen={isReportModalOpen} 
-        onClose={() => setIsReportModalOpen(false)} 
-        materialId={params.id} 
-      />
-      <AddToCollectionModal
-        isOpen={isCollectionModalOpen}
-        onClose={() => setIsCollectionModalOpen(false)}
+      <ReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
         materialId={params.id}
       />
     </div>

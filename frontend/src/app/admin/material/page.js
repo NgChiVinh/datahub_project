@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 
 export default function MaterialAdmin() {
   const [allMaterials, setAllMaterials] = useState([]);
@@ -33,10 +34,19 @@ export default function MaterialAdmin() {
       setIsLoading(true);
       const token = localStorage.getItem("token");
 
-      // Sử dụng API lọc từ backend để lấy đúng dữ liệu phân trang
-      const statusParam = activeStatus === "all" ? "all" : activeStatus;
+      const params = new URLSearchParams({
+        status: activeStatus,
+        page: String(page),
+        limit: String(limit),
+        sortBy: "latest",
+      });
+
+      if (searchTerm.trim()) params.set("search", searchTerm.trim());
+      if (activeTab === "Tài liệu") params.set("materialType", "not_video");
+      else if (activeTab === "Video") params.set("materialType", "video");
+
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/materials?status=${statusParam}&page=${page}&limit=${limit}&sortBy=latest`,
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/materials?${params.toString()}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -78,10 +88,17 @@ export default function MaterialAdmin() {
   };
 
   useEffect(() => {
-    fetchMaterials(1);
     fetchMajors();
     fetchCategories();
-  }, [activeStatus]);
+  }, []);
+
+  // Tải lại từ backend khi đổi trạng thái / loại / từ khóa (debounce search)
+  useEffect(() => {
+    const t = setTimeout(() => {
+      fetchMaterials(1);
+    }, 350);
+    return () => clearTimeout(t);
+  }, [activeStatus, activeTab, searchTerm]);
 
   const handleOpenEdit = (material) => {
     setEditingMaterial(material);
@@ -168,22 +185,6 @@ export default function MaterialAdmin() {
       toast.error("Lỗi kết nối");
     }
   };
-
-  const filtered = allMaterials.filter((asset) => {
-    // Lọc theo Search Term
-    if (searchTerm && !asset.title.toLowerCase().includes(searchTerm.toLowerCase())) {
-      return false;
-    }
-
-    // Lọc theo Loại (Type)
-    if (activeTab === "Tài liệu") {
-      if (asset.materialType === "video") return false;
-    } else if (activeTab === "Video") {
-      if (asset.materialType !== "video") return false;
-    }
-
-    return true;
-  });
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -292,7 +293,7 @@ export default function MaterialAdmin() {
                 <tr>
                   <td colSpan="5" className="px-6 py-12 text-center text-slate-400 font-bold text-xs uppercase tracking-widest">Đang tải dữ liệu...</td>
                 </tr>
-              ) : filtered.length === 0 ? (
+              ) : allMaterials.length === 0 ? (
                 <tr>
                   <td colSpan="5" className="px-6 py-12 text-center">
                     <div className="flex flex-col items-center gap-2">
@@ -302,7 +303,7 @@ export default function MaterialAdmin() {
                   </td>
                 </tr>
               ) : (
-                filtered.map((item) => (
+                allMaterials.map((item) => (
                   <tr key={item._id} className="hover:bg-slate-50/50 transition-colors group">
                     <td className="px-6 py-4">
                       <div className="flex flex-col gap-1">

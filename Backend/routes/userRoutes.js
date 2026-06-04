@@ -13,6 +13,7 @@ const {
   changePassword,
 } = require("../controllers/userController");
 const { authMiddleware, isAdmin } = require("../middleware/authMiddleware");
+const { authLimiter } = require("../middleware/rateLimiter");
 const upload = require("../middleware/multer");
 
 const router = express.Router();
@@ -22,11 +23,11 @@ router.get("/", authMiddleware, isAdmin, getUsers);
 router.put("/:id/role", authMiddleware, isAdmin, updateUserRole);
 router.delete("/:id", authMiddleware, isAdmin, deleteUser);
 
-router.post("/register", registerUser);
-router.post("/login", loginUser);
+router.post("/register", authLimiter, registerUser);
+router.post("/login", authLimiter, loginUser);
 
-router.post("/forgot-password", forgotPassword);
-router.post("/reset-password/:token", resetPassword);
+router.post("/forgot-password", authLimiter, forgotPassword);
+router.post("/reset-password/:token", authLimiter, resetPassword);
 router.put("/change-password", authMiddleware, changePassword);
 
 //  Chỉ người dùng đã login mới truy cập được profile

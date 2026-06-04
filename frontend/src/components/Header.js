@@ -226,6 +226,7 @@ export default function Header() {
         >
           <button
             onClick={() => setIsMobileMenuOpen(true)}
+            aria-label="Mở menu"
             className="lg:hidden p-2 text-slate-600 hover:bg-slate-50 rounded-xl transition-colors"
           >
             <svg
@@ -282,6 +283,7 @@ export default function Header() {
                     setSearchQuery("");
                     setSuggestions([]);
                   }}
+                  aria-label="Đóng tìm kiếm"
                   className="absolute right-3 p-1.5 text-slate-400 hover:text-slate-600 transition-colors"
                 >
                   <svg
@@ -432,6 +434,7 @@ export default function Header() {
           {!isSearchOpen && (
             <button
               onClick={() => setIsSearchOpen(true)}
+              aria-label="Mở tìm kiếm"
               className="p-2.5 text-slate-500 hover:bg-slate-50 hover:text-emerald-600 rounded-xl transition-all duration-300"
             >
               <svg
@@ -459,6 +462,7 @@ export default function Header() {
                   setIsNotifOpen(!isNotifOpen);
                   if (!isNotifOpen) markNotifsAsRead();
                 }}
+                aria-label={unreadCount > 0 ? `Thông báo, ${unreadCount} chưa đọc` : "Thông báo"}
                 className={`p-2.5 rounded-xl transition-all duration-300 relative ${isNotifOpen ? "bg-emerald-50 text-emerald-600" : "text-slate-500 hover:bg-slate-50"}`}
               >
                 <svg
@@ -545,7 +549,7 @@ export default function Header() {
 
           <Link
             href="/upload"
-            className="hidden sm:flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-bold text-white shadow-md transition-all hover:bg-emerald-700 active:scale-95"
+            className="hidden sm:flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-xs font-bold text-white shadow-md transition-all hover:brightness-110 active:scale-95"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -568,6 +572,8 @@ export default function Header() {
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setIsOpen(!isOpen)}
+              aria-label="Menu tài khoản"
+              aria-expanded={isOpen}
               className="group flex items-center gap-2 rounded-2xl p-1 lg:pr-3 bg-slate-50 hover:bg-slate-100 transition-all duration-300 border border-slate-100"
             >
               <div className="h-9 w-9 overflow-hidden rounded-xl bg-emerald-600 flex items-center justify-center text-white font-bold text-xs">
@@ -670,6 +676,7 @@ export default function Header() {
               </div>
               <button
                 onClick={() => setIsMobileMenuOpen(false)}
+                aria-label="Đóng menu"
                 className="p-2 text-slate-400 hover:text-slate-600"
               >
                 <svg

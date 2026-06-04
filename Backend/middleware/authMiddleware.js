@@ -57,27 +57,12 @@ const optionalAuth = async (req, res, next) => {
   }
 };
 
-const isAdmin = async (req, res, next) => {
-  let token = req.header("Authorization");
-  if (!token) return res.status(401).json({ message: "Chưa đăng nhập" });
-
-  if (token.startsWith("Bearer ")) {
-    token = token.slice(7);
+// Luôn chạy SAU authMiddleware (đã verify JWT + set req.user + check isActive).
+const isAdmin = (req, res, next) => {
+  if (!req.user || req.user.role !== "admin") {
+    return res.status(403).json({ message: "Không có quyền truy cập" });
   }
-
-  try {
-    const decoded = jwt.verify(token, process.env.SECRET_KEY); // Giải mã token
-    const user = await User.findById(decoded.userId);
-
-    if (!user || user.role !== "admin") {
-      return res.status(403).json({ message: "Không có quyền truy cập" });
-    }
-
-    req.user = user; // Lưu thông tin user vào request
-    next();
-  } catch (error) {
-    res.status(401).json({ message: "Xác thực thất bại", error });
-  }
+  next();
 };
 
 module.exports = { authMiddleware, optionalAuth, isAdmin };
