@@ -48,12 +48,16 @@ export default function Header() {
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
 
-  const handleSearchSubmit = async (e) => {
+  const handleSearchSubmit = (e) => {
     if (e.key === "Enter" && searchQuery.trim()) {
       setIsSearchOpen(false);
-      router.push(
-        `/documents?search=${encodeURIComponent(searchQuery.trim())}`,
-      );
+      const encoded = encodeURIComponent(searchQuery.trim());
+      // Nếu đang ở trang videos thì tìm trong videos, còn lại tìm trong tài liệu
+      if (pathname.startsWith("/videos")) {
+        router.push(`/videos?search=${encoded}`);
+      } else {
+        router.push(`/documents?search=${encoded}`);
+      }
     }
   };
 
