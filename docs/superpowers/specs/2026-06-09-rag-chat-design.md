@@ -156,11 +156,13 @@ Nhúng `<DocumentChat>` sau phần thông tin tài liệu:
 ```jsx
 <DocumentChat
   materialId={material._id}
-  hasContent={!!material.contentText}
+  hasContent={material.hasContentText}
 />
 ```
 
-Backend cần trả về `contentText` (hoặc ít nhất boolean `hasContentText`) trong response `/api/materials/:id` — chỉ cần biết có hay không, không cần gửi full text về client.
+**Quan trọng:** `getMaterialById` hiện trả về full object kể cả `contentText` (tối đa 50,000 ký tự) — lãng phí bandwidth. Cần sửa `getMaterialById` trong `materialController.js`:
+- Dùng `.select("-contentText -embedding")` khi query (loại bỏ 2 trường nặng)
+- Thêm virtual field `hasContentText: !!this.contentText` vào Material model, **hoặc** tính thủ công sau query rồi thêm vào response object trước khi trả về client
 
 ---
 
@@ -195,10 +197,11 @@ Backend cần trả về `contentText` (hoặc ít nhất boolean `hasContentTex
 |---|---|
 | `Backend/utils/extractText.js` | Thêm PPTX support (officeparser) |
 | `Backend/services/aiService.js` | Thêm chunkText, cosineSimilarity, chatWithDocument, chunkCache |
+| `Backend/controllers/materialController.js` | `getMaterialById`: exclude contentText/embedding, thêm hasContentText |
 | `Backend/controllers/recommendationController.js` | Thêm chatDocument handler |
 | `Backend/routes/recommendationRoutes.js` | Thêm POST /chat route |
 | `frontend/src/components/DocumentChat.js` | Component mới |
-| `frontend/src/app/documents/[id]/page.js` | Nhúng DocumentChat |
+| `frontend/src/app/documents/[id]/page.js` | Nhúng DocumentChat, dùng hasContentText |
 | `Backend/package.json` | Thêm officeparser |
 
 ---
