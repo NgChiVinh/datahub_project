@@ -6,10 +6,11 @@ const { generateEmbedding, expandQuery } = require("./aiService");
 // - Điểm vector >= STRONG  -> chắc chắn liên quan, giữ luôn.
 // - Điểm trong [FLOOR, STRONG) -> chỉ giữ nếu có ít nhất 1 từ trong truy vấn
 //   trùng với tiêu đề/mô tả tài liệu (chặn chuỗi rác lỡ rơi vào vùng này).
-// Đo thực tế: truy vấn thật rõ ~0.85+, truy vấn thật yếu/1 từ ~0.82-0.85,
-// rác/lạc đề ~0.80-0.82 và không có từ nào trùng.
-const SCORE_STRONG = 0.85;
-const SCORE_FLOOR = 0.82;
+// Calibrated cho OpenAI text-embedding-3-small (scores thấp hơn Gemini ~0.1-0.15).
+// Đo thực tế: truy vấn thật rõ ~0.75+, truy vấn thật yếu/1 từ ~0.65-0.75,
+// rác/lạc đề ~0.55-0.65 và không có từ nào trùng.
+const SCORE_STRONG = 0.75;
+const SCORE_FLOOR = 0.65;
 // Giữ tương thích cho findSimilarMaterials (chỉ dùng 1 ngưỡng sàn).
 const SCORE_THRESHOLD = SCORE_FLOOR;
 
