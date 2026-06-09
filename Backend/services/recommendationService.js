@@ -111,7 +111,7 @@ const semanticSearch = async (query, limit = 10) => {
           path: "embedding",
           queryVector: queryVector,
           numCandidates: 100,
-          limit: limit,
+          limit: Math.min(limit * 3, 30), // lấy dư để hybrid filter có đủ ứng viên
         },
       },
       {
@@ -150,6 +150,8 @@ const semanticSearch = async (query, limit = 10) => {
           title: 1,
           description: 1,
           materialType: 1,
+          fileUrl: 1,
+          thumbnail: 1,
           academicYear: 1,
           createdAt: 1,
           metrics: 1,
