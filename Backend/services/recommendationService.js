@@ -299,7 +299,7 @@ const getPersonalizedRecommendations = async (userId, limit = 8) => {
         index: "vector_index",
         path: "embedding",
         queryVector: profile,
-        numCandidates: 100,
+        numCandidates: Math.max(100, (limit + interactedIds.length) * 5),
         limit: limit + interactedIds.length,
       },
     },
