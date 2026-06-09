@@ -79,8 +79,7 @@ const autoSeed = async () => {
         });
 
         // D. Tạo Embedding
-        const fullTextForAI = `Tiêu đề: ${meta.title}. Mô tả: ${meta.description}. Nội dung: ${contentText.slice(0, 2000)}`;
-        const embedding = await generateEmbedding(fullTextForAI);
+        const embedding = await generateEmbedding(buildEmbeddingText(meta.title, meta.description, contentText));
 
         // E. Lưu DB
         const newMaterial = new Material({

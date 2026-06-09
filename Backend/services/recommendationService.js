@@ -210,6 +210,9 @@ const cardEnrichStages = [
 
 const cardProjectFields = {
   title: 1,
+  description: 1,
+  fileUrl: 1,
+  thumbnail: 1,
   materialType: 1,
   academicYear: 1,
   createdAt: 1,
@@ -300,19 +303,16 @@ const getPersonalizedRecommendations = async (userId, limit = 8) => {
         limit: limit + interactedIds.length,
       },
     },
+    { $addFields: { score: { $meta: "vectorSearchScore" } } },
     {
       $match: {
         status: "approved",
         _id: { $nin: interactedIds },
+        score: { $gte: 0.55 }, // loại kết quả quá yếu khỏi for-you feed
       },
     },
     ...cardEnrichStages,
-    {
-      $project: {
-        ...cardProjectFields,
-        score: { $meta: "vectorSearchScore" },
-      },
-    },
+    { $project: { ...cardProjectFields, score: 1 } },
     { $limit: limit },
   ]);
 
