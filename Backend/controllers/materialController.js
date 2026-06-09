@@ -14,15 +14,7 @@ const mongoose = require("mongoose");
 const uploadFile = require("../utils/uploadFile");
 const { deleteFile } = require("../utils/uploadFile");
 const { extractText } = require("../utils/extractText");
-const { generateEmbedding } = require("../services/geminiService");
-
-// Dựng chuỗi văn bản để sinh embedding từ tiêu đề + mô tả + nội dung trích từ file.
-// Nội dung file là tín hiệu ngữ nghĩa quan trọng nhất; tiêu đề/mô tả bổ trợ.
-const buildEmbeddingText = (title, description, content) => {
-  let text = "Tiêu đề: " + (title || "") + ". Mô tả: " + (description || "");
-  if (content) text += ". Nội dung: " + content;
-  return text;
-};
+const { generateEmbedding, buildEmbeddingText } = require("../services/aiService");
 
 // Sinh embedding an toàn: trả mảng rỗng nếu lỗi (đã log bên trong generateEmbedding).
 const safeGenerateEmbedding = async (title, description, content) => {
