@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import ReportModal from "@/components/ReportModal";
+import AddToCollectionModal from "@/components/AddToCollectionModal";
 import toast from "react-hot-toast";
 import api from "@/lib/axios";
 import { getYoutubeId, getYoutubeEmbedUrl } from "@/lib/youtube";
@@ -84,6 +85,7 @@ export default function DocumentDetailPage() {
   const [commentInput, setCommentInput] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isCollectionModalOpen, setIsCollectionModalOpen] = useState(false);
   const [likePending, setLikePending] = useState(false);
 
   // 1. Fetch dữ liệu từ API
@@ -1313,6 +1315,11 @@ export default function DocumentDetailPage() {
       <ReportModal
         isOpen={isReportModalOpen}
         onClose={() => setIsReportModalOpen(false)}
+        materialId={params.id}
+      />
+      <AddToCollectionModal
+        isOpen={isCollectionModalOpen}
+        onClose={() => setIsCollectionModalOpen(false)}
         materialId={params.id}
       />
     </div>

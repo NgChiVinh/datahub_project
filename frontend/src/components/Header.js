@@ -304,89 +304,95 @@ export default function Header() {
               </div>
 
               {/* Suggestions Dropdown */}
-              {(isSearching || suggestions.length > 0) && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl border border-slate-100 z-[110] overflow-hidden">
-                  {isSearching ? (
-                    <div className="p-4 text-center">
-                      <div className="animate-spin inline-block w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full mr-2"></div>
-                      <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
-                        Đang tìm...
-                      </span>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col">
-                      {suggestions.map((item) => (
-                        <button
-                          key={item._id}
-                          onClick={() => handleSuggestionClick(item)}
-                          className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 text-left transition-colors border-b border-slate-50 last:border-0"
-                        >
-                          <div
-                            className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                              item.materialType === "video"
-                                ? "bg-orange-100 text-orange-600"
-                                : "bg-emerald-100 text-emerald-600"
-                            }`}
-                          >
-                            {item.materialType === "video" ? (
-                              <svg
-                                width="14"
-                                height="14"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth="2"
-                                  d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-                                ></path>
-                              </svg>
-                            ) : (
-                              <svg
-                                width="14"
-                                height="14"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth="2"
-                                  d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-                                ></path>
-                              </svg>
-                            )}
-                          </div>
-                          <div className="flex-1 overflow-hidden">
-                            <p className="text-sm font-semibold text-slate-700 truncate">
-                              {item.title}
-                            </p>
-                            <p className="text-[11px] font-medium text-slate-400 uppercase tracking-tight">
-                              {item.materialType} • {item.uploaderId?.fullName}
-                            </p>
-                          </div>
-                        </button>
-                      ))}
-                      <button
-                        onClick={() => {
-                          const e = { key: "Enter" };
-                          handleSearchSubmit(e);
-                        }}
-                        className="p-3 text-center bg-slate-50 hover:bg-slate-100 transition-colors"
+              {(isSearching || suggestions.length > 0 || (searchQuery.length >= 2 && !isSearching && suggestions.length === 0)) && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl border border-slate-100 z-[110] overflow-hidden">
+              {isSearching ? (
+                <div className="p-4 text-center">
+                  <div className="animate-spin inline-block w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full mr-2"></div>
+                  <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
+                    Đang tìm...
+                  </span>
+                </div>
+              ) : suggestions.length === 0 ? (
+                <div className="p-6 text-center">
+                  <p className="text-sm font-medium text-slate-500">
+                    Không tìm thấy kết quả phù hợp cho "{searchQuery}"
+                  </p>
+                </div>
+              ) : (
+                <div className="flex flex-col">
+                  {suggestions.map((item) => (
+                    <button
+                      key={item._id}
+                      onClick={() => handleSuggestionClick(item)}
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 text-left transition-colors border-b border-slate-50 last:border-0"
+                    >
+                      <div
+                        className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                          item.materialType === "video"
+                            ? "bg-orange-100 text-orange-600"
+                            : "bg-emerald-100 text-emerald-600"
+                        }`}
                       >
-                        <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-widest">
-                          Xem tất cả kết quả
-                        </span>
-                      </button>
-                    </div>
-                  )}
+                        {item.materialType === "video" ? (
+                          <svg
+                            width="14"
+                            height="14"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                            ></path>
+                          </svg>
+                        ) : (
+                          <svg
+                            width="14"
+                            height="14"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                            ></path>
+                          </svg>
+                        )}
+                      </div>
+                      <div className="flex-1 overflow-hidden">
+                        <p className="text-sm font-semibold text-slate-700 truncate">
+                          {item.title}
+                        </p>
+                        <p className="text-[11px] font-medium text-slate-400 uppercase tracking-tight">
+                          {item.materialType} • {item.uploaderId?.fullName}
+                        </p>
+                      </div>
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => {
+                      const e = { key: "Enter" };
+                      handleSearchSubmit(e);
+                    }}
+                    className="p-3 text-center bg-slate-50 hover:bg-slate-100 transition-colors"
+                  >
+                    <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-widest">
+                      Xem tất cả kết quả
+                    </span>
+                  </button>
                 </div>
               )}
-            </div>
-          ) : (
+              </div>
+              )}
+              </div>
+              ) : (
             <nav className="hidden lg:flex items-center justify-center gap-8">
               {navLinks.map((link) => (
                 <Link
@@ -631,6 +637,12 @@ export default function Header() {
                       </Link>
                     )}
                     <Link
+                      href="/collections"
+                      className="px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 rounded-xl"
+                    >
+                      Bộ sưu tập
+                    </Link>
+                    <Link
                       href="/profile"
                       className="px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 rounded-xl"
                     >
@@ -696,7 +708,7 @@ export default function Header() {
               </button>
             </div>
 
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-6 overflow-y-auto pb-6">
               {navLinks.map((link) => (
                 <Link
                   key={link.name}
@@ -706,9 +718,41 @@ export default function Header() {
                   {link.name}
                 </Link>
               ))}
+              
+              {user && (
+                 <>
+                   <Link
+                     href="/upload"
+                     className="text-2xl font-black uppercase tracking-tighter text-slate-800 hover:text-emerald-600 transition-colors"
+                   >
+                     Tải lên
+                   </Link>
+                   <Link
+                     href="/collections"
+                     className="text-2xl font-black uppercase tracking-tighter text-slate-800 hover:text-emerald-600 transition-colors"
+                   >
+                     Bộ sưu tập
+                   </Link>
+                   <Link
+                     href="/profile"
+                     className="text-2xl font-black uppercase tracking-tighter text-slate-800 hover:text-emerald-600 transition-colors"
+                   >
+                     Trang cá nhân
+                   </Link>
+                   {user.role === "admin" && (
+                     <Link
+                       href="/admin"
+                       className="text-2xl font-black uppercase tracking-tighter text-emerald-600 transition-colors"
+                     >
+                       Trang quản trị
+                     </Link>
+                   )}
+                 </>
+              )}
+
               <Link
                 href="/ai-suggest"
-                className="flex items-center justify-between w-full p-6 rounded-[2rem] bg-emerald-50 border border-emerald-100 text-emerald-700"
+                className="flex items-center justify-between w-full p-6 mt-4 rounded-[2rem] bg-emerald-50 border border-emerald-100 text-emerald-700"
               >
                 <span className="text-xl font-black uppercase tracking-tight">
                   AI Gợi ý
@@ -734,7 +778,7 @@ export default function Header() {
               </Link>
             </div>
 
-            <div className="mt-auto">
+            <div className="mt-auto pt-4">
               {user ? (
                 <button
                   onClick={handleLogout}
