@@ -77,7 +77,7 @@ export default function DocumentsContent() {
     try {
       setIsAiSearching(true);
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/recommendations/search?q=${encodeURIComponent(q)}&limit=12`,
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/recommendations/search?q=${encodeURIComponent(q)}&limit=12&type=not_video`,
       );
       const json = await res.json();
       setAiResults(Array.isArray(json?.data) ? json.data : []);

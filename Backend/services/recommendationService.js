@@ -96,13 +96,22 @@ const findSimilarMaterials = async (materialId, limit = 5) => {
 /**
  * Tìm kiếm ngữ nghĩa dựa trên câu truy vấn
  */
-const semanticSearch = async (query, limit = 10) => {
+const semanticSearch = async (query, limit = 10, type = null) => {
   try {
     const expandedQuery = await expandQuery(query);
     const queryVector = await generateEmbedding(expandedQuery);
     if (!queryVector || queryVector.length === 0) {
       return [];
     }
+
+    // Lọc theo loại nếu được chỉ định:
+    // type="not_video" → chỉ tài liệu, type="video" → chỉ video, null → tất cả
+    const typeFilter =
+      type === "not_video"
+        ? { materialType: { $ne: "video" } }
+        : type === "video"
+        ? { materialType: "video" }
+        : {};
 
     const results = await Material.aggregate([
       {
@@ -121,6 +130,7 @@ const semanticSearch = async (query, limit = 10) => {
         $match: {
           status: "approved",
           score: { $gte: SCORE_THRESHOLD },
+          ...typeFilter,
         },
       },
       {

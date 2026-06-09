@@ -25,7 +25,7 @@ exports.getSimilarMaterials = async (req, res) => {
 // Tìm kiếm ngữ nghĩa
 exports.searchSemantic = async (req, res) => {
   try {
-    const { q } = req.query;
+    const { q, type } = req.query;
     const limit = parseInt(req.query.limit) || 10;
 
     if (!q) {
@@ -35,7 +35,7 @@ exports.searchSemantic = async (req, res) => {
       });
     }
 
-    const materials = await recommendationService.semanticSearch(q, limit);
+    const materials = await recommendationService.semanticSearch(q, limit, type);
 
     res.json({
       success: true,
