@@ -1,6 +1,6 @@
 const Material = require("../models/Material");
 const Interaction = require("../models/Interaction");
-const { generateEmbedding } = require("./geminiService");
+const { generateEmbedding, expandQuery } = require("./aiService");
 
 // Lọc kết quả tìm kiếm ngữ nghĩa theo kiểu hybrid (vector + từ khóa):
 // - Điểm vector >= STRONG  -> chắc chắn liên quan, giữ luôn.
@@ -97,7 +97,8 @@ const findSimilarMaterials = async (materialId, limit = 5) => {
  */
 const semanticSearch = async (query, limit = 10) => {
   try {
-    const queryVector = await generateEmbedding(query);
+    const expandedQuery = await expandQuery(query);
+    const queryVector = await generateEmbedding(expandedQuery);
     if (!queryVector || queryVector.length === 0) {
       return [];
     }
