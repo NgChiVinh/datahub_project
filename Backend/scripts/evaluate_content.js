@@ -4,7 +4,7 @@
 // hệ nào. Đây là phép đo công bằng để thấy lợi ích của embedding nội dung.
 const mongoose = require("mongoose");
 const Material = require("../models/Material");
-const { generateEmbedding } = require("../services/geminiService");
+const { generateEmbedding } = require("../services/aiService");
 const connectDB = require("../config/db");
 require("dotenv").config();
 

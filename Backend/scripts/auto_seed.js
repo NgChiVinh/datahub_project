@@ -8,7 +8,7 @@ const Major = require("../models/Major");
 const User = require("../models/User");
 const uploadFile = require("../utils/uploadFile");
 const { extractText } = require("../utils/extractText");
-const { generateMetadata, generateEmbedding } = require("../services/geminiService");
+const { generateMetadata, generateEmbedding } = require("../services/aiService");
 require("dotenv").config();
 
 // Cấu hình

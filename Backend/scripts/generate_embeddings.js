@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const https = require("https");
 const http = require("http");
 const Material = require("../models/Material");
-const { generateEmbedding } = require("../services/geminiService");
+const { generateEmbedding, buildEmbeddingText } = require("../services/aiService");
 const { extractText } = require("../utils/extractText");
 const connectDB = require("../config/db");
 require("dotenv").config();
@@ -12,7 +12,7 @@ const BATCH_SIZE = parseInt(process.env.BATCH_SIZE) || 5;
 const DELAY_BETWEEN_BATCHES = parseInt(process.env.DELAY) || 2000;
 const PROCESS_ALL = process.env.ALL === "1" || process.env.ALL === "true";
 const LIMIT = parseInt(process.env.LIMIT) || 0; // 0 = không giới hạn
-// CONTENT_ONLY: chỉ trích + lưu contentText, KHÔNG gọi Gemini (không tốn quota).
+// CONTENT_ONLY: chỉ trích + lưu contentText, không gọi embedding API.
 const CONTENT_ONLY =
   process.env.CONTENT_ONLY === "1" || process.env.CONTENT_ONLY === "true";
 
@@ -38,11 +38,6 @@ const fetchBuffer = (url) =>
     });
   });
 
-const buildText = (title, description, content) => {
-  let t = "Tiêu đề: " + (title || "") + ". Mô tả: " + (description || "");
-  if (content) t += ". Nội dung: " + content;
-  return t;
-};
 
 const migrateEmbeddings = async () => {
   try {
@@ -137,7 +132,7 @@ const migrateEmbeddings = async () => {
             }
 
             const vector = await generateEmbedding(
-              buildText(m.title, m.description, content),
+              buildEmbeddingText(m.title, m.description, content),
             );
 
             if (vector && vector.length > 0) {

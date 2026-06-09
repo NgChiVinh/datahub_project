@@ -7,7 +7,7 @@
 // kiểm chứng được, phù hợp cho phần đánh giá của khóa luận.
 const mongoose = require("mongoose");
 const Material = require("../models/Material");
-const { generateEmbedding } = require("../services/geminiService");
+const { generateEmbedding } = require("../services/aiService");
 const connectDB = require("../config/db");
 require("dotenv").config();
 
