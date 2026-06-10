@@ -25,4 +25,7 @@ router.get("/for-you", aiLimiter, authMiddleware, recommendationController.getFo
 // RAG chat — hỏi AI về nội dung 1 tài liệu cụ thể (public, no auth required)
 router.post("/chat", aiLimiter, recommendationController.chatDocument);
 
+// Quiz tự động từ nội dung tài liệu (public, no auth required)
+router.post("/quiz", aiLimiter, recommendationController.quizDocument);
+
 module.exports = router;

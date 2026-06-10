@@ -1,5 +1,5 @@
 const recommendationService = require("../services/recommendationService");
-const { chatWithDocument } = require("../services/aiService");
+const { chatWithDocument, generateQuiz } = require("../services/aiService");
 const mongoose = require("mongoose");
 
 // Lấy tài liệu tương tự
@@ -95,6 +95,27 @@ exports.chatDocument = async (req, res) => {
 
     const result = await chatWithDocument(materialId, question.trim());
     res.json({ success: true, answer: result.answer });
+  } catch (error) {
+    const status = error.statusCode || 500;
+    const message = status === 500 ? "AI đang bận, vui lòng thử lại sau" : error.message;
+    res.status(status).json({ success: false, message });
+  }
+};
+
+// Tạo quiz tự động từ nội dung tài liệu
+exports.quizDocument = async (req, res) => {
+  try {
+    const { materialId } = req.body;
+
+    if (!materialId) {
+      return res.status(400).json({ success: false, message: "Thiếu materialId" });
+    }
+    if (!mongoose.Types.ObjectId.isValid(materialId)) {
+      return res.status(400).json({ success: false, message: "materialId không hợp lệ" });
+    }
+
+    const questions = await generateQuiz(materialId);
+    res.json({ success: true, questions });
   } catch (error) {
     const status = error.statusCode || 500;
     const message = status === 500 ? "AI đang bận, vui lòng thử lại sau" : error.message;
