@@ -1,5 +1,19 @@
 const StudyCollection = require("../models/StudyCollection");
+const Interaction = require("../models/Interaction");
 const mongoose = require("mongoose");
+
+const recordInteraction = async (userId, materialId, actionType, weight) => {
+  if (!userId || !materialId) return;
+  try {
+    await Interaction.findOneAndUpdate(
+      { userId, materialId, actionType },
+      { weight },
+      { upsert: true, new: true },
+    );
+  } catch (err) {
+    console.error("Lỗi ghi interaction:", err.message);
+  }
+};
 
 // CREATE
 const createCollection = async (req, res) => {
@@ -168,6 +182,7 @@ const addMaterialToCollection = async (req, res) => {
     if (!collection.materialIds.some((id) => id.toString() === materialId)) {
       collection.materialIds.push(materialId);
       await collection.save();
+      recordInteraction(req.user._id, materialId, "save_to_collection", 4);
     }
 
     res.status(200).json({
