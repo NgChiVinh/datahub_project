@@ -123,7 +123,7 @@ const expandQuery = async (query) => {
 const chatWithDocument = async (materialId, question) => {
   const Material = require("../models/Material");
 
-  const doc = await Material.findById(materialId).select("contentText title");
+  const doc = await Material.findById(materialId).select("contentText");
   if (!doc) {
     const err = new Error("Tài liệu không tồn tại");
     err.statusCode = 404;
@@ -139,6 +139,9 @@ const chatWithDocument = async (materialId, question) => {
   if (!chunkCache.has(cacheKey)) {
     const chunks = chunkText(doc.contentText);
     const vectors = await Promise.all(chunks.map((chunk) => generateEmbedding(chunk)));
+    if (vectors.some((v) => v.length === 0)) {
+      throw new Error("AI đang bận, vui lòng thử lại sau");
+    }
     chunkCache.set(
       cacheKey,
       chunks.map((chunk, i) => ({ chunk, vector: vectors[i] }))
