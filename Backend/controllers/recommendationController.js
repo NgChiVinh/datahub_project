@@ -1,4 +1,6 @@
 const recommendationService = require("../services/recommendationService");
+const { chatWithDocument } = require("../services/aiService");
+const mongoose = require("mongoose");
 
 // Lấy tài liệu tương tự
 exports.getSimilarMaterials = async (req, res) => {
@@ -73,5 +75,26 @@ exports.getForYou = async (req, res) => {
       message: "Lỗi khi lấy gợi ý cá nhân hóa",
       error: error.message,
     });
+  }
+};
+
+// Hỏi AI về nội dung của một tài liệu cụ thể (RAG)
+exports.chatDocument = async (req, res) => {
+  try {
+    const { materialId, question } = req.body;
+
+    if (!materialId || !question?.trim()) {
+      return res.status(400).json({ success: false, message: "Thiếu materialId hoặc question" });
+    }
+    if (!mongoose.Types.ObjectId.isValid(materialId)) {
+      return res.status(400).json({ success: false, message: "materialId không hợp lệ" });
+    }
+
+    const result = await chatWithDocument(materialId, question.trim());
+    res.json({ success: true, answer: result.answer });
+  } catch (error) {
+    const status = error.statusCode || 500;
+    const message = status === 500 ? "AI đang bận, vui lòng thử lại sau" : error.message;
+    res.status(status).json({ success: false, message });
   }
 };
