@@ -20,8 +20,6 @@ export default function DocumentQuiz({ materialId, hasContent, isOpen, onClose }
     startQuiz();
   }, [isOpen]);
 
-  if (!hasContent) return null;
-
   const startQuiz = async () => {
     setPhase("loading");
     setQuestions([]);
@@ -51,6 +49,8 @@ export default function DocumentQuiz({ materialId, hasContent, isOpen, onClose }
       setPhase("error");
     }
   };
+
+  if (!hasContent) return null;
 
   const allAnswered = questions.length > 0 && Object.keys(selected).length === questions.length;
   const score = questions.filter((q, i) => selected[i] === q.answer).length;
