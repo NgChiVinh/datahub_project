@@ -378,7 +378,7 @@ const getMaterialById = async (req, res) => {
     // Exclude contentText (tối đa 8000 chars) và embedding (1536 floats) khỏi response.
     // Frontend chỉ cần hasContentText (boolean) để quyết định có hiện chat panel không.
     const material = await Material.findById(req.params.id)
-      .select("-embedding")
+      .select("-embedding +contentText")
       .populate("uploaderId", "fullName avatar")
       .populate("categoryId", "name")
       .populate("majorId", "name")
