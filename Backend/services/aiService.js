@@ -131,4 +131,56 @@ const chatWithDocument = async (materialId, question) => {
   return { answer: response.choices[0].message.content.trim() };
 };
 
-module.exports = { generateEmbedding, generateMetadata, expandQuery, buildEmbeddingText, chatWithDocument };
+const generateQuiz = async (materialId) => {
+  const Material = require("../models/Material");
+
+  const doc = await Material.findById(materialId).select("contentText");
+  if (!doc) {
+    const err = new Error("Tài liệu không tồn tại");
+    err.statusCode = 404;
+    throw err;
+  }
+  if (!doc.contentText || doc.contentText.trim().length === 0) {
+    const err = new Error("Tài liệu này chưa hỗ trợ quiz");
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [
+      {
+        role: "user",
+        content: `Dựa vào nội dung tài liệu dưới đây, hãy tạo đúng 5 câu hỏi trắc nghiệm để kiểm tra hiểu biết.
+
+Yêu cầu:
+- Mỗi câu có đúng 4 đáp án
+- Chỉ 1 đáp án đúng
+- Câu hỏi phải dựa trực tiếp vào nội dung, không bịa
+- Đáp án nhiễu phải hợp lý, không quá dễ đoán
+- Ngôn ngữ: tiếng Việt
+
+Trả về JSON với format sau (không giải thích thêm):
+{"questions":[{"question":"...","options":["...","...","...","..."],"answer":0}]}
+
+"answer" là index (0-3) của đáp án đúng trong mảng options.
+
+Nội dung tài liệu:
+${doc.contentText}`,
+      },
+    ],
+    response_format: { type: "json_object" },
+    max_tokens: 1500,
+    temperature: 0.5,
+  });
+
+  const parsed = JSON.parse(response.choices[0].message.content);
+  if (!Array.isArray(parsed.questions) || parsed.questions.length === 0) {
+    const err = new Error("Không thể tạo quiz từ tài liệu này");
+    err.statusCode = 400;
+    throw err;
+  }
+  return parsed.questions;
+};
+
+module.exports = { generateEmbedding, generateMetadata, expandQuery, buildEmbeddingText, chatWithDocument, generateQuiz };
