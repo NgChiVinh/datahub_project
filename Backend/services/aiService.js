@@ -3,6 +3,31 @@ require("dotenv").config();
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+const chunkText = (text, chunkSize = 400, overlap = 50) => {
+  const chunks = [];
+  let i = 0;
+  while (i < text.length) {
+    chunks.push(text.slice(i, i + chunkSize));
+    i += chunkSize - overlap;
+  }
+  return chunks.filter((c) => c.trim().length > 0);
+};
+
+const cosineSimilarity = (vecA, vecB) => {
+  let dot = 0, normA = 0, normB = 0;
+  for (let i = 0; i < vecA.length; i++) {
+    dot += vecA[i] * vecB[i];
+    normA += vecA[i] * vecA[i];
+    normB += vecB[i] * vecB[i];
+  }
+  if (normA === 0 || normB === 0) return 0;
+  return dot / (Math.sqrt(normA) * Math.sqrt(normB));
+};
+
+// Cache chunk embeddings theo materialId để tránh re-embed khi cùng tài liệu được hỏi nhiều lần.
+// Mất khi server restart — đây là behavior đúng vì contentText có thể thay đổi.
+const chunkCache = new Map();
+
 // Dựng text để embed: lặp title 2x để tăng trọng số,
 // chỉ lấy 1500 chars đầu content (phần intro đại diện nhất).
 const buildEmbeddingText = (title, description, content) => {
@@ -95,4 +120,59 @@ const expandQuery = async (query) => {
   }
 };
 
-module.exports = { generateEmbedding, generateMetadata, expandQuery, buildEmbeddingText };
+const chatWithDocument = async (materialId, question) => {
+  const Material = require("../models/Material");
+
+  const doc = await Material.findById(materialId).select("contentText title");
+  if (!doc) {
+    const err = new Error("Tài liệu không tồn tại");
+    err.statusCode = 404;
+    throw err;
+  }
+  if (!doc.contentText || doc.contentText.trim().length === 0) {
+    const err = new Error("Tài liệu này chưa hỗ trợ chat");
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const cacheKey = materialId.toString();
+  if (!chunkCache.has(cacheKey)) {
+    const chunks = chunkText(doc.contentText);
+    const vectors = await Promise.all(chunks.map((chunk) => generateEmbedding(chunk)));
+    chunkCache.set(
+      cacheKey,
+      chunks.map((chunk, i) => ({ chunk, vector: vectors[i] }))
+    );
+  }
+  const cached = chunkCache.get(cacheKey);
+
+  const questionVector = await generateEmbedding(question);
+
+  const top4 = cached
+    .map(({ chunk, vector }) => ({ chunk, score: cosineSimilarity(questionVector, vector) }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 4);
+
+  const contextText = top4.map((s) => s.chunk).join("\n---\n");
+
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [
+      {
+        role: "system",
+        content:
+          "Bạn là trợ lý học tập. Dựa vào các đoạn trích dưới đây từ tài liệu, hãy trả lời câu hỏi một cách chính xác và súc tích bằng tiếng Việt. Nếu thông tin không có trong các đoạn trích, hãy nói rõ là không tìm thấy trong tài liệu.",
+      },
+      {
+        role: "user",
+        content: `Context:\n${contextText}\n\nCâu hỏi: ${question}`,
+      },
+    ],
+    max_tokens: 500,
+    temperature: 0.3,
+  });
+
+  return { answer: response.choices[0].message.content.trim() };
+};
+
+module.exports = { generateEmbedding, generateMetadata, expandQuery, buildEmbeddingText, chatWithDocument };
