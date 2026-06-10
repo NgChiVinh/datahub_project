@@ -375,31 +375,31 @@ const getMaterials = async (req, res) => {
 
 const getMaterialById = async (req, res) => {
   try {
+    // Exclude contentText (tối đa 8000 chars) và embedding (1536 floats) khỏi response.
+    // Frontend chỉ cần hasContentText (boolean) để quyết định có hiện chat panel không.
     const material = await Material.findById(req.params.id)
-      .populate("uploaderId", "fullName")
+      .select("-embedding")
+      .populate("uploaderId", "fullName avatar")
       .populate("categoryId", "name")
       .populate("majorId", "name")
       .populate("tags", "name");
 
     if (!material) {
-      return res.status(404).json({
-        message: "Không tìm thấy",
-      });
+      return res.status(404).json({ message: "Không tìm thấy" });
     }
 
     material.metrics.viewCount += 1;
-
     await material.save();
 
-    // Ghi tương tác xem (chỉ khi đã đăng nhập)
     recordInteraction(req.user?._id, material._id, "view", 1);
 
-    return res.status(200).json(material);
+    const docObj = material.toObject();
+    docObj.hasContentText = !!(docObj.contentText && docObj.contentText.trim().length > 0);
+    delete docObj.contentText;
+
+    return res.status(200).json(docObj);
   } catch (error) {
-    return res.status(500).json({
-      message: "Lỗi server",
-      error: error.message,
-    });
+    return res.status(500).json({ message: "Lỗi server", error: error.message });
   }
 };
 
