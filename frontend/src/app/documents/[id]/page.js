@@ -9,6 +9,7 @@ import AddToCollectionModal from "@/components/AddToCollectionModal";
 import toast from "react-hot-toast";
 import api from "@/lib/axios";
 import { getYoutubeId, getYoutubeEmbedUrl } from "@/lib/youtube";
+import DocumentChat from "@/components/DocumentChat";
 
 const TAB_ICONS = {
   eye: "M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z",
@@ -600,92 +601,45 @@ export default function DocumentDetailPage() {
     );
 
   return (
-    <div className="min-h-screen bg-[#fafbfc] font-sans text-slate-900 pb-20 pt-24">
-      {/* Top Breadcrumb & Actions */}
-      <div className="bg-white/70 backdrop-blur-xl border-b border-slate-100 sticky top-20 z-40 transition-all duration-300">
-        <div className="container mx-auto max-w-7xl px-4 py-4 lg:px-12 flex items-center justify-between">
+    <div className="min-h-screen bg-[#FAFAF8] pb-24 pt-20">
+
+      {/* Sticky breadcrumb + actions */}
+      <div className="bg-[#FAFAF8]/90 backdrop-blur-xl border-b border-slate-200/60 sticky top-20 z-40">
+        <div className="container mx-auto max-w-7xl px-4 lg:px-12 h-14 flex items-center justify-between gap-4">
           <Link
             href="/documents"
-            className="group inline-flex items-center gap-3 text-slate-500 hover:text-emerald-600 font-black text-[10px] uppercase tracking-[0.2em] transition-all"
+            className="inline-flex items-center gap-2 text-slate-500 hover:text-emerald-600 font-black text-[10px] uppercase tracking-widest transition-colors group shrink-0"
           >
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 group-hover:bg-emerald-100 group-hover:text-emerald-600 transition-all">
-              <svg
-                width="16"
-                height="16"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="3"
-                  d="M15 19l-7-7 7-7"
-                ></path>
-              </svg>
-            </div>
-            Quay lại Thư viện
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3" className="group-hover:-translate-x-0.5 transition-transform">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+            Thư viện
           </Link>
-          <div className="flex items-center gap-4">
-            <button
-              onClick={handleLike}
-              disabled={likePending}
-              aria-label={isLiked ? "Bỏ thích tài liệu" : "Thích tài liệu"}
-              aria-pressed={isLiked}
-              className={`p-3 rounded-2xl border transition-all duration-300 active:scale-90 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40 ${isLiked ? "bg-red-50 border-red-100 text-red-500 shadow-lg shadow-red-500/10" : "bg-white border-slate-100 text-slate-400 hover:text-red-500 hover:border-red-100"}`}
-            >
-              <svg
-                width="20"
-                height="20"
-                fill={isLiked ? "currentColor" : "none"}
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2.5"
-                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                ></path>
+          <p className="text-[11px] font-medium text-slate-500 truncate hidden md:block flex-1 text-center">
+            {doc.title}
+          </p>
+          <div className="flex items-center gap-2 shrink-0">
+            <button onClick={handleLike} disabled={likePending} aria-label={isLiked ? "Bỏ thích" : "Thích"} aria-pressed={isLiked}
+              className={`p-2.5 rounded-xl border transition-all active:scale-90 disabled:opacity-50 ${isLiked ? "bg-red-50 border-red-200 text-red-500" : "bg-white border-slate-200 text-slate-400 hover:text-red-500 hover:border-red-200"}`}>
+              <svg width="15" height="15" fill={isLiked ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
             </button>
-            <button
-              onClick={handleShare}
-              aria-label="Chia sẻ tài liệu"
-              title="Chia sẻ"
-              className="p-3 rounded-2xl bg-white border border-slate-100 text-slate-400 hover:text-emerald-500 hover:border-emerald-100 transition-all active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
-            >
-              <svg
-                width="20"
-                height="20"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2.5"
-                  d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
-                ></path>
+            <button onClick={handleShare} aria-label="Chia sẻ"
+              className="p-2.5 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-emerald-500 hover:border-emerald-200 transition-all active:scale-90">
+              <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
               </svg>
             </button>
-            <button 
-              onClick={() => setIsCollectionModalOpen(true)}
-              className="p-3 rounded-2xl bg-white border border-slate-100 text-slate-400 hover:text-emerald-500 hover:border-emerald-100 transition-all active:scale-90"
-              title="Thêm vào bộ sưu tập"
-            >
-              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
+            <button onClick={() => setIsCollectionModalOpen(true)} title="Lưu vào bộ sưu tập"
+              className="p-2.5 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-emerald-500 hover:border-emerald-200 transition-all active:scale-90">
+              <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
               </svg>
             </button>
-            <button
-              onClick={() => setIsReportModalOpen(true)}
-              aria-label="Báo cáo vi phạm"
-              title="Báo cáo vi phạm"
-              className="p-3 rounded-2xl bg-white border border-slate-100 text-slate-400 hover:text-red-500 hover:border-red-100 transition-all active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40"
-            >
-              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button onClick={() => setIsReportModalOpen(true)} aria-label="Báo cáo vi phạm"
+              className="p-2.5 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-red-500 hover:border-red-200 transition-all active:scale-90">
+              <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
             </button>
@@ -693,558 +647,344 @@ export default function DocumentDetailPage() {
         </div>
       </div>
 
-      <div className="container mx-auto max-w-7xl px-4 lg:px-12 py-10">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
-          <div className="lg:col-span-2 space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-700">
-            {/* Header Info Card */}
-            <div className="bg-white rounded-[3rem] p-10 md:p-14 border border-slate-100 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.03)] relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-emerald-500/5 to-blue-500/5 rounded-bl-[8rem] -mr-20 -mt-20 group-hover:scale-110 transition-transform duration-1000"></div>
+      <div className="container mx-auto max-w-7xl px-4 lg:px-12">
 
-              <div className="flex flex-wrap gap-3 mb-8 relative z-10">
-                <span
-                  className={`px-5 py-2 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-sm bg-slate-900 text-white`}
-                >
-                  {doc.materialType}
-                </span>
-                <span className="px-5 py-2 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] bg-emerald-50 text-emerald-600 border border-emerald-100/50 shadow-sm">
-                  {doc.categoryId?.name}
-                </span>
-                <span className="px-5 py-2 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] bg-blue-50 text-blue-600 border border-blue-100/50 shadow-sm">
-                  {doc.academicYear}
-                </span>
-              </div>
-
-              <h1 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight tracking-tight mb-10 relative z-10">
-                {doc.title}
-              </h1>
-
-              <div className="flex flex-wrap items-center gap-10 text-slate-400 text-[11px] font-black uppercase tracking-widest border-t border-slate-50 pt-10 relative z-10">
-                <div className="flex items-center gap-3 group/item">
-                  <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center group-hover/item:text-emerald-500 transition-colors shadow-inner">
-                    <svg
-                      width="18"
-                      height="18"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2.5"
-                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                      ></path>
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                      ></path>
-                    </svg>
-                  </div>
-                  <span>
-                    {doc.metrics?.viewCount?.toLocaleString()} LƯỢT XEM
-                  </span>
-                </div>
-                <div className="flex items-center gap-3 group/item">
-                  <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center group-hover/item:text-amber-500 transition-colors shadow-inner text-amber-500">
-                    <svg
-                      width="18"
-                      height="18"
-                      fill="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                    </svg>
-                  </div>
-                  <span>
-                    {doc.metrics?.averageRating?.toFixed(1) || 0} (
-                    {doc.metrics?.reviewCount || 0} ĐÁNH GIÁ)
-                  </span>
-                </div>
-                <div className="flex items-center gap-3 group/item">
-                  <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center group-hover/item:text-blue-500 transition-colors shadow-inner">
-                    <svg
-                      width="18"
-                      height="18"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2.5"
-                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                      ></path>
-                    </svg>
-                  </div>
-                  <span>
-                    {doc.metrics?.downloadCount?.toLocaleString()} TẢI VỀ
-                  </span>
-                </div>
-                <div className="flex items-center gap-3 group/item">
-                  <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center group-hover/item:text-amber-500 transition-colors shadow-inner">
-                    <svg
-                      width="18"
-                      height="18"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2.5"
-                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v12a2 2 0 002 2z"
-                      ></path>
-                    </svg>
-                  </div>
-                  <span>
-                    {new Date(doc.createdAt).toLocaleDateString("vi-VN")}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Document Content Area */}
-            <div className="bg-white rounded-[3rem] border border-slate-100 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.02)] overflow-hidden">
-              <div className="flex border-b border-slate-50 px-10 pt-8 gap-4 overflow-x-auto no-scrollbar" role="tablist">
-                {[
-                  { id: "preview", label: "XEM TRƯỚC", icon: "eye" },
-                  { id: "info", label: "CHI TIẾT", icon: "info" },
-                  {
-                    id: "comments",
-                    label: "THẢO LUẬN",
-                    icon: "message",
-                    count: reviews.length + comments.length,
-                  },
-                ].map((tab) => {
-                  const isActive = activeTab === tab.id;
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      role="tab"
-                      id={`tab-${tab.id}`}
-                      aria-controls={`tabpanel-${tab.id}`}
-                      aria-selected={isActive}
-                      className={`px-10 py-5 text-[10px] font-black uppercase tracking-[0.2em] transition-all relative flex items-center gap-2.5 whitespace-nowrap focus-visible:outline-none focus-visible:text-emerald-600 ${isActive ? "text-emerald-600" : "text-slate-400 hover:text-slate-700"}`}
-                    >
-                      <svg
-                        width="15"
-                        height="15"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2.5"
-                          d={TAB_ICONS[tab.icon]}
-                        />
-                      </svg>
-                      {tab.label}
-                      {tab.count > 0 && (
-                        <span
-                          className={`min-w-[18px] h-[18px] px-1 rounded-full text-[9px] flex items-center justify-center transition-colors ${isActive ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-400"}`}
-                        >
-                          {tab.count}
-                        </span>
-                      )}
-                      {isActive && (
-                        <div className="absolute bottom-0 left-0 w-full h-1 bg-emerald-500 rounded-t-full shadow-[0_-4px_10px_rgba(16,185,129,0.3)]"></div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div
-                className="p-10 md:p-14 min-h-[500px]"
-                role="tabpanel"
-                id={`tabpanel-${activeTab}`}
-                aria-labelledby={`tab-${activeTab}`}
-              >
-                {activeTab === "preview" && renderPreview()}
-
-                {activeTab === "info" && (
-                  <div className="space-y-12 animate-in fade-in duration-500">
-                    <div className="relative">
-                      <span className="absolute -left-10 top-0 text-6xl font-black text-slate-100 italic opacity-50">
-                        “
-                      </span>
-                      <h4 className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.3em] mb-6">
-                        Mô tả tài liệu
-                      </h4>
-                      <p className="text-slate-700 leading-relaxed font-medium text-lg border-l-4 border-emerald-500/30 pl-8">
-                        {doc.description || "Không có mô tả cho tài liệu này."}
-                      </p>
-                    </div>
-
-                    <div>
-                      <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-6">
-                        Tags Tri thức
-                      </h4>
-                      <div className="flex flex-wrap gap-3">
-                        {doc.tags?.length > 0 ? (
-                          doc.tags.map((tag) => (
-                            <span
-                              key={tag._id}
-                              className="px-6 py-3 rounded-2xl bg-slate-50 border border-slate-100 text-[11px] font-black text-slate-600 hover:border-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 transition-all cursor-pointer uppercase tracking-tight shadow-sm"
-                            >
-                              #{tag.name}
-                            </span>
-                          ))
-                        ) : (
-                          <p className="text-xs text-slate-400 font-bold italic uppercase">
-                            Chưa có tag nào
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {activeTab === "comments" && (
-                  <div className="space-y-16 animate-in fade-in duration-500">
-                    {/* Phần Đánh giá (Reviews) */}
-                    <div className="space-y-10">
-                      <div className="flex flex-col gap-6 p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100 shadow-inner">
-                        <div className="flex items-center justify-between flex-wrap gap-4">
-                          <div className="flex items-center gap-4">
-                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-blue-500 flex items-center justify-center text-white font-black text-xl shadow-lg shrink-0">
-                              ★
-                            </div>
-                            <div>
-                              <p className="text-sm font-black text-slate-800 uppercase tracking-tight">
-                                Đánh giá tài liệu
-                              </p>
-                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                Chia sẻ trải nghiệm và số sao của bạn
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-1">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <button
-                                key={star}
-                                onMouseEnter={() => setHoverRating(star)}
-                                onMouseLeave={() => setHoverRating(0)}
-                                onClick={() => setUserRating(star)}
-                                className="p-1 transition-transform active:scale-90"
-                              >
-                                <svg
-                                  width="28"
-                                  height="28"
-                                  viewBox="0 0 24 24"
-                                  fill={
-                                    (hoverRating || userRating) >= star
-                                      ? "#fbbf24"
-                                      : "none"
-                                  }
-                                  stroke={
-                                    (hoverRating || userRating) >= star
-                                      ? "#fbbf24"
-                                      : "#cbd5e1"
-                                  }
-                                  strokeWidth="2"
-                                >
-                                  <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                                </svg>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div className="space-y-6">
-                          <textarea
-                            placeholder="Tài liệu này có hữu ích không? Hãy cho mọi người biết..."
-                            value={commentInput || ""}
-                            onChange={(e) => setCommentInput(e.target.value)}
-                            className="w-full bg-white border-2 border-slate-100 rounded-3xl px-8 py-6 font-bold text-slate-700 outline-none focus:ring-8 focus:ring-emerald-500/5 focus:border-emerald-500/20 transition-all resize-none shadow-sm placeholder:text-slate-300"
-                            rows="3"
-                          ></textarea>
-                          <div className="flex justify-end">
-                            <button
-                              onClick={handleSubmitReview}
-                              disabled={isSubmitting}
-                              className="inline-flex items-center gap-3 bg-slate-900 text-white font-black text-[10px] uppercase tracking-[0.2em] px-10 py-5 rounded-2xl shadow-xl shadow-slate-900/20 hover:bg-primary hover:shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
-                            >
-                              {isSubmitting && (
-                                <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
-                              )}
-                              {isSubmitting ? "Đang gửi..." : "Gửi đánh giá"}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-8">
-                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">
-                          ĐÁNH GIÁ TỪ CỘNG ĐỒNG ({reviews.length})
-                        </h4>
-
-                        {reviews.length > 0 ? (
-                          <div className="grid grid-cols-1 gap-6">
-                            {reviews.map((rev) => (
-                              <div key={rev._id} className="p-8 bg-white border border-slate-50 rounded-[2rem] shadow-sm hover:shadow-md transition-all group">
-                                <div className="flex items-start justify-between mb-4">
-                                  <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 font-black text-sm">
-                                      {rev.userId?.fullName?.charAt(0) || "U"}
-                                    </div>
-                                    <div>
-                                      <h5 className="text-xs font-bold text-slate-800">
-                                        {rev.userId?.fullName}
-                                      </h5>
-                                      <div className="flex items-center gap-0.5">
-                                        {[1, 2, 3, 4, 5].map((s) => (
-                                          <svg
-                                            key={s}
-                                            width="10"
-                                            height="10"
-                                            fill={s <= rev.rating ? "#fbbf24" : "#e2e8f0"}
-                                            viewBox="0 0 24 24"
-                                          >
-                                            <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                                          </svg>
-                                        ))}
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <span className="text-[9px] font-bold text-slate-400 uppercase">
-                                    {new Date(rev.createdAt).toLocaleDateString("vi-VN")}
-                                  </span>
-                                </div>
-                                <p className="text-sm text-slate-600 font-medium leading-relaxed">
-                                  {rev.content}
-                                </p>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="text-center py-10 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-100">
-                            <p className="text-slate-400 font-black text-[10px] uppercase tracking-widest">
-                              Chưa có đánh giá nào
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Dải phân cách */}
-                    <div className="relative py-4">
-                      <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-slate-100"></div>
-                      </div>
-                      <div className="relative flex justify-center">
-                        <span className="bg-white px-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.5em]">Hỏi đáp & Thảo luận</span>
-                      </div>
-                    </div>
-
-                    {/* Phần Bình luận (Comments) */}
-                    <div id="comment-form" className="space-y-10">
-                      <div className="space-y-6">
-                        {replyingTo && (
-                          <div className="flex items-center justify-between px-6 py-3 bg-emerald-50 rounded-xl border border-emerald-100 animate-in slide-in-from-top-2">
-                            <p className="text-[10px] font-black text-emerald-600 uppercase">
-                              Đang trả lời: <span className="italic">{replyingTo.name}</span>
-                            </p>
-                            <button 
-                              onClick={() => setReplyingTo(null)}
-                              className="text-[9px] font-black text-slate-400 hover:text-red-500 uppercase"
-                            >
-                              Hủy
-                            </button>
-                          </div>
-                        )}
-                        <div className="relative">
-                          <textarea
-                            placeholder="Đặt câu hỏi hoặc thảo luận về tài liệu này..."
-                            value={commentText}
-                            onChange={(e) => setCommentText(e.target.value)}
-                            className="w-full bg-white border-2 border-slate-100 rounded-3xl px-8 py-6 font-bold text-slate-700 outline-none focus:ring-8 focus:ring-blue-500/5 focus:border-blue-500/20 transition-all resize-none shadow-sm placeholder:text-slate-300"
-                            rows="3"
-                          ></textarea>
-                          <button
-                            onClick={handleSubmitComment}
-                            disabled={isSubmitting || !commentText.trim()}
-                            aria-label="Gửi bình luận"
-                            className="absolute bottom-4 right-4 bg-blue-600 text-white p-4 rounded-2xl shadow-lg hover:bg-blue-500 active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
-                          >
-                            {isSubmitting ? (
-                              <span className="block w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
-                            ) : (
-                              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                              </svg>
-                            )}
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        {comments.length > 0 ? (
-                          comments.map((comment) => (
-                            <CommentItem
-                              key={comment._id}
-                              comment={comment}
-                              onReply={handleReply}
-                            />
-                          ))
-                        ) : (
-                          <div className="text-center py-10">
-                            <p className="text-slate-400 font-black text-[10px] uppercase tracking-widest">
-                              Chưa có thảo luận nào
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-              </div>
-            </div>
+        {/* ── EDITORIAL MASTHEAD ── */}
+        <div className="relative py-14 overflow-hidden">
+          {/* Watermark type */}
+          <div className="absolute top-1/2 right-0 -translate-y-1/2 text-[clamp(100px,15vw,180px)] font-black text-slate-100 uppercase leading-none select-none pointer-events-none hidden lg:block" aria-hidden="true">
+            {doc.materialType}
           </div>
 
-          <aside className="space-y-12 animate-in fade-in slide-in-from-right-8 duration-700 delay-200">
-            <div className="bg-slate-900 rounded-[3rem] p-10 text-white shadow-2xl shadow-slate-900/30 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500 rounded-bl-full -mr-16 -mt-16 group-hover:scale-125 transition-transform duration-1000 opacity-80"></div>
+          {/* Tag row */}
+          <div className="flex flex-wrap gap-2 mb-6 relative z-10">
+            <span className="px-3.5 py-1.5 bg-slate-900 text-white text-[9px] font-black uppercase tracking-[0.2em] rounded-full">
+              {doc.materialType}
+            </span>
+            {doc.categoryId?.name && (
+              <span className="px-3.5 py-1.5 bg-emerald-100 text-emerald-700 text-[9px] font-black uppercase tracking-[0.2em] rounded-full border border-emerald-200/60">
+                {doc.categoryId.name}
+              </span>
+            )}
+            {doc.academicYear && (
+              <span className="px-3.5 py-1.5 bg-slate-100 text-slate-600 text-[9px] font-black uppercase tracking-[0.2em] rounded-full">
+                {doc.academicYear}
+              </span>
+            )}
+          </div>
 
-              <h3 className="text-2xl font-black mb-10 relative z-10 tracking-tighter uppercase italic">
-                {doc.sourceType === "link" ? "XEM NGUỒN" : "TẢI VỀ MÁY"}
-              </h3>
+          {/* Title */}
+          <h1 className="text-4xl md:text-5xl xl:text-[3.75rem] font-bold text-slate-900 leading-[1.05] tracking-tight mb-10 max-w-3xl relative z-10">
+            {doc.title}
+          </h1>
 
-              <div className="space-y-4 mb-12 relative z-10">
-                <div className="flex items-center justify-between p-6 bg-white/5 rounded-3xl border border-white/10 backdrop-blur-xl group-hover:bg-white/10 transition-colors">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-emerald-400 group-hover:rotate-12 transition-transform">
-                      <svg
-                        width="24"
-                        height="24"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2.5"
-                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        ></path>
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/40 mb-1">
-                        LOẠI TÀI LIỆU
-                      </p>
-                      <p className="text-sm font-black tracking-tight uppercase">
-                        {doc.materialType}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/40 mb-1">
-                      NGUỒN
-                    </p>
-                    <p className="text-sm font-black tracking-tight uppercase">
-                      {doc.sourceType}
-                    </p>
-                  </div>
-                </div>
+          {/* Meta row */}
+          <div className="flex flex-wrap items-center gap-5 relative z-10">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-slate-900 text-white text-[10px] font-black flex items-center justify-center shrink-0">
+                {doc.uploaderId?.fullName?.charAt(0) || "U"}
               </div>
+              <span className="text-xs font-bold text-slate-700">{doc.uploaderId?.fullName}</span>
+            </div>
+            <span className="w-px h-4 bg-slate-200 hidden sm:block" />
+            <div className="flex flex-wrap items-center gap-4 text-[11px] font-bold text-slate-500">
+              <span className="flex items-center gap-1.5">
+                <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                <strong className="text-slate-900">{doc.metrics?.viewCount?.toLocaleString("vi-VN") || 0}</strong> xem
+              </span>
+              <span className="flex items-center gap-1.5">
+                <svg width="13" height="13" fill="#fbbf24" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <strong className="text-slate-900">{doc.metrics?.averageRating?.toFixed(1) || "0.0"}</strong>
+                <span className="text-slate-400">({doc.metrics?.reviewCount || 0})</span>
+              </span>
+              <span className="flex items-center gap-1.5">
+                <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                <strong className="text-slate-900">{doc.metrics?.downloadCount?.toLocaleString("vi-VN") || 0}</strong> tải
+              </span>
+              <span className="text-slate-300">·</span>
+              <span>{new Date(doc.createdAt).toLocaleDateString("vi-VN")}</span>
+            </div>
+          </div>
+        </div>
 
-              <button
-                onClick={handleDownload}
-                className="w-full bg-primary text-white py-6 rounded-3xl font-black text-lg shadow-2xl shadow-emerald-500/20 hover:brightness-110 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-4 relative z-10"
-              >
-                <span>
-                  {doc.sourceType === "link" ? "TRUY CẬP" : "TẢI NGAY"}
-                </span>
-                <svg
-                  width="24"
-                  height="24"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  className="animate-bounce"
-                >
-                  <path
-                    d="M12 5v14M5 12l7 7 7-7"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </button>
+        <div className="h-px bg-slate-200/60 mb-12" />
+
+        {/* ── CONTENT GRID ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] xl:grid-cols-[1fr_320px] gap-12 items-start">
+
+          {/* Left column */}
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+
+            {/* Tab nav */}
+            <div className="flex items-center gap-0 border-b border-slate-200/60 mb-8" role="tablist">
+              {[
+                { id: "preview", label: "Xem trước", icon: "eye" },
+                { id: "info", label: "Chi tiết", icon: "info" },
+                { id: "comments", label: "Thảo luận", icon: "message", count: reviews.length + comments.length },
+              ].map((tab) => {
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    role="tab"
+                    id={`tab-${tab.id}`}
+                    aria-controls={`tabpanel-${tab.id}`}
+                    aria-selected={isActive}
+                    className={`relative px-5 py-4 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-colors focus-visible:outline-none whitespace-nowrap ${isActive ? "text-slate-900" : "text-slate-400 hover:text-slate-600"}`}
+                  >
+                    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d={TAB_ICONS[tab.icon]} />
+                    </svg>
+                    {tab.label}
+                    {tab.count > 0 && (
+                      <span className={`min-w-[16px] h-4 px-1 rounded-full text-[8px] flex items-center justify-center font-black ${isActive ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-500"}`}>
+                        {tab.count}
+                      </span>
+                    )}
+                    {isActive && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-emerald-500 rounded-t-full" />}
+                  </button>
+                );
+              })}
             </div>
 
-            {relatedDocs.length > 0 && (
-              <div className="bg-white rounded-[3rem] p-10 border border-slate-100 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.03)] relative overflow-hidden group">
-                <h3 className="text-xl font-black text-slate-800 mb-8 uppercase tracking-tighter italic flex items-center gap-3">
-                  <span className="w-2 h-6 bg-emerald-500 rounded-full"></span>
-                  {relatedIsAI ? "Tài liệu liên quan (AI)" : "Tài liệu cùng chuyên mục"}
-                </h3>
-                <div className="space-y-6">
-                  {relatedDocs.map((rd) => (
-                    <Link
-                      key={rd._id}
-                      href={`/documents/${rd._id}`}
-                      className="block group/item"
-                    >
-                      <div className="flex items-start gap-4 p-4 rounded-2xl hover:bg-slate-50 transition-all border border-transparent hover:border-slate-100">
-                        <div
-                          className={`w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 shrink-0 font-black text-[10px] group-hover/item:bg-emerald-500 group-hover/item:text-white transition-all`}
-                        >
-                          {rd.materialType === "video" ? (
-                            <svg
-                              width="18"
-                              height="18"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path d="m7 4 12 8-12 8V4z" strokeWidth="2.5" />
+            {/* Tab content */}
+            <div role="tabpanel" id={`tabpanel-${activeTab}`} aria-labelledby={`tab-${activeTab}`} className="min-h-[400px]">
+              {activeTab === "preview" && renderPreview()}
+
+              {activeTab === "info" && (
+                <div className="space-y-10 animate-in fade-in duration-300">
+                  <div>
+                    <p className="text-[9px] font-black text-emerald-500 uppercase tracking-[0.35em] mb-4">Mô tả tài liệu</p>
+                    <p className="text-base text-slate-700 leading-relaxed font-medium border-l-[3px] border-emerald-500/30 pl-6">
+                      {doc.description || "Không có mô tả cho tài liệu này."}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.35em] mb-4">Tags</p>
+                    <div className="flex flex-wrap gap-2">
+                      {doc.tags?.length > 0 ? doc.tags.map((tag) => (
+                        <span key={tag._id} className="px-4 py-2 rounded-xl bg-slate-50 border border-slate-100 text-[11px] font-bold text-slate-600 hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all cursor-default">
+                          #{tag.name}
+                        </span>
+                      )) : (
+                        <span className="text-xs text-slate-400 font-bold italic">Chưa có tag nào</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {[
+                      { label: "Loại file", value: doc.materialType?.toUpperCase() },
+                      { label: "Chuyên ngành", value: doc.majorId?.name },
+                      { label: "Năm học", value: doc.academicYear },
+                      { label: "Danh mục", value: doc.categoryId?.name },
+                      { label: "Nguồn lưu trữ", value: doc.sourceType },
+                      { label: "Ngày đăng", value: new Date(doc.createdAt).toLocaleDateString("vi-VN") },
+                    ].filter(i => i.value).map(({ label, value }) => (
+                      <div key={label} className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5">{label}</p>
+                        <p className="text-sm font-bold text-slate-800">{value}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {activeTab === "comments" && (
+                <div className="space-y-12 animate-in fade-in duration-300">
+
+                  {/* Review form */}
+                  <div className="bg-white rounded-3xl p-7 border border-slate-100 shadow-sm">
+                    <div className="flex items-center justify-between mb-5">
+                      <div>
+                        <p className="text-sm font-black text-slate-800">Đánh giá tài liệu</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Chia sẻ trải nghiệm của bạn</p>
+                      </div>
+                      <div className="flex items-center gap-0.5">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button key={star}
+                            onMouseEnter={() => setHoverRating(star)}
+                            onMouseLeave={() => setHoverRating(0)}
+                            onClick={() => setUserRating(star)}
+                            aria-label={`${star} sao`}
+                            aria-pressed={userRating === star}
+                            className="p-0.5 transition-transform hover:scale-110 active:scale-90">
+                            <svg width="24" height="24" viewBox="0 0 24 24"
+                              fill={(hoverRating || userRating) >= star ? "#fbbf24" : "none"}
+                              stroke={(hoverRating || userRating) >= star ? "#fbbf24" : "#cbd5e1"}
+                              strokeWidth="2">
+                              <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
                             </svg>
-                          ) : (
-                            <svg
-                              width="18"
-                              height="18"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-                                strokeWidth="2.5"
-                              />
-                            </svg>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-bold text-slate-700 leading-tight line-clamp-2 group-hover/item:text-emerald-600 transition-colors">
-                            {rd.title}
-                          </p>
-                          <div className="flex items-center gap-3 mt-2">
-                            {relatedIsAI ? (
-                              <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">
-                                {Math.round((rd.score || 0) * 100)}% liên quan
-                              </span>
-                            ) : (
-                              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                                {rd.academicYear}
-                              </span>
-                            )}
-                            <span className="w-1 h-1 rounded-full bg-slate-200"></span>
-                            <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest">
-                              {rd.materialType}
-                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <textarea
+                      placeholder="Tài liệu này có hữu ích không? Hãy cho mọi người biết..."
+                      value={commentInput || ""}
+                      onChange={(e) => setCommentInput(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-sm font-medium text-slate-700 outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-500/5 focus:bg-white transition-all resize-none placeholder:text-slate-300"
+                      rows="3"
+                    />
+                    <div className="flex justify-end mt-4">
+                      <button onClick={handleSubmitReview} disabled={isSubmitting}
+                        className="inline-flex items-center gap-2 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest px-7 py-3.5 rounded-xl hover:bg-emerald-600 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+                        {isSubmitting && <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />}
+                        {isSubmitting ? "Đang gửi..." : "Gửi đánh giá"}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Reviews list */}
+                  {reviews.length > 0 && (
+                    <div className="space-y-3">
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.4em]">
+                        {reviews.length} đánh giá từ cộng đồng
+                      </p>
+                      {reviews.map((rev) => (
+                        <div key={rev._id} className="p-5 bg-white border border-slate-100 rounded-2xl hover:border-slate-200 transition-colors">
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 font-black text-xs">
+                                {rev.userId?.fullName?.charAt(0) || "U"}
+                              </div>
+                              <div>
+                                <p className="text-xs font-bold text-slate-800">{rev.userId?.fullName}</p>
+                                <div className="flex items-center gap-0.5 mt-0.5">
+                                  {[1,2,3,4,5].map((s) => (
+                                    <svg key={s} width="9" height="9" viewBox="0 0 24 24" fill={s <= rev.rating ? "#fbbf24" : "#e2e8f0"}>
+                                      <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                                    </svg>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                            <span className="text-[9px] font-bold text-slate-300 uppercase">{new Date(rev.createdAt).toLocaleDateString("vi-VN")}</span>
                           </div>
+                          <p className="text-sm text-slate-600 leading-relaxed">{rev.content}</p>
                         </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Divider */}
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100"/></div>
+                    <div className="relative flex justify-center">
+                      <span className="bg-[#FAFAF8] px-4 text-[9px] font-black text-slate-300 uppercase tracking-[0.5em]">Hỏi đáp & Thảo luận</span>
+                    </div>
+                  </div>
+
+                  {/* Comment form */}
+                  <div id="comment-form" className="space-y-4">
+                    {replyingTo && (
+                      <div className="flex items-center justify-between px-4 py-2.5 bg-emerald-50 rounded-xl border border-emerald-100">
+                        <p className="text-[10px] font-bold text-emerald-600">Trả lời <span className="font-black">{replyingTo.name}</span></p>
+                        <button onClick={() => setReplyingTo(null)} className="text-[9px] font-bold text-slate-400 hover:text-red-500">Hủy</button>
+                      </div>
+                    )}
+                    <div className="relative">
+                      <textarea
+                        placeholder="Đặt câu hỏi hoặc thảo luận về tài liệu này..."
+                        value={commentText}
+                        onChange={(e) => setCommentText(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 pr-16 text-sm font-medium text-slate-700 outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-500/5 focus:bg-white transition-all resize-none placeholder:text-slate-300"
+                        rows="3"
+                      />
+                      <button onClick={handleSubmitComment} disabled={isSubmitting || !commentText.trim()} aria-label="Gửi bình luận"
+                        className="absolute bottom-3 right-3 bg-blue-600 text-white p-3 rounded-xl hover:bg-blue-500 active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed">
+                        {isSubmitting ? (
+                          <span className="block w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                        ) : (
+                          <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
+                    <div className="space-y-1 pt-2">
+                      {comments.length > 0 ? (
+                        comments.map((comment) => (
+                          <CommentItem key={comment._id} comment={comment} onReply={handleReply} />
+                        ))
+                      ) : (
+                        <div className="text-center py-10">
+                          <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Chưa có thảo luận nào</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                </div>
+              )}
+            </div>
+
+            {/* RAG Chat */}
+            <DocumentChat
+              materialId={doc._id}
+              hasContent={doc.hasContentText}
+            />
+          </div>
+
+          {/* ── SIDEBAR ── */}
+          <aside className="space-y-5 lg:sticky lg:top-36 animate-in fade-in slide-in-from-right-4 duration-500 delay-100">
+
+            {/* Download card */}
+            <div className="bg-slate-900 rounded-3xl p-7 text-white relative overflow-hidden">
+              <div className="absolute -top-8 -right-8 w-36 h-36 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none" />
+              <div className="relative z-10">
+                <p className="text-[8px] font-black uppercase tracking-[0.3em] text-white/40 mb-1">
+                  {doc.sourceType === "link" ? "NGUỒN LIÊN KẾT" : "FILE TÀI LIỆU"}
+                </p>
+                <p className="text-base font-black uppercase tracking-tight mb-5">
+                  {doc.sourceType === "link" ? "Xem nguồn" : "Tải về máy"}
+                </p>
+                <div className="flex items-center gap-3 p-4 bg-white/5 rounded-2xl border border-white/10 mb-5">
+                  <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center text-emerald-400 shrink-0">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-[8px] font-black uppercase tracking-widest text-white/40 mb-0.5">Loại file</p>
+                    <p className="text-sm font-black uppercase">{doc.materialType}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[8px] font-black uppercase tracking-widest text-white/40 mb-0.5">Nguồn</p>
+                    <p className="text-sm font-black uppercase">{doc.sourceType}</p>
+                  </div>
+                </div>
+                <button onClick={handleDownload}
+                  className="w-full bg-emerald-500 hover:bg-emerald-400 text-white py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-3 transition-all active:scale-95 group/dl">
+                  {doc.sourceType === "link" ? "Truy cập ngay" : "Tải ngay"}
+                  <svg width="17" height="17" fill="none" stroke="currentColor" viewBox="0 0 24 24" className="group-hover/dl:translate-y-0.5 transition-transform">
+                    <path d="M12 5v14M5 12l7 7 7-7" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Related docs */}
+            {relatedDocs.length > 0 && (
+              <div className="bg-white rounded-3xl p-5 border border-slate-100">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.35em] mb-4 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
+                  {relatedIsAI ? "Gợi ý AI" : "Cùng chuyên mục"}
+                </p>
+                <div className="space-y-0.5">
+                  {relatedDocs.map((rd) => (
+                    <Link key={rd._id} href={`/documents/${rd._id}`}
+                      className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors group/rel">
+                      <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center shrink-0 text-[8px] font-black text-slate-400 uppercase group-hover/rel:bg-emerald-500 group-hover/rel:text-white transition-all">
+                        {rd.materialType?.slice(0, 3)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-bold text-slate-700 line-clamp-2 leading-tight group-hover/rel:text-emerald-600 transition-colors">
+                          {rd.title}
+                        </p>
+                        {relatedIsAI && typeof rd.score === "number" && (
+                          <p className="text-[9px] font-bold text-emerald-500 mt-0.5">{Math.round(rd.score * 100)}% liên quan</p>
+                        )}
                       </div>
                     </Link>
                   ))}
@@ -1252,76 +992,51 @@ export default function DocumentDetailPage() {
               </div>
             )}
 
-            <div className="bg-white rounded-[3rem] p-10 border border-slate-100 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.03)] text-center relative overflow-hidden group">
-              <div className="absolute top-0 left-0 w-full h-24 bg-slate-50 border-b border-slate-100 -z-10 group-hover:bg-emerald-50 transition-colors"></div>
-
-              <div className="relative inline-block mb-8 mt-4">
-                <div className="w-28 h-28 rounded-[2.5rem] bg-white shadow-2xl flex items-center justify-center text-4xl font-black text-slate-300 border-4 border-white overflow-hidden group-hover:rotate-6 transition-transform relative">
-                  {doc.uploaderId?.avatar ? (
-                    <Image
-                      src={doc.uploaderId.avatar}
-                      alt="avatar"
-                      fill
-                      className="object-cover"
-                    />
-                  ) : (
-                    doc.uploaderId?.fullName?.charAt(0) || "U"
-                  )}
-                  <div className="absolute inset-0 bg-emerald-500 opacity-0 group-hover:opacity-10 transition-opacity"></div>
+            {/* Uploader card */}
+            <div className="bg-white rounded-3xl p-5 border border-slate-100">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="relative shrink-0">
+                  <div className="w-11 h-11 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-600 font-black text-base overflow-hidden relative">
+                    {doc.uploaderId?.avatar ? (
+                      <Image src={doc.uploaderId.avatar} alt="avatar" fill className="object-cover" />
+                    ) : (
+                      doc.uploaderId?.fullName?.charAt(0) || "U"
+                    )}
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-md bg-emerald-500 flex items-center justify-center border-2 border-white">
+                    <svg width="8" height="8" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
                 </div>
-                <div className="absolute -bottom-2 -right-2 w-10 h-10 rounded-2xl bg-emerald-500 text-white flex items-center justify-center border-4 border-white shadow-xl">
-                  <svg
-                    width="18"
-                    height="18"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="3"
-                      d="M5 13l4 4L19 7"
-                    ></path>
-                  </svg>
-                </div>
-              </div>
-
-              <h3 className="text-2xl font-bold text-slate-900 mb-2 tracking-tight">
-                {doc.uploaderId?.fullName}
-              </h3>
-              <p className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.3em] mb-10">
-                Người đóng góp tri thức
-              </p>
-
-              <div className="grid grid-cols-1 gap-4 border-y border-slate-50 py-8 mb-10">
                 <div>
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">
-                    EMAIL
-                  </p>
-                  <p className="text-sm font-black text-slate-800 truncate px-4">
-                    {doc.uploaderId?.email}
-                  </p>
+                  <p className="text-sm font-bold text-slate-900 leading-tight">{doc.uploaderId?.fullName}</p>
+                  <p className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Người đóng góp</p>
                 </div>
               </div>
-
-              <button className="w-full py-5 rounded-2xl border-2 border-slate-100 text-slate-600 font-black text-[10px] uppercase tracking-widest hover:border-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 transition-all active:scale-95 shadow-sm">
-                XEM TRANG CÁ NHÂN
-              </button>
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                <div className="bg-slate-50 rounded-xl p-3">
+                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Chuyên ngành</p>
+                  <p className="text-xs font-bold text-slate-800 truncate">{doc.majorId?.name || "—"}</p>
+                </div>
+                <div className="bg-slate-50 rounded-xl p-3">
+                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Ngày đăng</p>
+                  <p className="text-xs font-bold text-slate-800">{new Date(doc.createdAt).toLocaleDateString("vi-VN")}</p>
+                </div>
+              </div>
+              <Link
+                href={`/documents?search=${encodeURIComponent(doc.uploaderId?.fullName || "")}`}
+                className="block w-full py-3 rounded-xl border border-slate-200 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all text-center">
+                Xem tài liệu cùng người đăng
+              </Link>
             </div>
+
           </aside>
         </div>
       </div>
-      <ReportModal
-        isOpen={isReportModalOpen}
-        onClose={() => setIsReportModalOpen(false)}
-        materialId={params.id}
-      />
-      <AddToCollectionModal
-        isOpen={isCollectionModalOpen}
-        onClose={() => setIsCollectionModalOpen(false)}
-        materialId={params.id}
-      />
+
+      <ReportModal isOpen={isReportModalOpen} onClose={() => setIsReportModalOpen(false)} materialId={params.id} />
+      <AddToCollectionModal isOpen={isCollectionModalOpen} onClose={() => setIsCollectionModalOpen(false)} materialId={params.id} />
     </div>
   );
 }
