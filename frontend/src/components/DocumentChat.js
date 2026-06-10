@@ -31,13 +31,17 @@ export default function DocumentChat({ materialId, hasContent }) {
         }
       );
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Lỗi không xác định");
+      if (!res.ok) {
+        const err = new Error(data.message || "Lỗi không xác định");
+        err.status = res.status;
+        throw err;
+      }
       setMessages((prev) =>
         [...prev, { role: "assistant", content: data.answer }].slice(-40)
       );
     } catch (err) {
       const msg =
-        err.message?.includes("nhiều") || err.message?.includes("nhanh")
+        err.status === 429
           ? "Bạn hỏi quá nhanh, chờ chút nhé."
           : "AI đang bận, vui lòng thử lại sau.";
       setMessages((prev) => [...prev, { role: "assistant", content: msg }].slice(-40));

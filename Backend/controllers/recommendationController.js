@@ -86,6 +86,9 @@ exports.chatDocument = async (req, res) => {
     if (!materialId || !question?.trim()) {
       return res.status(400).json({ success: false, message: "Thiếu materialId hoặc question" });
     }
+    if (question.trim().length > 1000) {
+      return res.status(400).json({ success: false, message: "Câu hỏi quá dài (tối đa 1000 ký tự)" });
+    }
     if (!mongoose.Types.ObjectId.isValid(materialId)) {
       return res.status(400).json({ success: false, message: "materialId không hợp lệ" });
     }
