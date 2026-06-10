@@ -22,4 +22,7 @@ router.get("/search", aiLimiter, recommendationController.searchSemantic);
 // Route gợi ý cá nhân hóa (cần đăng nhập + gọi OpenAI)
 router.get("/for-you", aiLimiter, authMiddleware, recommendationController.getForYou);
 
+// RAG chat — hỏi AI về nội dung 1 tài liệu cụ thể (public, no auth required)
+router.post("/chat", aiLimiter, recommendationController.chatDocument);
+
 module.exports = router;
