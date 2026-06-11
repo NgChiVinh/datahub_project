@@ -26,6 +26,6 @@ router.put("/:id", updateComment);
 // delete
 router.delete("/:id", deleteComment);
 
-router.get("/", authMiddleware, isAdmin, getAllComments);
+router.get("/", isAdmin, getAllComments);
 
 module.exports = router;
