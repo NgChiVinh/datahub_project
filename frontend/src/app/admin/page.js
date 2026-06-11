@@ -9,6 +9,7 @@ import {
 } from "chart.js";
 import { Doughnut, Bar } from "react-chartjs-2";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Filler);
 
@@ -16,6 +17,7 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchData = async () => {
