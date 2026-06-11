@@ -1,4 +1,5 @@
 const Category = require("../models/Category");
+const Material = require("../models/Material");
 const slugify = require("slugify");
 
 // [1] Thêm danh mục mới
@@ -108,6 +109,9 @@ const deleteCategory = async (req, res) => {
 
     // Tìm và cập nhật tất cả danh mục con để chúng không còn bị mồ côi (set parentId = null)
     await Category.updateMany({ parentId: categoryId }, { parentId: null });
+
+    // Null out categoryId on all Materials referencing this category
+    await Material.updateMany({ categoryId: categoryId }, { $set: { categoryId: null } });
 
     const deletedCategory = await Category.findByIdAndDelete(categoryId);
 
