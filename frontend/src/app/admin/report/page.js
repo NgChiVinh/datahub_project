@@ -13,11 +13,18 @@ export default function ReportAdmin() {
       setIsLoading(true);
       const token = localStorage.getItem("token");
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/reports`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const params = new URLSearchParams();
+      if (activeStatus !== "all") params.set("status", activeStatus);
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/reports?${params.toString()}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (!res.ok) {
+        toast.error("Lỗi tải danh sách báo cáo");
+        return;
+      }
 
       const data = await res.json();
       if (Array.isArray(data)) {
@@ -33,6 +40,10 @@ export default function ReportAdmin() {
   useEffect(() => {
     fetchReports();
   }, []);
+
+  useEffect(() => {
+    fetchReports();
+  }, [activeStatus]);
 
   const handleUpdateStatus = async (id, status) => {
     const token = localStorage.getItem("token");
@@ -80,11 +91,6 @@ export default function ReportAdmin() {
       toast.error("Lỗi kết nối");
     }
   };
-
-  const filtered = reports.filter((report) => {
-    if (activeStatus === "all") return true;
-    return report.status === activeStatus;
-  });
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -179,7 +185,7 @@ export default function ReportAdmin() {
                     Đang tải dữ liệu...
                   </td>
                 </tr>
-              ) : filtered.length === 0 ? (
+              ) : reports.length === 0 ? (
                 <tr>
                   <td colSpan="5" className="px-6 py-12 text-center">
                     <div className="flex flex-col items-center gap-2">
@@ -191,7 +197,7 @@ export default function ReportAdmin() {
                   </td>
                 </tr>
               ) : (
-                filtered.map((report) => (
+                reports.map((report) => (
                   <tr
                     key={report._id}
                     className="hover:bg-slate-50/50 transition-colors group"

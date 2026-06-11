@@ -38,7 +38,10 @@ const createReport = async (req, res) => {
 // GET ALL REPORTS (ADMIN)
 const getReports = async (req, res) => {
   try {
-    const reports = await Report.find()
+    const { status } = req.query;
+    const filter = status && status !== "all" ? { status } : {};
+
+    const reports = await Report.find(filter)
       .populate("reporterId", "fullName email")
       .populate("materialId", "title fileUrl status")
       .sort({ createdAt: -1 });
