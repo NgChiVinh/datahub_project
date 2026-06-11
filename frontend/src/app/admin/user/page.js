@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { useAuth } from "@/context/AuthContext";
 
 export default function UserAdmin() {
   const [users, setUsers] = useState([]);
+  const { user: currentUser } = useAuth();
   const [loading, setLoading] = useState(true);
 
   const fetchUsers = async () => {
@@ -57,6 +59,10 @@ export default function UserAdmin() {
 
   const handleDelete = async (id) => {
     if (!confirm("Bạn có chắc muốn xoá user này?")) return;
+  if (id === currentUser?._id?.toString()) {
+    toast.error("Không thể xóa tài khoản của chính bạn!");
+    return;
+  }
 
     try {
       const token = localStorage.getItem("token");
@@ -134,10 +140,13 @@ export default function UserAdmin() {
                       <select
                         value={u.role}
                         onChange={(e) => handleChangeRole(u._id, e.target.value)}
-                        className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border focus:outline-none transition-all cursor-pointer ${
-                          u.role === "admin" 
-                            ? "bg-primary/5 text-primary border-primary/20" 
-                            : "bg-slate-100 text-slate-500 border-slate-200"
+                        disabled={u._id === currentUser?._id?.toString()}
+                        className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border focus:outline-none transition-all ${
+                          u._id === currentUser?._id?.toString()
+                            ? "opacity-50 cursor-not-allowed bg-slate-100 text-slate-400 border-slate-200"
+                            : u.role === "admin"
+                            ? "cursor-pointer bg-primary/5 text-primary border-primary/20"
+                            : "cursor-pointer bg-slate-100 text-slate-500 border-slate-200"
                         }`}
                       >
                         <option value="student">Student</option>
@@ -147,8 +156,13 @@ export default function UserAdmin() {
                     <td className="px-6 py-4 text-right">
                       <button
                         onClick={() => handleDelete(u._id)}
-                        className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
-                        title="Xóa người dùng"
+                        disabled={u._id === currentUser?._id?.toString()}
+                        className={`p-2 rounded-xl transition-all ${
+                          u._id === currentUser?._id?.toString()
+                            ? "text-slate-200 cursor-not-allowed"
+                            : "text-slate-300 hover:text-red-500 hover:bg-red-50"
+                        }`}
+                        title={u._id === currentUser?._id?.toString() ? "Không thể xóa tài khoản của chính bạn" : "Xóa người dùng"}
                       >
                         <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
