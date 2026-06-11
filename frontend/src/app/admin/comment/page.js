@@ -7,8 +7,7 @@ export default function CommentAdmin() {
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
   const fetchComments = async () => {
     try {
@@ -21,11 +20,8 @@ export default function CommentAdmin() {
       const data = await res.json();
       if (!Array.isArray(data)) { toast.error("Lỗi tải bình luận"); return; }
       setComments(data);
-    } catch {
-      toast.error("Lỗi tải bình luận");
-    } finally {
-      setLoading(false);
-    }
+    } catch { toast.error("Lỗi tải bình luận"); }
+    finally { setLoading(false); }
   };
 
   useEffect(() => { fetchComments(); }, []);
@@ -40,70 +36,81 @@ export default function CommentAdmin() {
       if (!res.ok) { toast.error("Xóa bình luận thất bại"); return; }
       toast.success("Xóa bình luận thành công!");
       fetchComments();
-    } catch {
-      toast.error("Xóa bình luận thất bại");
-    }
+    } catch { toast.error("Xóa bình luận thất bại"); }
   };
 
   return (
-    <div className="space-y-6 pb-8">
+    <div className="space-y-7 pb-10">
       <div>
-        <h1 className="text-xl font-semibold text-white">Bình luận</h1>
-        <p className="text-[12px] text-slate-500 mt-0.5">Kiểm soát nội dung thảo luận trên hệ thống</p>
+        <div className="flex items-center gap-2 text-emerald-600 font-bold text-[10px] uppercase tracking-[0.3em] mb-1">
+          <span className="w-6 h-[2px] bg-emerald-600"></span>
+          Quản lý
+        </div>
+        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Bình luận</h1>
+        <p className="text-sm text-slate-400 font-medium mt-1">Kiểm soát nội dung thảo luận trên hệ thống</p>
       </div>
 
-      <div className="bg-[#111118] rounded-2xl border border-[#ffffff0a] overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div className="px-6 py-4 border-b border-slate-50 bg-slate-50/50">
+          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{comments.length} bình luận</p>
+        </div>
+
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="border-b border-[#ffffff08]">
-                <th className="px-5 py-4 text-[11px] font-medium text-slate-500 uppercase tracking-wider">Nội dung</th>
-                <th className="px-5 py-4 text-[11px] font-medium text-slate-500 uppercase tracking-wider">Người đăng</th>
-                <th className="px-5 py-4 text-[11px] font-medium text-slate-500 uppercase tracking-wider">Tài liệu</th>
-                <th className="px-5 py-4 text-[11px] font-medium text-slate-500 uppercase tracking-wider">Thời gian</th>
-                <th className="px-5 py-4 text-[11px] font-medium text-slate-500 uppercase tracking-wider text-right">Thao tác</th>
+              <tr className="border-b border-slate-100">
+                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Nội dung bình luận</th>
+                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Người đăng</th>
+                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Tài liệu</th>
+                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Thời gian</th>
+                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Thao tác</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#ffffff06]">
+            <tbody className="divide-y divide-slate-50">
               {loading ? (
                 <tr>
-                  <td colSpan="5" className="px-5 py-12 text-center">
+                  <td colSpan="5" className="px-6 py-16 text-center">
                     <div className="flex flex-col items-center gap-3">
-                      <div className="w-6 h-6 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
-                      <p className="text-[11px] text-slate-500 uppercase tracking-widest">Đang tải...</p>
+                      <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Đang tải...</p>
                     </div>
                   </td>
                 </tr>
               ) : comments.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="px-5 py-12 text-center">
-                    <p className="text-[13px] text-slate-500">Chưa có bình luận nào</p>
+                  <td colSpan="5" className="px-6 py-16 text-center">
+                    <p className="text-sm font-semibold text-slate-400 italic">Chưa có bình luận nào</p>
                   </td>
                 </tr>
               ) : (
                 comments.map((c) => (
-                  <tr key={c._id} className="hover:bg-[#ffffff04] transition-colors">
-                    <td className="px-5 py-3.5">
-                      <p className="text-[13px] text-slate-300 max-w-xs line-clamp-2">{c.content}</p>
+                  <tr key={c._id} className="hover:bg-emerald-50/30 transition-colors group">
+                    <td className="px-6 py-4">
+                      <p className="text-sm text-slate-600 font-medium max-w-xs line-clamp-2">{c.content}</p>
                     </td>
-                    <td className="px-5 py-3.5">
-                      <span className="text-[13px] text-slate-300">{c.userId?.fullName}</span>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary border border-primary/20 flex-shrink-0">
+                          {c.userId?.fullName?.charAt(0)}
+                        </div>
+                        <span className="text-sm font-semibold text-slate-700">{c.userId?.fullName}</span>
+                      </div>
                     </td>
-                    <td className="px-5 py-3.5">
-                      <span className="text-[12px] text-cyan-500/80 truncate max-w-[160px] inline-block">{c.materialId?.title}</span>
+                    <td className="px-6 py-4">
+                      <span className="text-xs font-semibold text-primary truncate max-w-[160px] inline-block">{c.materialId?.title}</span>
                     </td>
-                    <td className="px-5 py-3.5">
-                      <span className="text-[11px] text-slate-600">
+                    <td className="px-6 py-4">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
                         {new Date(c.createdAt).toLocaleString("vi-VN")}
                       </span>
                     </td>
-                    <td className="px-5 py-3.5 text-right">
+                    <td className="px-6 py-4 text-right">
                       <button
                         onClick={() => handleDelete(c._id)}
-                        className="w-8 h-8 flex items-center justify-center rounded-xl ml-auto text-slate-500 hover:bg-red-500/15 hover:text-red-400 transition-all"
+                        className="p-2.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
                         title="Xóa bình luận"
                       >
-                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.75">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
                       </button>
@@ -114,11 +121,6 @@ export default function CommentAdmin() {
             </tbody>
           </table>
         </div>
-        {!loading && comments.length > 0 && (
-          <div className="px-5 py-3 border-t border-[#ffffff08]">
-            <p className="text-[11px] text-slate-600">{comments.length} bình luận</p>
-          </div>
-        )}
       </div>
     </div>
   );

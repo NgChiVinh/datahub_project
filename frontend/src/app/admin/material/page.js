@@ -3,6 +3,15 @@
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 
+const STATUS_CONFIG = {
+  approved: { label: "Đã duyệt",  cls: "bg-emerald-50 text-emerald-700 border-emerald-100" },
+  rejected: { label: "Từ chối",   cls: "bg-red-50 text-red-600 border-red-100" },
+  pending:  { label: "Chờ duyệt", cls: "bg-amber-50 text-amber-700 border-amber-100" },
+  hidden:   { label: "Đã ẩn",     cls: "bg-slate-100 text-slate-500 border-slate-200" },
+};
+
+const TYPE_DOT = { video: "bg-amber-400", pdf: "bg-red-400" };
+
 export default function MaterialAdmin() {
   const [allMaterials, setAllMaterials] = useState([]);
   const [majors, setMajors] = useState([]);
@@ -11,16 +20,13 @@ export default function MaterialAdmin() {
   const [activeTab, setActiveTab] = useState("Tất cả");
   const [activeStatus, setActiveStatus] = useState("pending");
   const [searchTerm, setSearchTerm] = useState("");
-
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const limit = 10;
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingMaterial, setEditingMaterial] = useState(null);
-  const [editForm, setEditForm] = useState({
-    title: "", description: "", majorId: "", categoryId: "", academicYear: "", status: "",
-  });
+  const [editForm, setEditForm] = useState({ title: "", description: "", majorId: "", categoryId: "", academicYear: "", status: "" });
 
   const fetchMaterials = async (page = 1) => {
     try {
@@ -43,28 +49,22 @@ export default function MaterialAdmin() {
       }
     } catch {
       console.error("Lỗi tải dữ liệu materials");
-    } finally {
-      setIsLoading(false);
-    }
+    } finally { setIsLoading(false); }
   };
 
-  const fetchMajors = async () => {
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/majors`);
-      const data = await res.json();
-      if (Array.isArray(data)) setMajors(data);
-    } catch {}
-  };
-
-  const fetchCategories = async () => {
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/categories`);
-      const data = await res.json();
-      if (Array.isArray(data)) setCategories(data);
-    } catch {}
-  };
-
-  useEffect(() => { fetchMajors(); fetchCategories(); }, []);
+  useEffect(() => {
+    const fetchMeta = async () => {
+      try {
+        const [mRes, cRes] = await Promise.all([
+          fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/majors`),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/categories`),
+        ]);
+        const mData = await mRes.json(); if (Array.isArray(mData)) setMajors(mData);
+        const cData = await cRes.json(); if (Array.isArray(cData)) setCategories(cData);
+      } catch {}
+    };
+    fetchMeta();
+  }, []);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -91,11 +91,7 @@ export default function MaterialAdmin() {
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/materials/${editingMaterial._id}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify(editForm),
-        }
+        { method: "PUT", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify(editForm) }
       );
       if (res.ok) { setIsEditModalOpen(false); fetchMaterials(currentPage); toast.success("Cập nhật thông tin thành công!"); }
       else { toast.error("Cập nhật thất bại"); }
@@ -109,11 +105,7 @@ export default function MaterialAdmin() {
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/materials/${id}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ status }),
-        }
+        { method: "PUT", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ status }) }
       );
       if (res.ok) { toast.success("Cập nhật trạng thái thành công!"); fetchMaterials(currentPage); }
       else { toast.error("Cập nhật trạng thái thất bại"); }
@@ -133,18 +125,6 @@ export default function MaterialAdmin() {
     } catch { toast.error("Lỗi kết nối"); }
   };
 
-  const statusConfig = {
-    approved: { label: "Đã duyệt",  cls: "bg-emerald-500/15 text-emerald-400 border-emerald-500/20" },
-    rejected: { label: "Từ chối",   cls: "bg-red-500/15 text-red-400 border-red-500/20" },
-    pending:  { label: "Chờ duyệt", cls: "bg-amber-500/15 text-amber-400 border-amber-500/20" },
-    hidden:   { label: "Đã ẩn",     cls: "bg-slate-500/15 text-slate-400 border-slate-500/20" },
-  };
-
-  const typeColor = {
-    video: "bg-amber-500",
-    pdf:   "bg-red-500",
-  };
-
   const statusTabs = [
     { label: "Chờ duyệt", value: "pending" },
     { label: "Đã duyệt",  value: "approved" },
@@ -153,36 +133,44 @@ export default function MaterialAdmin() {
     { label: "Tất cả",    value: "all" },
   ];
 
+  const inputCls = "w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm text-slate-800 font-medium focus:bg-white focus:outline-none focus:border-primary/30 focus:ring-2 focus:ring-primary/5 transition-all";
+
   return (
-    <div className="space-y-6 pb-8">
+    <div className="space-y-7 pb-10">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-5">
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
         <div>
-          <h1 className="text-xl font-semibold text-white">Tài liệu</h1>
-          <p className="text-[12px] text-slate-500 mt-0.5">Quản lý nội dung học tập</p>
+          <div className="flex items-center gap-2 text-emerald-600 font-bold text-[10px] uppercase tracking-[0.3em] mb-1">
+            <span className="w-6 h-[2px] bg-emerald-600"></span>
+            Quản lý
+          </div>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Tài liệu</h1>
+          <p className="text-sm text-slate-400 font-medium mt-1">Hệ thống quản lý nội dung học tập</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
           {/* Search */}
-          <div className="relative">
+          <div className="relative group">
             <input
               type="text"
-              placeholder="Tìm kiếm..."
+              placeholder="Tìm kiếm tài liệu..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 pr-4 py-2 bg-[#ffffff06] border border-[#ffffff0f] rounded-xl text-[13px] text-slate-300 placeholder:text-slate-600 focus:border-cyan-500/40 focus:ring-1 focus:ring-cyan-500/15 focus:outline-none transition-all w-52"
+              className="pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary/30 transition-all w-56 shadow-sm"
             />
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
           </div>
 
           {/* Status filter */}
-          <div className="flex gap-1 p-1 bg-[#ffffff06] border border-[#ffffff08] rounded-xl">
+          <div className="flex p-1 bg-slate-100 rounded-2xl">
             {statusTabs.map((s) => (
               <button
                 key={s.value}
                 onClick={() => { setActiveStatus(s.value); setCurrentPage(1); }}
-                className={`px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${
-                  activeStatus === s.value ? "bg-[#ffffff10] text-white" : "text-slate-500 hover:text-slate-300"
+                className={`px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                  activeStatus === s.value ? "bg-white text-primary shadow-sm" : "text-slate-400 hover:text-slate-600"
                 }`}
               >
                 {s.label}
@@ -191,13 +179,13 @@ export default function MaterialAdmin() {
           </div>
 
           {/* Type filter */}
-          <div className="flex gap-1 p-1 bg-[#ffffff06] border border-[#ffffff08] rounded-xl">
+          <div className="flex p-1 bg-slate-100 rounded-2xl">
             {["Tất cả", "Tài liệu", "Video"].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${
-                  activeTab === tab ? "bg-[#ffffff10] text-white" : "text-slate-500 hover:text-slate-300"
+                className={`px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                  activeTab === tab ? "bg-white text-primary shadow-sm" : "text-slate-400 hover:text-slate-600"
                 }`}
               >
                 {tab}
@@ -208,129 +196,128 @@ export default function MaterialAdmin() {
       </div>
 
       {/* Table */}
-      <div className="bg-[#111118] rounded-2xl border border-[#ffffff0a] overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="border-b border-[#ffffff08]">
-                <th className="px-5 py-4 text-[11px] font-medium text-slate-500 uppercase tracking-wider">Tài liệu</th>
-                <th className="px-5 py-4 text-[11px] font-medium text-slate-500 uppercase tracking-wider">Người đăng</th>
-                <th className="px-5 py-4 text-[11px] font-medium text-slate-500 uppercase tracking-wider">Số liệu</th>
-                <th className="px-5 py-4 text-[11px] font-medium text-slate-500 uppercase tracking-wider">Trạng thái</th>
-                <th className="px-5 py-4 text-[11px] font-medium text-slate-500 uppercase tracking-wider text-right">Thao tác</th>
+              <tr className="bg-slate-50/50 border-b border-slate-100">
+                <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Thông tin tài liệu</th>
+                <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Người đăng</th>
+                <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Số liệu</th>
+                <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Trạng thái</th>
+                <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Thao tác</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#ffffff06]">
+            <tbody className="divide-y divide-slate-50">
               {isLoading ? (
                 <tr>
-                  <td colSpan="5" className="px-5 py-12 text-center">
+                  <td colSpan="5" className="px-6 py-16 text-center">
                     <div className="flex flex-col items-center gap-3">
-                      <div className="w-6 h-6 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
-                      <p className="text-[11px] text-slate-500 uppercase tracking-widest">Đang tải...</p>
+                      <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Đang tải...</p>
                     </div>
                   </td>
                 </tr>
               ) : allMaterials.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="px-5 py-12 text-center">
-                    <p className="text-[13px] text-slate-500">Không có tài liệu nào</p>
+                  <td colSpan="5" className="px-6 py-16 text-center">
+                    <div className="flex flex-col items-center gap-2">
+                      <span className="text-3xl">📭</span>
+                      <p className="text-sm font-bold text-slate-400">Không có dữ liệu</p>
+                    </div>
                   </td>
                 </tr>
               ) : (
                 allMaterials.map((item) => {
-                  const sc = statusConfig[item.status] || statusConfig.pending;
-                  const tc = typeColor[item.materialType] || "bg-blue-500";
+                  const sc = STATUS_CONFIG[item.status] || STATUS_CONFIG.pending;
+                  const dotCls = TYPE_DOT[item.materialType] || "bg-blue-400";
                   return (
-                    <tr key={item._id} className="hover:bg-[#ffffff04] transition-colors">
-                      <td className="px-5 py-3.5">
+                    <tr key={item._id} className="hover:bg-emerald-50/30 transition-colors group">
+                      <td className="px-6 py-4">
                         <div className="flex flex-col gap-1">
                           <div className="flex items-center gap-2">
-                            <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${tc}`}></span>
-                            <span className="text-[13px] font-medium text-slate-200 line-clamp-1">{item.title}</span>
+                            <span className={`w-2 h-2 rounded-full flex-shrink-0 ${dotCls}`}></span>
+                            <span className="text-sm font-semibold text-slate-700 line-clamp-1">{item.title}</span>
                           </div>
-                          <div className="flex items-center gap-2 pl-3.5">
-                            <span className="text-[11px] text-slate-600">{item.categoryId?.name || "Chưa phân loại"}</span>
-                            <span className="text-slate-700">·</span>
-                            <span className="text-[11px] text-slate-600">{new Date(item.createdAt).toLocaleDateString("vi-VN")}</span>
+                          <div className="flex items-center gap-2 pl-4">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{item.categoryId?.name || "Chưa phân loại"}</span>
+                            <span className="text-slate-300">·</span>
+                            <span className="text-[10px] font-medium text-slate-400">{new Date(item.createdAt).toLocaleDateString("vi-VN")}</span>
                           </div>
                         </div>
                       </td>
-                      <td className="px-5 py-3.5">
+                      <td className="px-6 py-4">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-7 h-7 rounded-lg bg-[#ffffff0a] border border-[#ffffff10] flex items-center justify-center text-[11px] text-cyan-400 font-semibold flex-shrink-0">
+                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary border border-primary/20 flex-shrink-0">
                             {item.uploaderId?.fullName?.charAt(0)}
                           </div>
                           <div className="flex flex-col gap-0.5 min-w-0">
-                            <span className="text-[12px] font-medium text-slate-300 truncate">{item.uploaderId?.fullName}</span>
-                            <span className="text-[11px] text-slate-600 truncate">{item.uploaderId?.email}</span>
+                            <span className="text-[11px] font-bold text-slate-600 uppercase tracking-tight truncate">{item.uploaderId?.fullName}</span>
+                            <span className="text-[10px] text-slate-400 truncate">{item.uploaderId?.email}</span>
                           </div>
                         </div>
                       </td>
-                      <td className="px-5 py-3.5">
+                      <td className="px-6 py-4">
                         <div className="flex items-center gap-4">
                           <div className="flex flex-col items-center">
-                            <span className="text-[13px] font-semibold text-slate-300">{item.metrics?.viewCount || 0}</span>
-                            <span className="text-[9px] text-slate-600 uppercase tracking-wide">Xem</span>
+                            <span className="text-[12px] font-bold text-slate-700">{item.metrics?.viewCount || 0}</span>
+                            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Xem</span>
                           </div>
                           <div className="flex flex-col items-center">
-                            <span className="text-[13px] font-semibold text-slate-300">{item.metrics?.downloadCount || 0}</span>
-                            <span className="text-[9px] text-slate-600 uppercase tracking-wide">Tải</span>
+                            <span className="text-[12px] font-bold text-slate-700">{item.metrics?.downloadCount || 0}</span>
+                            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Tải</span>
                           </div>
                         </div>
                       </td>
-                      <td className="px-5 py-3.5">
-                        <span className={`inline-block px-2.5 py-1 text-[10px] font-medium rounded-lg border ${sc.cls}`}>
+                      <td className="px-6 py-4">
+                        <span className={`inline-block px-3 py-1.5 text-[9px] font-black uppercase rounded-lg border shadow-sm ${sc.cls}`}>
                           {sc.label}
                         </span>
                       </td>
-                      <td className="px-5 py-3.5">
+                      <td className="px-6 py-4">
                         <div className="flex justify-end gap-1.5">
                           <a href={item.fileUrl} target="_blank" rel="noopener noreferrer"
-                            className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#ffffff08] text-slate-400 hover:bg-[#ffffff14] hover:text-slate-200 transition-all"
+                            className="w-9 h-9 bg-slate-100 text-slate-500 rounded-xl flex items-center justify-center hover:bg-primary hover:text-white transition-all active:scale-90"
                             title="Xem trước">
-                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                            <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                           </a>
                           <button onClick={() => handleOpenEdit(item)}
-                            className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#ffffff08] text-slate-400 hover:bg-cyan-500/15 hover:text-cyan-400 transition-all"
+                            className="w-9 h-9 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center hover:bg-blue-500 hover:text-white transition-all active:scale-90"
                             title="Chỉnh sửa">
-                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                           </button>
-
                           {item.status === "pending" && (
                             <>
                               <button onClick={() => handleUpdateStatus(item._id, "approved")}
-                                className="w-8 h-8 flex items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition-all"
+                                className="w-9 h-9 bg-emerald-50 text-emerald-500 rounded-xl flex items-center justify-center hover:bg-emerald-500 hover:text-white transition-all active:scale-90"
                                 title="Phê duyệt">
-                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
                               </button>
                               <button onClick={() => handleUpdateStatus(item._id, "rejected")}
-                                className="w-8 h-8 flex items-center justify-center rounded-lg bg-amber-500/10 text-amber-400 hover:bg-amber-500 hover:text-white transition-all"
+                                className="w-9 h-9 bg-amber-50 text-amber-500 rounded-xl flex items-center justify-center hover:bg-amber-500 hover:text-white transition-all active:scale-90"
                                 title="Từ chối">
-                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                               </button>
                             </>
                           )}
-
                           {item.status === "approved" && (
                             <button onClick={() => handleUpdateStatus(item._id, "hidden")}
-                              className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#ffffff08] text-slate-400 hover:bg-slate-600/40 hover:text-slate-200 transition-all"
+                              className="w-9 h-9 bg-slate-100 text-slate-400 rounded-xl flex items-center justify-center hover:bg-slate-600 hover:text-white transition-all active:scale-90"
                               title="Tạm ẩn">
-                              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"/></svg>
+                              <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"/></svg>
                             </button>
                           )}
-
                           {(item.status === "hidden" || item.status === "rejected") && (
                             <button onClick={() => handleUpdateStatus(item._id, "approved")}
-                              className="w-8 h-8 flex items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition-all"
+                              className="w-9 h-9 bg-emerald-50 text-emerald-500 rounded-xl flex items-center justify-center hover:bg-emerald-500 hover:text-white transition-all active:scale-90"
                               title="Khôi phục">
-                              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                              <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                             </button>
                           )}
-
                           <button onClick={() => handleDelete(item._id)}
-                            className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:bg-red-500/15 hover:text-red-400 transition-all"
+                            className="w-9 h-9 bg-red-50 text-red-500 rounded-xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-all active:scale-90"
                             title="Xóa vĩnh viễn">
-                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                           </button>
                         </div>
                       </td>
@@ -344,21 +331,17 @@ export default function MaterialAdmin() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="px-5 py-4 border-t border-[#ffffff08] flex items-center justify-between">
-            <p className="text-[11px] text-slate-600">Trang {currentPage} / {totalPages}</p>
+          <div className="px-6 py-5 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              Trang {currentPage} / {totalPages}
+            </p>
             <div className="flex gap-2">
-              <button
-                disabled={currentPage === 1}
-                onClick={() => fetchMaterials(currentPage - 1)}
-                className="px-3.5 py-1.5 bg-[#ffffff08] border border-[#ffffff10] rounded-xl text-[11px] font-medium text-slate-400 hover:bg-[#ffffff14] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-              >
+              <button disabled={currentPage === 1} onClick={() => fetchMaterials(currentPage - 1)}
+                className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-50 disabled:opacity-40 transition-all shadow-sm">
                 Trước
               </button>
-              <button
-                disabled={currentPage === totalPages}
-                onClick={() => fetchMaterials(currentPage + 1)}
-                className="px-3.5 py-1.5 bg-[#ffffff08] border border-[#ffffff10] rounded-xl text-[11px] font-medium text-slate-400 hover:bg-[#ffffff14] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-              >
+              <button disabled={currentPage === totalPages} onClick={() => fetchMaterials(currentPage + 1)}
+                className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-50 disabled:opacity-40 transition-all shadow-sm">
                 Sau
               </button>
             </div>
@@ -368,77 +351,49 @@ export default function MaterialAdmin() {
 
       {/* Edit Modal */}
       {isEditModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="bg-[#111118] rounded-2xl w-full max-w-2xl border border-[#ffffff0f] shadow-2xl overflow-hidden">
-            <div className="px-6 py-5 border-b border-[#ffffff08] flex justify-between items-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white rounded-[2rem] w-full max-w-2xl shadow-2xl overflow-hidden border border-slate-100">
+            <div className="p-8 border-b border-slate-50 flex justify-between items-center">
               <div>
-                <h3 className="text-[15px] font-semibold text-white">Chỉnh sửa tài liệu</h3>
-                <p className="text-[11px] text-slate-600 mt-0.5">ID: {editingMaterial?._id}</p>
+                <h3 className="text-xl font-bold text-slate-900 tracking-tight">Chỉnh sửa tài liệu</h3>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">ID: {editingMaterial?._id}</p>
               </div>
               <button onClick={() => setIsEditModalOpen(false)}
-                className="w-8 h-8 flex items-center justify-center rounded-xl bg-[#ffffff08] text-slate-400 hover:bg-red-500/15 hover:text-red-400 transition-all">
-                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all">
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
               </button>
             </div>
-
-            <form onSubmit={handleUpdateMaterial} className="p-6 space-y-5">
-              <div>
-                <label className="text-[11px] font-medium text-slate-500 uppercase tracking-wider mb-1.5 block">Tiêu đề tài liệu</label>
-                <input
-                  type="text"
-                  value={editForm.title}
-                  onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
-                  className="w-full px-4 py-3 bg-[#ffffff06] border border-[#ffffff0f] rounded-xl text-[13px] text-white placeholder:text-slate-600 focus:border-cyan-500/40 focus:ring-1 focus:ring-cyan-500/15 focus:outline-none transition-all"
-                  required
-                />
+            <form onSubmit={handleUpdateMaterial} className="p-8 space-y-5">
+              <div className="space-y-1.5">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Tiêu đề tài liệu</label>
+                <input type="text" value={editForm.title} onChange={e => setEditForm({...editForm, title: e.target.value})} className={inputCls} required />
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-[11px] font-medium text-slate-500 uppercase tracking-wider mb-1.5 block">Danh mục</label>
-                  <select
-                    value={editForm.categoryId}
-                    onChange={(e) => setEditForm({ ...editForm, categoryId: e.target.value })}
-                    className="w-full px-4 py-3 bg-[#ffffff06] border border-[#ffffff0f] rounded-xl text-[13px] text-white focus:border-cyan-500/40 focus:outline-none transition-all appearance-none cursor-pointer"
-                    required
-                  >
+              <div className="grid grid-cols-2 gap-5">
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Danh mục</label>
+                  <select value={editForm.categoryId} onChange={e => setEditForm({...editForm, categoryId: e.target.value})} className={inputCls + " appearance-none cursor-pointer"} required>
                     <option value="">-- Chọn danh mục --</option>
                     {categories.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
                   </select>
                 </div>
-
-                <div>
-                  <label className="text-[11px] font-medium text-slate-500 uppercase tracking-wider mb-1.5 block">Chuyên ngành</label>
-                  <select
-                    value={editForm.majorId}
-                    onChange={(e) => setEditForm({ ...editForm, majorId: e.target.value })}
-                    className="w-full px-4 py-3 bg-[#ffffff06] border border-[#ffffff0f] rounded-xl text-[13px] text-white focus:border-cyan-500/40 focus:outline-none transition-all appearance-none cursor-pointer"
-                  >
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Chuyên ngành</label>
+                  <select value={editForm.majorId} onChange={e => setEditForm({...editForm, majorId: e.target.value})} className={inputCls + " appearance-none cursor-pointer"}>
                     <option value="">-- Chọn chuyên ngành --</option>
                     {majors.map(m => <option key={m._id} value={m._id}>{m.name}</option>)}
                   </select>
                 </div>
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-[11px] font-medium text-slate-500 uppercase tracking-wider mb-1.5 block">Năm học</label>
-                  <select
-                    value={editForm.academicYear}
-                    onChange={(e) => setEditForm({ ...editForm, academicYear: e.target.value })}
-                    className="w-full px-4 py-3 bg-[#ffffff06] border border-[#ffffff0f] rounded-xl text-[13px] text-white focus:border-cyan-500/40 focus:outline-none transition-all appearance-none cursor-pointer"
-                  >
-                    {["Năm 1", "Năm 2", "Năm 3", "Năm 4", "Khác"].map(y => <option key={y} value={y}>{y}</option>)}
+              <div className="grid grid-cols-2 gap-5">
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Năm học</label>
+                  <select value={editForm.academicYear} onChange={e => setEditForm({...editForm, academicYear: e.target.value})} className={inputCls + " appearance-none cursor-pointer"}>
+                    {["Năm 1","Năm 2","Năm 3","Năm 4","Khác"].map(y => <option key={y} value={y}>{y}</option>)}
                   </select>
                 </div>
-
-                <div>
-                  <label className="text-[11px] font-medium text-slate-500 uppercase tracking-wider mb-1.5 block">Trạng thái</label>
-                  <select
-                    value={editForm.status}
-                    onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
-                    className="w-full px-4 py-3 bg-[#ffffff06] border border-[#ffffff0f] rounded-xl text-[13px] text-white focus:border-cyan-500/40 focus:outline-none transition-all appearance-none cursor-pointer"
-                  >
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Trạng thái</label>
+                  <select value={editForm.status} onChange={e => setEditForm({...editForm, status: e.target.value})} className={inputCls + " appearance-none cursor-pointer"}>
                     <option value="pending">Chờ duyệt</option>
                     <option value="approved">Đã duyệt</option>
                     <option value="rejected">Từ chối</option>
@@ -446,24 +401,17 @@ export default function MaterialAdmin() {
                   </select>
                 </div>
               </div>
-
-              <div>
-                <label className="text-[11px] font-medium text-slate-500 uppercase tracking-wider mb-1.5 block">Mô tả</label>
-                <textarea
-                  rows="3"
-                  value={editForm.description}
-                  onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                  className="w-full px-4 py-3 bg-[#ffffff06] border border-[#ffffff0f] rounded-xl text-[13px] text-white placeholder:text-slate-600 focus:border-cyan-500/40 focus:ring-1 focus:ring-cyan-500/15 focus:outline-none transition-all resize-none"
-                />
+              <div className="space-y-1.5">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Mô tả tài liệu</label>
+                <textarea rows="3" value={editForm.description} onChange={e => setEditForm({...editForm, description: e.target.value})} className={inputCls + " resize-none"} />
               </div>
-
               <div className="flex justify-end gap-3 pt-2">
                 <button type="button" onClick={() => setIsEditModalOpen(false)}
-                  className="px-5 py-2.5 bg-[#ffffff08] border border-[#ffffff10] text-slate-400 rounded-xl text-[13px] font-medium hover:bg-[#ffffff14] hover:text-white transition-all">
+                  className="px-7 py-3.5 bg-slate-100 text-slate-500 rounded-2xl font-bold text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-all">
                   Hủy bỏ
                 </button>
                 <button type="submit"
-                  className="px-6 py-2.5 bg-cyan-500 text-[#09090f] rounded-xl text-[13px] font-semibold hover:bg-cyan-400 transition-all active:scale-95 shadow-lg shadow-cyan-500/20">
+                  className="px-9 py-3.5 bg-primary text-white rounded-2xl font-bold text-[10px] uppercase tracking-widest shadow-xl shadow-primary/20 hover:brightness-110 transition-all active:scale-95">
                   Lưu thay đổi
                 </button>
               </div>
