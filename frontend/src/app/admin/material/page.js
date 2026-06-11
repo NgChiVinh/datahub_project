@@ -54,6 +54,11 @@ export default function MaterialAdmin() {
         }
       );
 
+      if (!res.ok) {
+        toast.error("Lỗi tải danh sách tài liệu");
+        return;
+      }
+
       const data = await res.json();
       if (data && data.materials) {
         setAllMaterials(data.materials);
@@ -94,6 +99,7 @@ export default function MaterialAdmin() {
 
   // Tải lại từ backend khi đổi trạng thái / loại / từ khóa (debounce search)
   useEffect(() => {
+    setCurrentPage(1);
     const t = setTimeout(() => {
       fetchMaterials(1);
     }, 350);
@@ -140,6 +146,13 @@ export default function MaterialAdmin() {
   };
 
   const handleUpdateStatus = async (id, status) => {
+    if (status === "rejected") {
+      if (!window.confirm("Từ chối tài liệu này?")) return;
+    }
+    if (status === "hidden") {
+      if (!window.confirm("Ẩn tài liệu này khỏi hệ thống?")) return;
+    }
+
     const token = localStorage.getItem("token");
 
     try {
