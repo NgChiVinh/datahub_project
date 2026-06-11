@@ -20,10 +20,19 @@ export default function CommentAdmin() {
         },
       });
 
+      if (!res.ok) {
+        toast.error("Lỗi tải bình luận");
+        return;
+      }
+
       const data = await res.json();
+      if (!Array.isArray(data)) {
+        toast.error("Lỗi tải bình luận");
+        return;
+      }
       setComments(data);
     } catch (err) {
-      toast.error("Lỗi tải comment");
+      toast.error("Lỗi tải bình luận");
     } finally {
       setLoading(false);
     }
@@ -37,12 +46,15 @@ export default function CommentAdmin() {
     if (!confirm("Xóa comment này?")) return;
 
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/comments/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/comments/${id}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
+
+      if (!res.ok) {
+        toast.error("Xóa bình luận thất bại");
+        return;
+      }
 
       toast.success("Xóa bình luận thành công!");
       fetchComments();

@@ -131,12 +131,18 @@ export default function CategoryAdmin() {
       const baseUrl =
         process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
-      await fetch(`${baseUrl}/api/categories/${id}`, {
+      const res = await fetch(`${baseUrl}/api/categories/${id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        toast.error(errData.message || "Xóa thất bại");
+        return;
+      }
 
       toast.success("Xóa thành công");
 
