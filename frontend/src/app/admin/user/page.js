@@ -20,7 +20,16 @@ export default function UserAdmin() {
         },
       });
 
+      if (!res.ok) {
+        toast.error("Lỗi tải danh sách user");
+        return;
+      }
+
       const data = await res.json();
+      if (!Array.isArray(data)) {
+        toast.error("Lỗi tải danh sách user");
+        return;
+      }
       setUsers(data);
     } catch (err) {
       toast.error("Lỗi tải danh sách user");
