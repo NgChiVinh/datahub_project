@@ -15,6 +15,7 @@ import {
   Filler,
 } from "chart.js";
 import { Doughnut, Bar } from "react-chartjs-2";
+import { useRouter } from "next/navigation";
 
 // Register ChartJS components
 ChartJS.register(
@@ -33,6 +34,7 @@ ChartJS.register(
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -230,10 +232,10 @@ export default function AdminDashboard() {
           </p>
         </div>
         <div className="relative z-10 flex gap-4 mt-8 md:mt-0">
-          <button onClick={() => window.location.href='/admin/material'} className="px-8 py-4 bg-primary text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:brightness-110 transition-all active:scale-95 shadow-xl shadow-primary/20">
+          <button onClick={() => router.push('/admin/material')} className="px-8 py-4 bg-primary text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:brightness-110 transition-all active:scale-95 shadow-xl shadow-primary/20">
             Kiểm duyệt ngay
           </button>
-          <button onClick={() => window.location.href='/admin/user'} className="px-8 py-4 bg-white/10 backdrop-blur-md text-white border border-white/10 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-white/20 transition-all active:scale-95">
+          <button onClick={() => router.push('/admin/user')} className="px-8 py-4 bg-white/10 backdrop-blur-md text-white border border-white/10 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-white/20 transition-all active:scale-95">
             Quản lý User
           </button>
         </div>
