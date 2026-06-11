@@ -81,7 +81,7 @@ exports.getForYou = async (req, res) => {
 // Hỏi AI về nội dung của một tài liệu cụ thể (RAG)
 exports.chatDocument = async (req, res) => {
   try {
-    const { materialId, question } = req.body;
+    const { materialId, question, history } = req.body;
 
     if (!materialId || !question?.trim()) {
       return res.status(400).json({ success: false, message: "Thiếu materialId hoặc question" });
@@ -93,7 +93,8 @@ exports.chatDocument = async (req, res) => {
       return res.status(400).json({ success: false, message: "materialId không hợp lệ" });
     }
 
-    const result = await chatWithDocument(materialId, question.trim());
+    const safeHistory = Array.isArray(history) ? history.slice(-6) : [];
+    const result = await chatWithDocument(materialId, question.trim(), safeHistory);
     res.json({ success: true, answer: result.answer });
   } catch (error) {
     const status = error.statusCode || 500;

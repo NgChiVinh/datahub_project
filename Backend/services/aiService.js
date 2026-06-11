@@ -96,7 +96,7 @@ const expandQuery = async (query) => {
   }
 };
 
-const chatWithDocument = async (materialId, question) => {
+const chatWithDocument = async (materialId, question, history = []) => {
   const Material = require("../models/Material");
 
   const doc = await Material.findById(materialId).select("contentText");
@@ -116,13 +116,10 @@ const chatWithDocument = async (materialId, question) => {
     messages: [
       {
         role: "system",
-        content:
-          "Bạn là trợ lý học tập. Dựa vào nội dung tài liệu dưới đây, hãy trả lời câu hỏi một cách chính xác và súc tích bằng tiếng Việt. Nếu thông tin không có trong tài liệu, hãy nói rõ là không tìm thấy trong tài liệu.",
+        content: `Bạn là trợ lý học tập. Dựa vào nội dung tài liệu dưới đây, hãy trả lời câu hỏi một cách chính xác và súc tích bằng tiếng Việt. Nếu thông tin không có trong tài liệu, hãy nói rõ là không tìm thấy trong tài liệu.\n\nNội dung tài liệu:\n${doc.contentText.slice(0, 8000)}`,
       },
-      {
-        role: "user",
-        content: `Nội dung tài liệu:\n${doc.contentText}\n\nCâu hỏi: ${question}`,
-      },
+      ...history.map((m) => ({ role: m.role, content: m.content })),
+      { role: "user", content: question },
     ],
     max_tokens: 500,
     temperature: 0.3,

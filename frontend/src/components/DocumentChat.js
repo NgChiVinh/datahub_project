@@ -17,6 +17,7 @@ export default function DocumentChat({ materialId, hasContent }) {
     const question = input.trim();
     if (!question || isLoading) return;
 
+    const history = messages.slice(-6);
     setMessages((prev) => [...prev, { role: "user", content: question }].slice(-40));
     setInput("");
     setIsLoading(true);
@@ -27,7 +28,7 @@ export default function DocumentChat({ materialId, hasContent }) {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ materialId, question }),
+          body: JSON.stringify({ materialId, question, history }),
         }
       );
       const data = await res.json();
