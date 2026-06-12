@@ -44,13 +44,9 @@ const getCollections = async (req, res) => {
     const { userId } = req.query;
     let query = {};
 
-    if (!req.user || !req.user._id) {
-      return res.status(401).json({ message: "Chưa xác thực" });
-    }
-
     if (userId && mongoose.Types.ObjectId.isValid(userId)) {
       const userObjectId = new mongoose.Types.ObjectId(userId);
-      if (userObjectId.equals(req.user._id)) {
+      if (req.user && userObjectId.equals(req.user._id)) {
         query = { userId: userObjectId };
       } else {
         query = { userId: userObjectId, isPublic: true };
@@ -59,9 +55,13 @@ const getCollections = async (req, res) => {
       // Nếu có userId nhưng không hợp lệ
       return res.status(400).json({ message: "ID người dùng không hợp lệ" });
     } else {
-      query = {
-        $or: [{ isPublic: true }, { userId: req.user._id }],
-      };
+      if (req.user) {
+        query = {
+          $or: [{ isPublic: true }, { userId: req.user._id }],
+        };
+      } else {
+        query = { isPublic: true };
+      }
     }
 
     const collections = await StudyCollection.find(query)
@@ -98,11 +98,10 @@ const getCollectionById = async (req, res) => {
     }
 
     // check quyền (private)
-    if (
-      !collection.isPublic &&
-      collection.userId._id.toString() !== req.user._id.toString()
-    ) {
-      return res.status(403).json({ message: "Không có quyền truy cập" });
+    if (!collection.isPublic) {
+      if (!req.user || collection.userId._id.toString() !== req.user._id.toString()) {
+        return res.status(403).json({ message: "Không có quyền truy cập" });
+      }
     }
 
     res.status(200).json(collection);

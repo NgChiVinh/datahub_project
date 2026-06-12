@@ -19,11 +19,13 @@ export default function CollectionsDiscoveryPage() {
       setIsLoading(true);
 
       const token = localStorage.getItem("token");
+      const headers = {};
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
 
       const res = await fetch(`${API_URL}/api/collections`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers,
       });
 
       if (!res.ok) {
@@ -42,53 +44,87 @@ export default function CollectionsDiscoveryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#fafbfc] font-sans text-slate-900 pb-20 pt-24">
-      {/* Hero Section */}
-      <section className="bg-slate-900 text-white py-20 relative overflow-hidden mb-16">
-        <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-        <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/20 rounded-full blur-[120px] -mr-48 -mt-48"></div>
+    <div className="min-h-screen bg-[#f8fafc] font-sans text-slate-900 pb-32 pt-28 selection:bg-blue-200">
+      {/* Premium Hero Section */}
+      <section className="relative mb-24 px-4 sm:px-6">
+        <div className="container mx-auto max-w-7xl relative z-10">
+          {/* Outer glow container */}
+          <div className="relative rounded-[3rem] overflow-hidden bg-slate-950 shadow-2xl shadow-blue-900/20 p-[1px]">
+            {/* Animated gradient border effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 opacity-20"></div>
+            
+            {/* Inner Content */}
+            <div className="relative bg-slate-950/90 backdrop-blur-3xl rounded-[3rem] p-10 md:p-20 overflow-hidden">
+              {/* Decorative Orbs */}
+              <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-bl from-blue-500/20 via-purple-500/20 to-transparent rounded-full blur-[100px] -mr-48 -mt-48 pointer-events-none mix-blend-screen"></div>
+              <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-emerald-500/20 to-transparent rounded-full blur-[80px] -ml-32 -mb-32 pointer-events-none mix-blend-screen"></div>
+              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5 mix-blend-overlay"></div>
 
-        <div className="container mx-auto max-w-7xl px-4 relative z-10">
-          <div className="max-w-3xl">
-            <nav className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6">
-              <Link
-                href="/"
-                className="hover:text-emerald-500 transition-colors"
-              >
-                Trang chủ
-              </Link>
-              <span>/</span>
-              <span className="text-emerald-500">Bộ sưu tập cộng đồng</span>
-            </nav>
-            <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase italic mb-6 leading-none">
-              Khám phá <span className="text-emerald-500">Hệ sinh thái</span>{" "}
-              kiến thức
-            </h1>
-            <p className="text-slate-400 font-medium text-lg md:text-xl leading-relaxed mb-10">
-              Tổng hợp những bộ sưu tập tài liệu chất lượng nhất được đóng góp
-              bởi cộng đồng sinh viên VLU.
-            </p>
-            <div className="flex flex-wrap gap-4">
-              <Link
-                href="/profile"
-                className="px-8 py-4 bg-emerald-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white hover:text-slate-900 transition-all shadow-xl shadow-emerald-500/20"
-              >
-                Bộ sưu tập của tôi
-              </Link>
+              <div className="max-w-3xl relative z-10">
+                <nav className="flex items-center gap-3 text-xs font-bold text-slate-400 mb-10 tracking-widest uppercase">
+                  <Link
+                    href="/"
+                    className="hover:text-blue-400 transition-colors flex items-center gap-2"
+                  >
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg>
+                    Trang chủ
+                  </Link>
+                  <span className="text-slate-600">/</span>
+                  <span className="text-blue-400">Bộ sưu tập cộng đồng</span>
+                </nav>
+                <h1 className="text-5xl md:text-6xl lg:text-7xl font-black tracking-tight text-white mb-8 leading-[1.05]">
+                  Khám phá <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400">
+                    Tri thức vô tận
+                  </span>
+                </h1>
+                <p className="text-slate-300 text-lg md:text-xl leading-relaxed mb-12 max-w-2xl font-medium">
+                  Tổng hợp những bộ sưu tập tài liệu chọn lọc và chất lượng nhất được đóng góp
+                  bởi cộng đồng sinh viên. Tìm kiếm, lưu trữ và chia sẻ ngay hôm nay.
+                </p>
+                <div className="flex flex-wrap gap-5">
+                  <Link
+                    href="/profile?tab=collections"
+                    className="group relative inline-flex items-center justify-center gap-3 px-8 py-4 bg-white text-slate-950 rounded-2xl text-sm font-bold overflow-hidden transition-transform hover:scale-105 active:scale-95"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-100 to-indigo-100 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <span className="relative">Bộ sưu tập của tôi</span>
+                    <svg className="relative w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                  </Link>
+                  <a
+                    href="#explore"
+                    className="inline-flex items-center justify-center px-8 py-4 bg-white/5 text-white border border-white/10 rounded-2xl text-sm font-bold hover:bg-white/10 transition-colors backdrop-blur-sm"
+                  >
+                    Khám phá ngay
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <div className="container mx-auto max-w-7xl px-4">
-        <div className="flex items-center justify-between mb-12">
-          <h2 className="text-2xl font-black text-slate-900 uppercase italic tracking-tight">
-            Bộ sưu tập <span className="text-emerald-500">Nổi bật</span>
-          </h2>
-          <div className="h-px flex-1 bg-slate-100 mx-8 hidden md:block"></div>
-          <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">
-            {collections.length} Kết quả
-          </span>
+      <div id="explore" className="container mx-auto max-w-7xl px-4 sm:px-6 scroll-mt-32">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
+          <div className="space-y-3">
+            <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">
+              Bộ sưu tập <span className="text-blue-600">Nổi bật</span>
+            </h2>
+            <p className="text-slate-500 font-medium text-lg">Những chủ đề đang được quan tâm nhiều nhất</p>
+          </div>
+          <div className="flex items-center gap-3 bg-white px-5 py-2.5 rounded-2xl border border-slate-200/60 shadow-sm">
+             <div className="relative flex h-3 w-3">
+               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+               <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+             </div>
+             <span className="text-sm font-bold text-slate-700">
+               {collections.length} <span className="text-slate-400 font-medium">Kết quả</span>
+             </span>
+          </div>
         </div>
 
         {isLoading ? (
@@ -96,94 +132,106 @@ export default function CollectionsDiscoveryPage() {
             {[...Array(6)].map((_, i) => (
               <div
                 key={i}
-                className="bg-white rounded-[2.5rem] h-80 animate-pulse border border-slate-100"
+                className="bg-white rounded-[2.5rem] h-[380px] animate-pulse border border-slate-100 shadow-sm"
               ></div>
             ))}
           </div>
         ) : collections.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {collections.map((col) => (
-              <div
+              <Link
+                href={`/collections/${col._id}`}
                 key={col._id}
-                className="group bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-sm hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-500 relative flex flex-col"
+                className="group bg-white rounded-[2.5rem] p-8 md:p-10 border border-slate-200/50 shadow-sm hover:shadow-2xl hover:shadow-blue-900/5 hover:-translate-y-2 transition-all duration-500 relative flex flex-col overflow-hidden"
               >
-                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-500/5 to-transparent rounded-bl-[4rem] group-hover:from-emerald-500/10 transition-colors"></div>
+                {/* Accent line on hover */}
+                <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-500 to-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                
+                {/* Decorative blob */}
+                <div className="absolute -right-16 -top-16 w-48 h-48 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full blur-3xl opacity-0 group-hover:opacity-60 transition-opacity duration-700 pointer-events-none z-0"></div>
 
-                <div className="flex items-center gap-3 mb-6 relative z-10">
-                  <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center font-black text-xs">
-                    {col.userId?.fullName?.[0] || "U"}
+                <div className="flex items-center gap-4 mb-8 relative z-10">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 text-slate-700 flex items-center justify-center font-black text-xl shadow-inner border border-white group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500">
+                    {col.userId?.fullName?.[0]?.toUpperCase() || "U"}
                   </div>
                   <div>
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">
+                    <p className="text-[10px] font-bold text-slate-400 tracking-widest uppercase mb-1">
                       Tạo bởi
                     </p>
-                    <p className="text-[11px] font-bold text-slate-700">
+                    <p className="text-sm font-black text-slate-800 tracking-tight">
                       {col.userId?.fullName}
                     </p>
                   </div>
                 </div>
 
-                <h3 className="text-xl font-black text-slate-900 uppercase italic mb-4 line-clamp-1 group-hover:text-emerald-600 transition-colors">
-                  {col.name}
-                </h3>
+                <div className="relative z-10 flex-1 flex flex-col">
+                  <h3 className="text-2xl font-black text-slate-900 mb-4 line-clamp-2 group-hover:text-blue-600 transition-colors leading-[1.3] tracking-tight">
+                    {col.name}
+                  </h3>
 
-                <p className="text-slate-400 text-xs font-medium line-clamp-2 mb-8 flex-1 leading-relaxed">
-                  {col.description ||
-                    "Bộ sưu tập tài liệu học tập tổng hợp từ cộng đồng sinh viên."}
-                </p>
+                  <p className="text-slate-500 text-sm md:text-base line-clamp-3 mb-10 flex-1 leading-relaxed font-medium">
+                    {col.description ||
+                      "Bộ sưu tập tài liệu học tập tổng hợp từ cộng đồng sinh viên."}
+                  </p>
 
-                <div className="flex items-center justify-between pt-8 border-t border-slate-50 mt-auto">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                    <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest">
-                      {col.materialIds?.length || 0} Tài liệu
-                    </span>
-                  </div>
-                  <Link
-                    href={`/collections/${col._id}`}
-                    className="flex items-center gap-2 text-[10px] font-black text-emerald-500 uppercase tracking-widest hover:gap-3 transition-all"
-                  >
-                    Xem ngay
-                    <svg
-                      width="14"
-                      height="14"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                  <div className="flex items-center justify-between pt-6 border-t border-slate-100 mt-auto">
+                    <div className="flex items-center gap-2.5 bg-slate-50 group-hover:bg-blue-50 transition-colors px-4 py-2 rounded-xl">
+                      <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" className="text-blue-500">
+                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                      </svg>
+                      <span className="text-sm font-black text-slate-700 group-hover:text-blue-700 transition-colors">
+                        {col.materialIds?.length || 0} <span className="font-semibold text-slate-500 group-hover:text-blue-500">Tài liệu</span>
+                      </span>
+                    </div>
+                    <div
+                      className="w-12 h-12 rounded-2xl bg-white border border-slate-100 text-slate-400 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-all duration-300 shadow-sm group-hover:shadow-lg group-hover:shadow-blue-500/30"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="3"
-                        d="M17 8l4 4m0 0l-4 4m4-4H3"
-                      />
-                    </svg>
-                  </Link>
+                      <svg
+                        width="20"
+                        height="20"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        className="transform group-hover:translate-x-1 transition-transform"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="3"
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         ) : (
-          <div className="text-center py-32 bg-white rounded-[3rem] border-2 border-dashed border-slate-100">
-            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-200">
-              <svg
-                width="32"
-                height="32"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                />
-              </svg>
+          <div className="text-center py-40 bg-white rounded-[3rem] border border-slate-200/60 shadow-sm relative overflow-hidden">
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.02]"></div>
+            <div className="relative z-10">
+              <div className="w-24 h-24 bg-blue-50 rounded-[2rem] flex items-center justify-center mx-auto mb-8 text-blue-500 shadow-inner">
+                <svg
+                  width="40"
+                  height="40"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-black text-slate-800 tracking-tight mb-3">Chưa có bộ sưu tập nào</h3>
+              <p className="text-slate-500 font-medium text-lg">
+                Hiện tại chưa có bộ sưu tập công khai nào trên hệ thống.
+              </p>
             </div>
-            <p className="text-slate-400 font-black text-xs uppercase tracking-[0.2em]">
-              Hiện chưa có bộ sưu tập công khai nào
-            </p>
           </div>
         )}
       </div>

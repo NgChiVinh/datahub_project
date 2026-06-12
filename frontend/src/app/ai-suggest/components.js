@@ -1,5 +1,57 @@
 import Link from "next/link";
 
+/* ── Blob Loader (SVG metaball) ── */
+export const BlobLoader = ({ size = 1 }) => (
+  <div style={{ transform: `scale(${size})`, display: "inline-block", lineHeight: 0, position: "relative" }}>
+    {/* Ambient glow behind the blob */}
+    <div style={{
+      position: "absolute", inset: -20, borderRadius: "50%",
+      background: "radial-gradient(circle, #22d3ee28 0%, #1d4ed815 45%, transparent 70%)",
+      animation: "loader-pulse 2.4s ease-in-out infinite",
+      pointerEvents: "none",
+    }} />
+    <div style={{
+      filter: "drop-shadow(0 0 18px #22d3ee88) drop-shadow(0 16px 36px #1d4ed866)",
+      animation: "loader-colorize 6s ease-in-out infinite",
+    }}>
+      <svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="goo" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="7" result="blur" />
+            <feColorMatrix in="blur" type="matrix"
+              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 24 -10" />
+          </filter>
+          <radialGradient id="bgrad" cx="38%" cy="32%" r="68%">
+            <stop offset="0%"   stopColor="#a5f3fc" />
+            <stop offset="45%"  stopColor="#22d3ee" />
+            <stop offset="100%" stopColor="#1e40af" />
+          </radialGradient>
+        </defs>
+        <g filter="url(#goo)">
+          {/* Central — anchor blob */}
+          <circle cx="60" cy="60" r="22" fill="url(#bgrad)" />
+          {/* Orbit A — large, fast CW, tight */}
+          <circle cx="60" cy="27" r="15" fill="url(#bgrad)"
+            style={{ transformOrigin: "60px 60px", animation: "loader-rotation 2s linear infinite" }} />
+          {/* Orbit B — medium, slow CCW, wide */}
+          <circle cx="95" cy="60" r="12" fill="url(#bgrad)"
+            style={{ transformOrigin: "60px 60px", animation: "loader-rotation 3s linear infinite reverse", animationDelay: "-0.8s" }} />
+          {/* Orbit C — medium-small, medium CW, starts bottom-left */}
+          <circle cx="35" cy="88" r="10" fill="url(#bgrad)"
+            style={{ transformOrigin: "60px 60px", animation: "loader-rotation 3.8s linear infinite", animationDelay: "-1.4s" }} />
+          {/* Orbit D — small, fast CCW, close in */}
+          <circle cx="60" cy="38" r="8" fill="url(#bgrad)"
+            style={{ transformOrigin: "60px 60px", animation: "loader-rotation 1.6s linear infinite reverse", animationDelay: "-0.5s" }} />
+          {/* Orbit E — tiny, medium CW, starts upper-right */}
+          <circle cx="88" cy="35" r="6" fill="url(#bgrad)"
+            style={{ transformOrigin: "60px 60px", animation: "loader-rotation 2.4s linear infinite", animationDelay: "-1.0s" }} />
+        </g>
+      </svg>
+    </div>
+  </div>
+);
+
+
 export const SkeletonCard = () => (
   <div className="flex flex-col bg-white rounded-2xl border border-slate-100 overflow-hidden animate-pulse">
     {/* Thumbnail skeleton — khớp h-[88px] */}
@@ -34,6 +86,96 @@ export const SkeletonCard = () => (
     </div>
   </div>
 );
+
+export const AIIntroView = () => {
+  return (
+    <div className="min-h-screen bg-[#faf9f6] flex items-center justify-center relative overflow-hidden"    
+      style={{ animation: "fade-in 0.3s ease-out" }}>
+
+      {/* Grid bg */}
+      <div className="absolute inset-0 pointer-events-none" style={{
+        backgroundImage: "linear-gradient(rgba(5,150,105,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(5,150,105,0.04) 1px, transparent 1px)",
+        backgroundSize: "48px 48px",
+      }} />
+
+      {/* Ghost "AI" text */}
+      <div className="absolute right-8 bottom-10 pointer-events-none select-none hidden lg:block" aria-hidden="true">
+        <span className="font-black leading-none" style={{ fontSize: 200, color: "#059669", opacity: 0.04, fontWeight: 900 }}>AI</span>
+      </div>
+
+      {/* Center */}
+      <div className="relative flex flex-col items-center text-center px-6">
+
+        {/* Blob loader + decorative rings */}
+        <div className="relative flex items-center justify-center mb-10">
+          {/* Outer slow-expand ring */}
+          <div className="absolute w-64 h-64 rounded-full border border-cyan-400/20 animate-ping"
+            style={{ animationDuration: "3.5s" }} />
+          {/* Middle ring */}
+          <div className="absolute w-48 h-48 rounded-full border border-blue-400/25 animate-ping"
+            style={{ animationDuration: "3.5s", animationDelay: "1.2s" }} />
+          {/* Inner glow disc */}
+          <div className="absolute w-44 h-44 rounded-full"
+            style={{ background: "radial-gradient(circle, #22d3ee10 0%, transparent 70%)", animation: "loader-pulse 2.4s ease-in-out infinite" }} />
+          <BlobLoader size={1.5} />
+        </div>
+
+        <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-1.5"
+          style={{ animation: "fade-in-up 0.4s ease-out 0.2s both" }}>
+          AI đang chuẩn bị cho bạn
+        </h2>
+        <p className="text-sm text-slate-400 mb-8"
+          style={{ animation: "fade-in-up 0.4s ease-out 0.35s both" }}>
+          Phân tích sở thích và tìm tài liệu phù hợp nhất
+        </p>
+
+        {/* Steps */}
+        <div className="space-y-3 text-left w-64">
+          {[
+            { label: "Kết nối AI engine", delay: 450 },
+            { label: "Đọc lịch sử tương tác", delay: 850 },
+            { label: "Tìm kiếm tài liệu phù hợp", delay: 1250 },
+          ].map(({ label, delay }) => (
+            <div key={label} className="flex items-center gap-2.5"
+              style={{ animation: "fade-in-up 0.35s ease-out both", animationDelay: `${delay}ms` }}>
+              <div className="w-5 h-5 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center shrink-0">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"
+                  style={{ animation: "bounce-slow 1s ease-in-out infinite", animationDelay: `${delay}ms` }} />
+              </div>
+              <span className="text-sm text-slate-600">{label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const AIRefreshingView = () => (
+  <div className="flex flex-col items-center justify-center py-16 min-h-[280px]"
+    style={{ animation: "fade-in 0.3s ease-out both" }}>
+    <div className="relative flex items-center justify-center mb-5">
+      <div className="absolute w-36 h-36 rounded-full border border-cyan-400/20 animate-ping"
+        style={{ animationDuration: "3s" }} />
+      <BlobLoader size={0.85} />
+    </div>
+    <p className="text-sm font-bold text-slate-700 mb-1 flex items-center gap-1">
+      AI đang tìm kiếm<AiTypingDots />
+    </p>
+    <p className="text-xs text-slate-400">Phân tích sở thích học tập của bạn</p>
+  </div>
+);
+
+function AiTypingDots() {
+  return (
+    <span className="inline-flex items-end gap-0.5 ml-1 mb-0.5">
+      {[0, 1, 2].map((i) => (
+        <span key={i} className="w-1 h-1 rounded-full bg-emerald-500 inline-block"
+          style={{ animation: "bounce-slow 1.2s ease-in-out infinite", animationDelay: `${i * 0.2}s` }} />  
+      ))}
+    </span>
+  );
+}
 
 export const LoadingView = () => (
   <div className="min-h-screen bg-white font-sans text-slate-900 pb-24">

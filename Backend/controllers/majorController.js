@@ -1,4 +1,5 @@
 const Major = require("../models/Major");
+const Material = require("../models/Material");
 
 // CREATE Major
 const createMajor = async (req, res) => {
@@ -22,11 +23,27 @@ const createMajor = async (req, res) => {
   }
 };
 
-// GET all majors
+// GET all majors (kèm số tài liệu đã duyệt theo từng ngành)
 const getMajors = async (req, res) => {
   try {
-    const majors = await Major.find().sort({ createdAt: -1 });
-    res.status(200).json(majors);
+    const [majors, counts] = await Promise.all([
+      Major.find().sort({ createdAt: -1 }),
+      Material.aggregate([
+        { $match: { status: "approved" } },
+        { $group: { _id: "$majorId", count: { $sum: 1 } } },
+      ]),
+    ]);
+
+    const countMap = Object.fromEntries(
+      counts.map((c) => [c._id?.toString(), c.count])
+    );
+
+    const result = majors.map((m) => ({
+      ...m.toObject(),
+      materialCount: countMap[m._id.toString()] || 0,
+    }));
+
+    res.status(200).json(result);
   } catch (error) {
     res.status(500).json({ message: "Lỗi server", error });
   }

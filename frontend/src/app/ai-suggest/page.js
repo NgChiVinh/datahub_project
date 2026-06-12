@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import api from "@/lib/axios";
-import { SkeletonCard, LoadingView, UnauthenticatedView, EmptyStateView, AIRefreshingView } from "./components";
+import { SkeletonCard, LoadingView, UnauthenticatedView, EmptyStateView, AIRefreshingView, AIIntroView } from "./components";
 
 const FETCH_LIMIT = 24;
 const ITEMS_PER_PAGE = 9;
@@ -70,15 +70,16 @@ function FileIcon({ type, color, size = 40 }) {
   );
 }
 
-function ScoreArc({ pct, color, label }) {
-  const r = 22, circ = 2 * Math.PI * r;
+function ScoreArc({ pct, color, label, size = 52, r = 20 }) {
+  const circ = 2 * Math.PI * r;
   const dash = (pct / 100) * circ;
+  const cx = size / 2;
   return (
-    <div className="relative w-14 h-14 flex items-center justify-center">
-      <svg width="56" height="56" viewBox="0 0 56 56" className="-rotate-90"
-        style={{ filter: `drop-shadow(0 0 5px ${color}55)` }}>
-        <circle cx="28" cy="28" r={r} fill="none" stroke="#e2e8f0" strokeWidth="3.5" />
-        <circle cx="28" cy="28" r={r} fill="none" stroke={color} strokeWidth="3.5"
+    <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90"
+        style={{ filter: `drop-shadow(0 0 4px ${color}55)` }}>
+        <circle cx={cx} cy={cx} r={r} fill="none" stroke="#e2e8f0" strokeWidth="3" />
+        <circle cx={cx} cy={cx} r={r} fill="none" stroke={color} strokeWidth="3"
           strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
           style={{ transition: "stroke-dasharray 1s ease-out" }} />
       </svg>
@@ -93,6 +94,7 @@ export default function AISuggestPage() {
 
   const [isLoading, setIsLoading]       = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [introReady, setIntroReady]     = useState(false);
   const [items, setItems]               = useState([]);
   const [isColdStart, setIsColdStart]   = useState(false);
   const [basedOn, setBasedOn]           = useState(null);
@@ -130,6 +132,11 @@ export default function AISuggestPage() {
 
   useEffect(() => { setVisibleCount(ITEMS_PER_PAGE); }, [filterType]);
 
+  useEffect(() => {
+    const t = setTimeout(() => setIntroReady(true), 1700);
+    return () => clearTimeout(t);
+  }, []);
+
   const filteredItems = filterType === "all"
     ? items
     : items.filter((d) => d.materialType?.toLowerCase() === filterType);
@@ -152,11 +159,12 @@ export default function AISuggestPage() {
     }, {})
   ).sort(([, a], [, b]) => b - a).slice(0, 4);
 
-  if (authLoading || isLoading) return <LoadingView />;
+  if (authLoading || isLoading || !introReady) return <AIIntroView />;
   if (!isAuthed) return <UnauthenticatedView />;
 
   return (
-    <div className="min-h-screen bg-[#faf9f6] font-sans text-slate-900 pb-24">
+    <div className="min-h-screen bg-[#faf9f6] font-sans text-slate-900 pb-24"
+      style={{ animation: "fade-in 0.5s ease-out" }}>
 
       {/* ── HERO ── */}
       <section className="bg-[#faf9f6] border-b border-slate-100 py-12 relative overflow-hidden">
@@ -259,17 +267,29 @@ export default function AISuggestPage() {
                   )}
                 </div>
 
-                <div className="px-5 pb-4 flex items-center justify-between border-t border-slate-100 pt-3">
-                  <div>
-                    <p className="text-[10px] text-slate-400">Tổng gợi ý</p>
-                    <p className="text-xl font-black text-slate-900 leading-tight">{items.length}</p>
-                  </div>
-                  {basedOn && (
-                    <div className="text-right max-w-[150px]">
-                      <p className="text-[10px] text-slate-400 mb-0.5">Dựa trên</p>
-                      <p className="text-[11px] font-semibold text-emerald-600 line-clamp-2 leading-snug">{basedOn}</p>
+                <div className="px-5 pb-4 border-t border-slate-100 pt-3">
+                  <div className="flex items-center justify-between mb-2.5">
+                    <div>
+                      <p className="text-[10px] text-slate-400">Tổng gợi ý</p>
+                      <p className="text-xl font-black text-slate-900 leading-tight">{items.length}</p>
                     </div>
-                  )}
+                    <div className="text-right">
+                      <p className="text-[10px] text-slate-400">Loại file</p>
+                      <p className="text-xl font-black text-slate-900 leading-tight">
+                        {Object.keys(TYPE_MAP).filter(k => (typeCounts[k] || 0) > 0).length}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-50 border border-slate-100">
+                    <svg width="12" height="12" fill="none" stroke={isColdStart ? "#f59e0b" : "#10b981"} viewBox="0 0 24 24" strokeWidth="2" className="shrink-0">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4 2m6-2a10 10 0 11-20 0 10 10 0 0120 0z" />
+                    </svg>
+                    <p className="text-[10px] text-slate-500 leading-snug">
+                      {isColdStart
+                        ? "Gợi ý dựa trên tài liệu phổ biến nhất"
+                        : "Cá nhân hóa từ lịch sử xem của bạn"}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -381,18 +401,20 @@ export default function AISuggestPage() {
                             animationDelay: `${idx * 60}ms`,
                           }}>
                           {/* Thumbnail */}
-                          <div className="relative flex items-center justify-center h-[150px] overflow-hidden"
-                            style={{ background: `linear-gradient(135deg, ${type.thumbA}, ${type.thumbB})` }}>
+                          <div className="relative flex items-center justify-center h-[172px] overflow-hidden"
+                            style={{ background: "linear-gradient(160deg, #ffffff 0%, #f1f5f9 100%)" }}>
                             <span className="absolute font-black select-none pointer-events-none tracking-tighter"
-                              style={{ fontSize: 80, color: type.barColor, opacity: 0.08, lineHeight: 1 }}>
+                              style={{ fontSize: 88, color: type.barColor, opacity: 0.06, lineHeight: 1 }}>
                               {type.label}
                             </span>
-                            <FileIcon type={doc.materialType} color={type.iconColor} size={44} />
-                            <div className={`absolute top-2.5 left-3.5 flex items-center gap-1 px-2 py-0.5 rounded-md shadow-sm ${
-                              idx === 0 ? "bg-amber-400 text-white" : "bg-slate-400 text-white"
-                            }`}>
-                              <span className="text-[10px] font-black">#{idx + 1}</span>
-                              <span className="text-[9px] font-bold opacity-85">{idx === 0 ? "Top phù hợp" : "Top 2"}</span>
+                            <div className="w-[72px] h-[72px] rounded-2xl flex items-center justify-center"
+                              style={{ background: type.barColor + "14" }}>
+                              <FileIcon type={doc.materialType} color={type.barColor} size={38} />
+                            </div>
+                            <div className="absolute top-3 left-3.5 flex items-center gap-1.5 px-2.5 py-1 rounded-lg shadow-sm"
+                              style={{ background: idx === 0 ? "#f59e0b" : type.barColor + "dd" }}>
+                              <span className="text-[10px] font-black text-white">#{idx + 1}</span>
+                              <span className="text-[9px] font-bold text-white/90">{idx === 0 ? "Top phù hợp" : "Top 2"}</span>
                             </div>
                             <div className="absolute top-2.5 right-2.5">
                               <ScoreArc pct={scoreInfo.pct} color={scoreInfo.color} label={scoreInfo.label} />
@@ -424,7 +446,8 @@ export default function AISuggestPage() {
                             <div className="flex-1" />
                             <div className="flex items-center justify-between pt-3 mt-2.5 border-t border-slate-50">
                               <div className="flex items-center gap-2 min-w-0">
-                                <div className="w-6 h-6 rounded-lg bg-slate-900 flex items-center justify-center text-[10px] font-bold text-white shrink-0">
+                                <div className="w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-bold text-white shrink-0"
+                                  style={{ background: type.barColor + "cc" }}>
                                   {doc.uploaderId?.fullName?.charAt(0)?.toUpperCase() || "U"}
                                 </div>
                                 <div className="min-w-0">
@@ -432,7 +455,8 @@ export default function AISuggestPage() {
                                   <p className="text-[10px] text-slate-400 mt-0.5">{doc.metrics?.viewCount || 0} lượt xem</p>
                                 </div>
                               </div>
-                              <span className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-900 text-white text-[11px] font-bold group-hover:bg-emerald-600 transition-colors duration-200">
+                              <span className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-white text-[11px] font-bold transition-all duration-200 group-hover:opacity-90"
+                                style={{ background: type.barColor, boxShadow: `0 2px 8px ${type.barColor}40` }}>
                                 Xem
                                 <svg className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
                                   <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
@@ -467,18 +491,21 @@ export default function AISuggestPage() {
                           animationDelay: `${idx * 40}ms`,
                         }}>
                         {/* Thumbnail */}
-                        <div className="relative flex items-center justify-center h-[110px] overflow-hidden"
-                          style={{ background: `linear-gradient(135deg, ${type.thumbA}, ${type.thumbB})` }}>
+                        <div className="relative flex items-center justify-center h-[128px] overflow-hidden"
+                          style={{ background: "linear-gradient(160deg, #ffffff 0%, #f1f5f9 100%)" }}>
                           <span className="absolute font-black select-none pointer-events-none tracking-tighter"
-                            style={{ fontSize: 60, color: type.barColor, opacity: 0.09, lineHeight: 1 }}>
+                            style={{ fontSize: 64, color: type.barColor, opacity: 0.05, lineHeight: 1 }}>
                             {type.label}
                           </span>
-                          <FileIcon type={doc.materialType} color={type.iconColor} size={34} />
-                          <div className="absolute top-2.5 left-3 w-5 h-5 rounded-md flex items-center justify-center text-[9px] font-black bg-white/80 backdrop-blur-sm text-slate-500">
+                          <div className="w-[56px] h-[56px] rounded-xl flex items-center justify-center"
+                            style={{ background: type.barColor + "14" }}>
+                            <FileIcon type={doc.materialType} color={type.barColor} size={28} />
+                          </div>
+                          <div className="absolute top-2.5 left-3 flex items-center justify-center w-5 h-5 rounded-md text-[9px] font-black bg-white/80 backdrop-blur-sm text-slate-500">
                             #{realIdx + 1}
                           </div>
                           <div className="absolute top-2 right-2">
-                            <ScoreArc pct={scoreInfo.pct} color={scoreInfo.color} label={scoreInfo.label} />
+                            <ScoreArc pct={scoreInfo.pct} color={scoreInfo.color} label={scoreInfo.label} size={42} r={16} />
                           </div>
                           <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-black/5">
                             <div className="h-full rounded-r-full transition-all duration-1000"
@@ -486,31 +513,37 @@ export default function AISuggestPage() {
                           </div>
                         </div>
                         {/* Content */}
-                        <div className="flex flex-col flex-1 p-3.5">
-                          <div className="flex items-center gap-1.5 mb-1.5">
-                            <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded ${type.badge}`}>{type.label}</span>
+                        <div className="flex flex-col flex-1 p-4">
+                          <div className="flex items-center gap-1.5 mb-2">
+                            <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md ${type.badge}`}>{type.label}</span>
                             {doc.categoryId?.name && (
                               <span className="text-[10px] font-semibold text-slate-400 truncate">{doc.categoryId.name}</span>
                             )}
                           </div>
-                          <h3 className="text-[13px] font-bold text-slate-900 leading-snug line-clamp-2 mb-1 group-hover:text-emerald-600 transition-colors duration-200">
+                          <h3 className="text-[13px] font-bold text-slate-900 leading-snug line-clamp-2 mb-1.5 group-hover:text-emerald-600 transition-colors duration-200">
                             {doc.title}
                           </h3>
-                          <p className="flex items-center gap-1 text-[10px] text-emerald-400/70 font-medium mt-1 truncate">
-                            <svg width="10" height="10" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5" className="shrink-0">
+                          <p className="flex items-center gap-1 text-[10px] font-medium truncate"
+                            style={{ color: type.barColor + "99" }}>
+                            <svg width="9" height="9" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5" className="shrink-0">
                               <path strokeLinecap="round" strokeLinejoin="round" d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
                             </svg>
                             {getReasonLabel(doc, basedOn, isColdStart)}
                           </p>
                           <div className="flex-1" />
-                          <div className="flex items-center justify-between pt-2.5 mt-2 border-t border-slate-50">
+                          <div className="flex items-center justify-between pt-3 mt-3 border-t border-slate-50">
                             <div className="flex items-center gap-1.5 min-w-0">
-                              <div className="w-5 h-5 rounded-lg bg-slate-900 flex items-center justify-center text-[9px] font-bold text-white shrink-0">
+                              <div className="w-5 h-5 rounded-lg flex items-center justify-center text-[9px] font-bold text-white shrink-0"
+                                style={{ background: type.barColor + "cc" }}>
                                 {doc.uploaderId?.fullName?.charAt(0)?.toUpperCase() || "U"}
                               </div>
-                              <p className="text-[10px] font-semibold text-slate-600 truncate leading-none">{doc.uploaderId?.fullName || "Ẩn danh"}</p>
+                              <div className="min-w-0">
+                                <p className="text-[10px] font-semibold text-slate-600 truncate leading-none">{doc.uploaderId?.fullName || "Ẩn danh"}</p>
+                                <p className="text-[9px] text-slate-400 mt-0.5">{doc.metrics?.viewCount || 0} lượt xem</p>
+                              </div>
                             </div>
-                            <span className="shrink-0 inline-flex items-center gap-0.5 px-2 py-1 rounded-lg bg-slate-900 text-white text-[10px] font-bold group-hover:bg-emerald-600 transition-colors duration-200">
+                            <span className="shrink-0 inline-flex items-center gap-0.5 px-2.5 py-1.5 rounded-lg text-white text-[10px] font-bold transition-all duration-200 group-hover:opacity-90"
+                              style={{ background: type.barColor }}>
                               Xem
                               <svg className="w-2.5 h-2.5 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />

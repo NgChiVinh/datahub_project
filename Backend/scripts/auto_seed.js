@@ -3,120 +3,70 @@ const path = require("path");
 const mongoose = require("mongoose");
 const connectDB = require("../config/db");
 const Material = require("../models/Material");
-const Category = require("../models/Category");
-const Major = require("../models/Major");
 const User = require("../models/User");
 const uploadFile = require("../utils/uploadFile");
 const { extractText } = require("../utils/extractText");
-const { generateMetadata, generateEmbedding } = require("../services/aiService");
+const { generateEmbedding, buildEmbeddingText } = require("../services/aiService");
+const OpenAI = require("openai");
 require("dotenv").config();
 
-// Cấu hình
-const SEED_FOLDER = path.join(__dirname, "../seed_materials");
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+const SEED_FOLDER = path.join(__dirname, "../seed_materials/Tai_Lieu");
+const SUPPORTED_EXTS = [".pdf", ".docx", ".pptx"];
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const autoSeed = async () => {
-  try {
-    await connectDB();
-
-    // 1. Kiểm tra thư mục nguồn
-    if (!fs.existsSync(SEED_FOLDER)) {
-      console.log(`📁 Tạo thư mục: ${SEED_FOLDER}`);
-      fs.mkdirSync(SEED_FOLDER);
-      console.log("ℹ️ Hãy bỏ các file tài liệu vào thư mục trên và chạy lại script.");
-      process.exit(0);
-    }
-
-    const files = fs.readdirSync(SEED_FOLDER).filter(file => 
-      [".pdf", ".docx", ".pptx"].includes(path.extname(file).toLowerCase())
-    );
-
-    if (files.length === 0) {
-      console.log("❌ Không tìm thấy file tài liệu nào trong thư mục seed_materials.");
-      process.exit(0);
-    }
-
-    // 2. Lấy dữ liệu danh mục để AI lựa chọn
-    console.log("🔍 Đang tải danh mục và chuyên ngành từ DB...");
-    const categories = await Category.find({}).lean();
-    const majors = await Major.find({}).lean();
-
-    if (categories.length === 0 || majors.length === 0) {
-      console.warn("⚠️ Cảnh báo: DB chưa có Category hoặc Major. AI sẽ không thể phân loại chính xác.");
-    }
-
-    // 3. Lấy User admin
-    const admin = await User.findOne({ role: "admin" }) || await User.findOne();
-    if (!admin) {
-      console.error("❌ Không tìm thấy User nào trong hệ thống.");
-      process.exit(1);
-    }
-
-    console.log(`🚀 Bắt đầu Auto-Seed ${files.length} file...`);
-
-    for (const fileName of files) {
-      try {
-        console.log(`\n--- Xử lý: ${fileName} ---`);
-        const filePath = path.join(SEED_FOLDER, fileName);
-        const buffer = fs.readFileSync(filePath);
-        
-        // A. Trích xuất text
-        const contentText = await extractText(buffer, fileName);
-        
-        // B. Nhờ AI đặt tên & Phân loại
-        console.log("🧠 AI đang đọc nội dung và phân loại...");
-        const meta = await generateMetadata(contentText || fileName, categories, majors);
-        console.log(`   > Kết quả: [${meta.title}]`);
-        console.log(`   > Phân loại: CategoryID: ${meta.categoryId}, MajorID: ${meta.majorId}`);
-
-        // C. Upload file
-        console.log("☁️ Đang upload...");
-        const uploadResult = await uploadFile({
-          originalname: fileName,
-          buffer: buffer,
-          mimetype: getMimeType(fileName)
-        });
-
-        // D. Tạo Embedding
-        const embedding = await generateEmbedding(buildEmbeddingText(meta.title, meta.description, contentText));
-
-        // E. Lưu DB
-        const newMaterial = new Material({
-          title: meta.title,
-          description: meta.description,
-          fileUrl: uploadResult.url,
-          materialType: path.extname(fileName).slice(1).toLowerCase(),
-          sourceType: "upload",
-          categoryId: meta.categoryId || categories[0]?._id,
-          majorId: meta.majorId || majors[0]?._id,
-          uploaderId: admin._id,
-          status: "approved",
-          contentText: contentText,
-          embedding: embedding
-        });
-
-        await newMaterial.save();
-        console.log("✅ Thành công!");
-
-        // Dọn dẹp
-        const doneFolder = path.join(SEED_FOLDER, "done");
-        if (!fs.existsSync(doneFolder)) fs.mkdirSync(doneFolder);
-        fs.renameSync(filePath, path.join(doneFolder, fileName));
-
-        await sleep(1500);
-      } catch (err) {
-        console.error(`❌ Lỗi file ${fileName}:`, err.message);
-      }
-    }
-
-    console.log("\n🎉 HOÀN THÀNH!");
-    process.exit(0);
-
-  } catch (error) {
-    console.error("💥 LỖI:", error);
-    process.exit(1);
-  }
+// Map tên folder → { categoryId, majorId, categoryName, majorName }
+const FOLDER_MAP = {
+  CacCongCuVaNenTangChoTriTueNhanTao: {
+    categoryId: "6a0562b8b69eaa8bcc5b26c5",
+    majorId: "6a05a50f4da4878c41105184",
+    categoryName: "Các công cụ và nền tảng cho trí tuệ nhân tạo",
+    majorName: "Trí tuệ Nhân tạo",
+  },
+  CauTrucDuLieuVaGiaiThuat: {
+    categoryId: "6a0562b6b69eaa8bcc5b269c",
+    majorId: "6a05a70ae6e3b6a634c31bca",
+    categoryName: "Cấu trúc dữ liệu và giải thuật",
+    majorName: "Kiến thức cơ sở ngành",
+  },
+  LyThuyet_NhapMonTriTueNhanTao: {
+    categoryId: "6a0562b7b69eaa8bcc5b26bd",
+    majorId: "6a05a50f4da4878c41105184",
+    categoryName: "Nhập môn Trí tuệ nhân tạo",
+    majorName: "Trí tuệ Nhân tạo",
+  },
+  PhanTichDuLieu: {
+    categoryId: "6a0562b7b69eaa8bcc5b26b9",
+    majorId: "6a05a50f4da4878c41105185",
+    categoryName: "Nhập môn Phân tích Dữ liệu lớn",
+    majorName: "Công nghệ dữ liệu",
+  },
+  SlideBaiGiang_HocMayVaUngDung: {
+    categoryId: "6a0562b7b69eaa8bcc5b26c1",
+    majorId: "6a05a50f4da4878c41105184",
+    categoryName: "Học máy ứng dụng",
+    majorName: "Trí tuệ Nhân tạo",
+  },
+  SlideBaiGiang_Python_NangCao: {
+    categoryId: "6a0562b7b69eaa8bcc5b26b3",
+    majorId: "6a05a50f4da4878c41105183",
+    categoryName: "Lập trình Python nâng cao",
+    majorName: "Công nghệ Phần mềm",
+  },
+  ThucHanh_NhapMonTriTueNhanTao: {
+    categoryId: "6a0562b7b69eaa8bcc5b26bd",
+    majorId: "6a05a50f4da4878c41105184",
+    categoryName: "Nhập môn Trí tuệ nhân tạo",
+    majorName: "Trí tuệ Nhân tạo",
+  },
+  XacSuatThongKeChoKHMT: {
+    categoryId: "6a0562b7b69eaa8bcc5b26c0",
+    majorId: "6a05a50f4da4878c41105184",
+    categoryName: "Xác suất và Thống kê cho Khoa học máy tính",
+    majorName: "Trí tuệ Nhân tạo",
+  },
 };
 
 const getMimeType = (fileName) => {
@@ -125,6 +75,143 @@ const getMimeType = (fileName) => {
   if (ext === ".docx") return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
   if (ext === ".pptx") return "application/vnd.openxmlformats-officedocument.presentationml.presentation";
   return "application/octet-stream";
+};
+
+const generateTitleDesc = async (fileName, folderName, contentText) => {
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "user",
+          content: `Dựa vào tên file, tên môn học và nội dung tài liệu học tập dưới đây, hãy:
+1. Tạo tiêu đề ngắn gọn, chuyên nghiệp bằng tiếng Việt.
+2. Viết mô tả tóm tắt 1-2 câu.
+
+Tên môn học: ${folderName.replace(/_/g, " ")}
+Tên file: ${fileName}
+Nội dung (đầu tài liệu): ${(contentText || "").slice(0, 2000)}
+
+Trả về JSON: {"title":"...","description":"..."}
+Chỉ trả về duy nhất chuỗi JSON.`,
+        },
+      ],
+      response_format: { type: "json_object" },
+    });
+    return JSON.parse(response.choices[0].message.content);
+  } catch {
+    return {
+      title: path.basename(fileName, path.extname(fileName)),
+      description: `Tài liệu môn ${folderName.replace(/_/g, " ")}`,
+    };
+  }
+};
+
+const autoSeed = async () => {
+  try {
+    await connectDB();
+
+    if (!fs.existsSync(SEED_FOLDER)) {
+      console.log(`❌ Không tìm thấy thư mục: ${SEED_FOLDER}`);
+      process.exit(1);
+    }
+
+    const admin = await User.findOne({ role: "admin" }) || await User.findOne();
+    if (!admin) {
+      console.error("❌ Không tìm thấy User nào trong hệ thống.");
+      process.exit(1);
+    }
+
+    // Thu thập tất cả file từ các subfolder
+    const tasks = [];
+    const subFolders = fs.readdirSync(SEED_FOLDER).filter((f) =>
+      fs.statSync(path.join(SEED_FOLDER, f)).isDirectory()
+    );
+
+    for (const folderName of subFolders) {
+      const mapping = FOLDER_MAP[folderName];
+      if (!mapping) {
+        console.warn(`⚠️  Bỏ qua folder không có mapping: ${folderName}`);
+        continue;
+      }
+      const folderPath = path.join(SEED_FOLDER, folderName);
+      const files = fs.readdirSync(folderPath).filter((f) =>
+        SUPPORTED_EXTS.includes(path.extname(f).toLowerCase())
+      );
+      const skipped = fs.readdirSync(folderPath).filter((f) =>
+        path.extname(f).toLowerCase() === ".ppt"
+      );
+      if (skipped.length > 0) {
+        console.warn(`⚠️  [${folderName}] Bỏ qua ${skipped.length} file .ppt (không hỗ trợ): ${skipped.join(", ")}`);
+      }
+      for (const fileName of files) {
+        tasks.push({ folderName, folderPath, fileName, mapping });
+      }
+    }
+
+    console.log(`\n🚀 Bắt đầu upload ${tasks.length} file từ ${subFolders.length} folder...\n`);
+
+    let success = 0;
+    let failed = 0;
+
+    for (const { folderName, folderPath, fileName, mapping } of tasks) {
+      try {
+        console.log(`--- [${folderName}] ${fileName} ---`);
+        const filePath = path.join(folderPath, fileName);
+        const buffer = fs.readFileSync(filePath);
+
+        // Trích text
+        const contentText = await extractText(buffer, fileName);
+
+        // AI generate title + description (category/major đã biết từ folder)
+        console.log("🧠 AI generate title/description...");
+        const meta = await generateTitleDesc(fileName, folderName, contentText);
+        console.log(`   > Title: ${meta.title}`);
+        console.log(`   > Category: ${mapping.categoryName} | Major: ${mapping.majorName}`);
+
+        // Upload R2
+        console.log("☁️  Upload R2...");
+        const uploadResult = await uploadFile({
+          originalname: fileName,
+          buffer,
+          mimetype: getMimeType(fileName),
+        });
+
+        // Embedding
+        const embedding = await generateEmbedding(
+          buildEmbeddingText(meta.title, meta.description, contentText)
+        );
+
+        // Lưu DB
+        await new Material({
+          title: meta.title,
+          description: meta.description,
+          fileUrl: uploadResult.url,
+          materialType: path.extname(fileName).slice(1).toLowerCase(),
+          sourceType: "upload",
+          categoryId: mapping.categoryId,
+          majorId: mapping.majorId,
+          uploaderId: admin._id,
+          status: "approved",
+          contentText,
+          embedding,
+        }).save();
+
+        console.log("✅ Xong!\n");
+        success++;
+        await sleep(1000);
+      } catch (err) {
+        console.error(`❌ Lỗi [${folderName}/${fileName}]:`, err.message, "\n");
+        failed++;
+      }
+    }
+
+    console.log(`\n🎉 HOÀN THÀNH! Thành công: ${success} | Lỗi: ${failed}`);
+    process.exit(0);
+  } catch (error) {
+    console.error("💥 LỖI:", error);
+    process.exit(1);
+  }
 };
 
 autoSeed();

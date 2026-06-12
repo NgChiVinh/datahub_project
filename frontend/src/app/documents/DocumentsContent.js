@@ -150,15 +150,25 @@ export default function DocumentsContent() {
   const getTypeStyles = (type) => {
     switch (type) {
       case "pdf":
-        return "from-rose-50 to-rose-100/50 text-rose-600 border-rose-200";
+        return "from-rose-100 to-pink-100 text-rose-600 border-rose-200";
       case "docx":
-        return "from-blue-50 to-blue-100/50 text-blue-600 border-blue-200";
+        return "from-blue-100 to-sky-100 text-blue-600 border-blue-200";
       case "pptx":
-        return "from-orange-50 to-orange-100/50 text-orange-600 border-orange-200";
+        return "from-orange-100 to-amber-100 text-orange-600 border-orange-200";
       case "zip":
-        return "from-slate-100 to-slate-200/50 text-slate-700 border-slate-300";
+        return "from-slate-200 to-slate-100 text-slate-600 border-slate-300";
       default:
-        return "from-slate-50 to-slate-100/50 text-slate-500 border-slate-200";
+        return "from-slate-100 to-slate-50 text-slate-500 border-slate-200";
+    }
+  };
+
+  const getTypeIconBg = (type) => {
+    switch (type) {
+      case "pdf": return "bg-rose-200/70";
+      case "docx": return "bg-blue-200/70";
+      case "pptx": return "bg-orange-200/70";
+      case "zip": return "bg-slate-300/70";
+      default: return "bg-slate-200/70";
     }
   };
 
@@ -166,41 +176,35 @@ export default function DocumentsContent() {
     switch (type) {
       case "pdf":
         return (
-          <svg
-            width="20"
-            height="20"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            strokeWidth="2.5"
-          >
+          <svg width="36" height="36" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
             <path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
           </svg>
         );
       case "docx":
         return (
-          <svg
-            width="20"
-            height="20"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            strokeWidth="2.5"
-          >
+          <svg width="36" height="36" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
             <path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-            <path d="M9 17h6M9 13h6" />
+            <path d="M9 17h6M9 13h6" strokeLinecap="round" />
+          </svg>
+        );
+      case "pptx":
+        return (
+          <svg width="36" height="36" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+            <path d="M8 8h8M8 12h5" strokeLinecap="round" />
+            <path d="M8 16l3-3 2 2 3-4" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        );
+      case "zip":
+        return (
+          <svg width="36" height="36" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+            <path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            <path d="M12 7v4m0 4v.5" strokeLinecap="round" />
           </svg>
         );
       default:
         return (
-          <svg
-            width="20"
-            height="20"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            strokeWidth="2.5"
-          >
+          <svg width="36" height="36" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
             <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
         );
@@ -477,21 +481,29 @@ export default function DocumentsContent() {
 
               <button
                 onClick={() => {
+                  if (isAiSearching) return;
                   const next = !aiMode;
                   setAiMode(next);
-                  if (!next) setShowingAi(false); // tắt AI -> quay lại danh sách thường
+                  if (!next) setShowingAi(false);
                 }}
-                className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 border ${
+                disabled={isAiSearching}
+                className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 border disabled:opacity-70 disabled:cursor-not-allowed ${
                   aiMode
                     ? "bg-emerald-500 text-white border-emerald-500 shadow-lg shadow-emerald-500/20"
                     : "bg-white text-slate-400 border-slate-200 hover:text-emerald-500 hover:border-emerald-200"
                 }`}
                 title="Tìm kiếm thông minh bằng AI"
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
-                </svg>
-                Tìm kiếm AI
+                {isAiSearching ? (
+                  <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                  </svg>
+                ) : (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+                  </svg>
+                )}
+                {isAiSearching ? "Đang tìm..." : "Tìm kiếm AI"}
               </button>
 
               <div className="flex p-1 bg-slate-100 rounded-2xl">
@@ -530,38 +542,52 @@ export default function DocumentsContent() {
               </div>
             )}
 
+            {/* Results count */}
+            {!showingAi && !isLoading && pagination.totalMaterials > 0 && (
+              <p className="text-[11px] font-bold text-slate-400">
+                {pagination.totalMaterials.toLocaleString("vi-VN")} tài liệu
+                {hasFilters ? " phù hợp" : " trong thư viện"}
+              </p>
+            )}
+
             {/* Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {(isAiSearching || (!showingAi && isLoading)) ? (
                 [...Array(6)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="bg-slate-50 rounded-2xl h-64 animate-pulse"
-                  ></div>
+                  <div key={i} className="rounded-[1.5rem] border border-slate-100 overflow-hidden animate-pulse">
+                    <div className="aspect-[16/11] bg-slate-100" />
+                    <div className="p-5 space-y-3">
+                      <div className="h-2.5 w-16 bg-slate-100 rounded-full" />
+                      <div className="h-4 bg-slate-100 rounded-full" />
+                      <div className="h-4 bg-slate-100 rounded-full" style={{ width: "70%" }} />
+                    </div>
+                  </div>
                 ))
               ) : (showingAi ? aiResults : materials).length > 0 ? (
                 (showingAi ? aiResults : materials).map((doc) => (
-                  <div key={doc._id} className="group bg-white rounded-2xl border border-slate-100 hover:border-emerald-500/20 hover:shadow-xl hover:shadow-slate-200/40 transition-all duration-300 flex flex-col h-full overflow-hidden">
+                  <div key={doc._id} className="group bg-white rounded-[1.5rem] border border-slate-100 hover:border-emerald-500/20 hover:shadow-xl hover:shadow-emerald-500/10 hover:-translate-y-1 transition-all duration-300 flex flex-col h-full overflow-hidden">
                     <Link
                       href={`/documents/${doc._id}`}
                       className="block relative aspect-[16/11] overflow-hidden"
                       onClick={() => logClick(doc._id, doc.title)}
                     >
                       <div
-                        className={`w-full h-full flex flex-col items-center justify-center bg-gradient-to-br transition-transform duration-500 group-hover:scale-105 ${getTypeStyles(doc.materialType)}`}
+                        className={`w-full h-full flex flex-col items-center justify-center bg-gradient-to-br transition-transform duration-500 group-hover:scale-[1.04] ${getTypeStyles(doc.materialType)}`}
                       >
-                        <div className="mb-2 opacity-80 group-hover:opacity-100 transition-opacity">
+                        <div className={`p-3 rounded-2xl mb-2.5 transition-all duration-300 group-hover:scale-110 ${getTypeIconBg(doc.materialType)}`}>
                           {getFileIcon(doc.materialType)}
                         </div>
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">
-                          {doc.materialType}
+                        <span className="text-[10px] font-black uppercase tracking-[0.25em] opacity-50">
+                          {doc.materialType || "file"}
                         </span>
                       </div>
-                      <div className="absolute top-4 left-4">
-                        <span className="px-2.5 py-1 rounded-lg bg-white/90 backdrop-blur shadow-sm text-[9px] font-bold text-slate-800 uppercase border border-white">
-                          {doc.academicYear || "Khác"}
-                        </span>
-                      </div>
+                      {doc.academicYear && doc.academicYear !== "Khác" && (
+                        <div className="absolute top-4 left-4">
+                          <span className="px-2.5 py-1 rounded-lg bg-white/90 backdrop-blur shadow-sm text-[9px] font-bold text-slate-800 uppercase border border-white">
+                            {doc.academicYear}
+                          </span>
+                        </div>
+                      )}
                       {showingAi && typeof doc.score === "number" && (
                         <div className="absolute top-4 right-4">
                           <span className="px-2.5 py-1 rounded-lg bg-emerald-500 text-white shadow-sm text-[9px] font-black uppercase tracking-widest">

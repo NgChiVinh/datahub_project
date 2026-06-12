@@ -10,6 +10,7 @@ export default function Home() {
   const [materials, setMaterials] = useState([]);
   const [majors, setMajors] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [totalDocs, setTotalDocs] = useState(null);
   const router = useRouter();
 
   const logClick = async (materialId, materialTitle) => {
@@ -48,6 +49,7 @@ export default function Home() {
 
         if (matData && Array.isArray(matData.materials)) {
           setMaterials(matData.materials.slice(0, 6));
+          setTotalDocs(matData.pagination?.total ?? null);
         } else if (Array.isArray(matData)) {
           setMaterials(matData.slice(0, 6));
         }
@@ -133,6 +135,32 @@ export default function Home() {
                   </button>
                 </div>
               </form>
+
+              <div className="mt-10 flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
+                <div className="flex items-center gap-2.5 text-white/70">
+                  <span className="text-2xl font-black text-emerald-300 tabular-nums">
+                    {totalDocs !== null ? `${totalDocs}+` : "100+"}
+                  </span>
+                  <span className="text-[11px] font-bold uppercase tracking-[0.2em]">Tài liệu</span>
+                </div>
+                <span className="w-px h-5 bg-white/20 hidden sm:block"></span>
+                <div className="flex items-center gap-2.5 text-white/70">
+                  <span className="text-2xl font-black text-emerald-300 tabular-nums">{majors.length || "4"}</span>
+                  <span className="text-[11px] font-bold uppercase tracking-[0.2em]">Chuyên ngành IT</span>
+                </div>
+                <span className="w-px h-5 bg-white/20 hidden sm:block"></span>
+                <div className="flex items-center gap-2.5 text-emerald-300/90">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                  <span className="text-[11px] font-bold uppercase tracking-[0.2em]">AI gợi ý</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 opacity-50 hover:opacity-80 transition-opacity">
+            <span className="text-[9px] font-black text-white uppercase tracking-[0.4em]">Khám phá</span>
+            <div className="w-5 h-8 rounded-full border border-white/40 flex items-start justify-center pt-1.5">
+              <div className="w-1 h-1.5 rounded-full bg-white/80 animate-bounce"></div>
             </div>
           </div>
         </section>
@@ -165,8 +193,8 @@ export default function Home() {
             </div>
 
             {isLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {[1,2,3].map(i => (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {[1,2,3,4,5,6].map(i => (
                   <div key={i} className="h-80 bg-slate-50 rounded-3xl animate-pulse"></div>
                 ))}
               </div>
@@ -305,19 +333,41 @@ export default function Home() {
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div className="space-y-3">
                   {[
-                    { t: "Gợi ý thông minh", d: "AI tự động đề xuất tài liệu theo chuyên ngành.", i: "m13 10V3L4 14h7v7l9-11h-7z" },
-                    { t: "Giao diện trực quan", d: "Trải nghiệm học tập hiện đại, dễ dàng thao tác.", i: "M4 5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5Zm0 8a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-6Zm10 0a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1v-6Z" },
-                    { t: "Tài liệu chuẩn hóa", d: "Nội dung được kiểm duyệt nghiêm ngặt, chất lượng.", i: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" },
-                    { t: "Video trực quan", d: "Học nhanh hơn qua hàng trăm video bài giảng.", i: "M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" }
-                  ].map((f, i) => (
-                    <div key={i} className="group p-6 rounded-[1.5rem] bg-white border border-slate-100 hover:shadow-xl hover:shadow-emerald-500/5 hover:border-emerald-100 transition-all duration-300">
-                      <div className="w-12 h-12 mb-4 rounded-xl bg-slate-50 text-slate-400 group-hover:text-emerald-600 group-hover:bg-emerald-50 flex items-center justify-center shadow-sm border border-slate-100 group-hover:border-emerald-100 transition-colors duration-300">
-                        <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d={f.i}/></svg>
+                    {
+                      num: totalDocs !== null ? `${totalDocs}+` : "100+",
+                      label: "Tài liệu được kiểm duyệt",
+                      sub: "Nội dung chất lượng từ sinh viên và giảng viên VLU",
+                      color: "text-emerald-600",
+                    },
+                    {
+                      num: `${majors.length || 4}`,
+                      label: "Chuyên ngành IT",
+                      sub: "SE · AI · IS · CS — tài liệu phân loại theo ngành",
+                      color: "text-blue-600",
+                    },
+                    {
+                      num: "AI",
+                      label: "Gợi ý thông minh",
+                      sub: "Vector similarity search tìm tài liệu liên quan",
+                      color: "text-violet-600",
+                    },
+                    {
+                      num: "0đ",
+                      label: "Hoàn toàn miễn phí",
+                      sub: "Không giới hạn tải về cho sinh viên Văn Lang",
+                      color: "text-amber-600",
+                    },
+                  ].map((item, i) => (
+                    <div key={i} className="group flex items-center gap-6 px-6 py-5 rounded-2xl hover:bg-white transition-all duration-300 border border-transparent hover:border-slate-100 hover:shadow-sm cursor-default">
+                      <div className={`w-16 shrink-0 text-3xl font-black tabular-nums tracking-tighter ${item.color}`}>
+                        {item.num}
                       </div>
-                      <h4 className="text-base font-bold text-slate-900 mb-2 group-hover:text-emerald-700 transition-colors">{f.t}</h4>
-                      <p className="text-[13px] text-slate-500 font-medium leading-relaxed">{f.d}</p>
+                      <div className="min-w-0">
+                        <p className="text-sm font-black text-slate-900 mb-0.5 group-hover:text-slate-800">{item.label}</p>
+                        <p className="text-[12px] text-slate-400 font-medium leading-relaxed">{item.sub}</p>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -326,62 +376,80 @@ export default function Home() {
           </div>
         </section>
 
-        {/* --- SECTION 3: QUICK MAJORS (SLEEK TAG UI) --- */}
-        <section className="py-20 bg-white relative">
+        {/* --- SECTION 3: MAJORS RANKING --- */}
+        <section className="py-24 bg-slate-50 relative">
           <div className="container mx-auto px-4 lg:px-8">
-            <div className="flex flex-col md:flex-row items-center justify-between mb-10 gap-6">
-              <div className="space-y-1">
-                <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tighter italic">
-                  Khám phá <span className="text-emerald-600">Ngành học</span>
+            <div className="flex items-center justify-between mb-12">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-emerald-600 font-bold text-[10px] uppercase tracking-[0.3em]">
+                  <span className="w-8 h-[2px] bg-emerald-600"></span>
+                  Chuyên ngành
+                </div>
+                <h2 className="text-3xl font-bold text-slate-900 tracking-tight">
+                  Khám phá ngành học
                 </h2>
-                <div className="h-1 w-12 bg-emerald-500 rounded-full"></div>
               </div>
-              <p className="text-slate-400 font-medium text-xs uppercase tracking-widest hidden sm:block">
-                Chọn chuyên ngành để xem tài liệu
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-3 justify-start">
-              {majors.map((major) => {
-                const configs = {
-                  "SE": { icon: "M16 18l6-6-6-6M8 6l-6 6 6 6", color: "text-blue-500", bg: "hover:bg-blue-50 hover:border-blue-100" },
-                  "AI": { icon: "M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-11.314l.707.707m11.314 11.314l.707.707M9 9h6v6H9V9z", color: "text-purple-500", bg: "hover:bg-purple-50 hover:border-purple-100" },
-                  "IS": { icon: "M4 7v10c0 2 4 3.5 8 3.5s8-1.5 8-3.5V7M4 7c0 2 4 3.5 8 3.5s8-1.5 8-3.5M4 7c0-2 4-3.5 8-3.5s8 1.5 8 3.5m-16 5c0 2 4 3.5 8 3.5s8-1.5 8-3.5", color: "text-amber-500", bg: "hover:bg-amber-50 hover:border-amber-100" },
-                  "CS": { icon: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z", color: "text-red-500", bg: "hover:bg-red-50 hover:border-red-100" }
-                };
-                const config = configs[major.majorCode] || configs.SE;
-
-                return (
-                  <Link 
-                    href={`/documents?major=${major._id}`} 
-                    key={major._id}
-                    className={`group flex items-center gap-3 px-6 py-3 rounded-full border border-slate-100 bg-transparent transition-all duration-300 ${config.bg} hover:shadow-lg hover:shadow-slate-200/20 hover:-translate-y-1`}
-                  >
-                    <div className={`${config.color} transition-transform duration-500 group-hover:scale-110`}>
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d={config.icon} />
-                      </svg>
-                    </div>
-                    <span className="text-[13px] font-bold text-slate-700 whitespace-nowrap group-hover:text-slate-900 transition-colors">
-                      {major.name}
-                    </span>
-                    <svg className="w-3 h-3 text-slate-300 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3">
-                      <path d="M9 5l7 7-7 7" />
-                    </svg>
-                  </Link>
-                );
-              })}
-              
-              <Link 
+              <Link
                 href="/documents"
-                className="flex items-center gap-2 px-6 py-3 rounded-full border border-dashed border-slate-200 text-slate-400 hover:text-emerald-600 hover:border-emerald-200 hover:bg-emerald-50/30 transition-all text-[13px] font-bold"
+                className="hidden sm:flex items-center gap-2 text-[11px] font-bold text-slate-400 uppercase tracking-widest hover:text-emerald-600 transition-colors group"
               >
-                Tất cả ngành
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                  <path d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
+                Tất cả tài liệu
+                <svg className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3"><path d="M9 5l7 7-7 7"/></svg>
               </Link>
             </div>
+
+            {(() => {
+              const maxCount = Math.max(...majors.map((m) => m.materialCount || 0), 1);
+              const colors = {
+                SE: { bar: "bg-blue-500",   text: "text-blue-600",   bg: "bg-blue-50",   border: "hover:border-blue-500/30",   shadow: "hover:shadow-blue-500/10"   },
+                AI: { bar: "bg-violet-500", text: "text-violet-600", bg: "bg-violet-50", border: "hover:border-violet-500/30", shadow: "hover:shadow-violet-500/10" },
+                IS: { bar: "bg-amber-500",  text: "text-amber-600",  bg: "bg-amber-50",  border: "hover:border-amber-500/30",  shadow: "hover:shadow-amber-500/10"  },
+                CS: { bar: "bg-red-500",    text: "text-red-600",    bg: "bg-red-50",    border: "hover:border-red-500/30",    shadow: "hover:shadow-red-500/10"    },
+              };
+              const sorted = [...majors].sort((a, b) => (b.materialCount || 0) - (a.materialCount || 0));
+
+              return (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {sorted.map((major, idx) => {
+                    const c = colors[major.majorCode] || colors.SE;
+                    const pct = Math.round(((major.materialCount || 0) / maxCount) * 100);
+
+                    return (
+                      <Link
+                        key={major._id}
+                        href={`/documents?major=${major._id}`}
+                        className={`group flex items-center gap-4 bg-white rounded-2xl border border-slate-100 px-5 py-4 hover:shadow-lg transition-all duration-300 ${c.border}`}
+                      >
+                        <div className={`w-10 h-10 rounded-xl ${c.bg} flex items-center justify-center shrink-0`}>
+                          <span className={`text-xs font-black ${c.text}`}>#{idx + 1}</span>
+                        </div>
+
+                        <div className="flex-1 min-w-0 space-y-1.5">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-sm font-bold text-slate-800 truncate group-hover:text-slate-900 transition-colors">
+                              {major.name}
+                            </span>
+                            <span className={`text-xs font-black tabular-nums shrink-0 ${c.text}`}>
+                              {major.materialCount || 0}
+                            </span>
+                          </div>
+                          <div className="h-1 w-full bg-slate-100 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full ${c.bar} rounded-full transition-all duration-700`}
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                        </div>
+
+                        <span className={`text-[10px] font-black px-2.5 py-1 rounded-lg ${c.bg} ${c.text} shrink-0`}>
+                          {major.majorCode}
+                        </span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </div>
         </section>
 

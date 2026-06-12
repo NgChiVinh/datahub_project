@@ -39,6 +39,10 @@
     66% { transform: translate(-20px, 20px) scale(0.9); }
     100% { transform: translate(0px, 0px) scale(1); }
   }
+  @keyframes dash-flow {
+    from { stroke-dashoffset: 0; }
+    to { stroke-dashoffset: -440; }
+  }
 }
 
 body {
@@ -86,4 +90,128 @@ body {
 .no-scrollbar {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
+}
+
+/* ── Blob loader (AI loading animation) ── */
+.loader {
+  --color-one: #22d3ee;
+  --color-two: #1d4ed8;
+  --color-three: #22d3ee80;
+  --color-four: #1d4ed880;
+  --color-five: #22d3ee40;
+  --time-animation: 2s;
+  --size: 1;
+  position: relative;
+  border-radius: 50%;
+  transform: scale(var(--size));
+  box-shadow:
+    0 0 25px 0 var(--color-three),
+    0 20px 50px 0 var(--color-four);
+  animation: loader-colorize calc(var(--time-animation) * 3) ease-in-out infinite;
+}
+
+.loader::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border-top: solid 1px var(--color-one);
+  border-bottom: solid 1px var(--color-two);
+  background: linear-gradient(180deg, var(--color-five), var(--color-four));
+  box-shadow:
+    inset 0 10px 10px 0 var(--color-three),
+    inset 0 -10px 10px 0 var(--color-four);
+}
+
+.loader .box {
+  width: 100px;
+  height: 100px;
+  background: linear-gradient(
+    180deg,
+    var(--color-one) 30%,
+    var(--color-two) 70%
+  );
+  mask: url(#clipping);
+  -webkit-mask: url(#clipping);
+}
+
+.loader svg {
+  position: absolute;
+}
+
+.loader svg #clipping {
+  filter: contrast(15);
+  animation: loader-roundness calc(var(--time-animation) / 2) linear infinite;
+}
+
+.loader svg #clipping polygon {
+  filter: blur(7px);
+}
+
+.loader svg #clipping polygon:nth-child(1) {
+  transform-origin: 75% 25%;
+  transform: rotate(90deg);
+}
+
+.loader svg #clipping polygon:nth-child(2) {
+  transform-origin: 50% 50%;
+  animation: loader-rotation var(--time-animation) linear infinite reverse;
+}
+
+.loader svg #clipping polygon:nth-child(3) {
+  transform-origin: 50% 60%;
+  animation: loader-rotation var(--time-animation) linear infinite;
+  animation-delay: calc(var(--time-animation) / -3);
+}
+
+.loader svg #clipping polygon:nth-child(4) {
+  transform-origin: 40% 40%;
+  animation: loader-rotation var(--time-animation) linear infinite reverse;
+}
+
+.loader svg #clipping polygon:nth-child(5) {
+  transform-origin: 40% 40%;
+  animation: loader-rotation var(--time-animation) linear infinite reverse;
+  animation-delay: calc(var(--time-animation) / -2);
+}
+
+.loader svg #clipping polygon:nth-child(6) {
+  transform-origin: 60% 40%;
+  animation: loader-rotation var(--time-animation) linear infinite;
+}
+
+.loader svg #clipping polygon:nth-child(7) {
+  transform-origin: 60% 40%;
+  animation: loader-rotation var(--time-animation) linear infinite;
+  animation-delay: calc(var(--time-animation) / -1.5);
+}
+
+@keyframes loader-rotation {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes loader-roundness {
+  0%   { filter: contrast(15); }
+  20%  { filter: contrast(3); }
+  40%  { filter: contrast(3); }
+  60%  { filter: contrast(15); }
+  100% { filter: contrast(15); }
+}
+
+@keyframes loader-colorize {
+  0%   { filter: hue-rotate(0deg); }
+  20%  { filter: hue-rotate(-30deg); }
+  40%  { filter: hue-rotate(-60deg); }
+  60%  { filter: hue-rotate(-90deg); }
+  80%  { filter: hue-rotate(-45deg); }
+  100% { filter: hue-rotate(0deg); }
+}
+
+@keyframes loader-pulse {
+  0%, 100% { opacity: 0.5; transform: scale(0.95); }
+  50%       { opacity: 1;   transform: scale(1.05); }
 }

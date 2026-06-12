@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ChangePasswordModal from "@/components/ChangePasswordModal";
@@ -10,8 +11,11 @@ import CreateCollectionModal from "@/components/CreateCollectionModal";
 import toast from "react-hot-toast";
 
 export default function ProfilePage() {
+  const searchParams = useSearchParams();
+  const initialTab = searchParams.get("tab") || "uploads";
+  
   const { user, loading: authLoading, setUser } = useAuth();
-  const [activeTab, setActiveTab] = useState("uploads");
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [userDocs, setUserDocs] = useState([]);
   const [favDocs, setFavDocs] = useState([]);
   const [collections, setCollections] = useState([]);

@@ -11,15 +11,17 @@ const {
   removeMaterialFromCollection,
 } = require("../controllers/studyCollectionController");
 
-const { authMiddleware } = require("../middleware/authMiddleware");
+const { authMiddleware, optionalAuth } = require("../middleware/authMiddleware");
 
-// tất cả cần login
+// GET endpoints use optionalAuth to allow viewing public collections
+router.get("/", optionalAuth, getCollections);
+router.get("/:id", optionalAuth, getCollectionById);
+
+// tất cả các route khác cần login
 router.use(authMiddleware);
 
 // CRUD
 router.post("/", createCollection);
-router.get("/", getCollections);
-router.get("/:id", getCollectionById);
 router.put("/:id", updateCollection);
 router.delete("/:id", deleteCollection);
 
