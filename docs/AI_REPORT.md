@@ -20,7 +20,7 @@ Hệ thống DataHub tích hợp 6 tính năng AI chính, chia thành 2 nhóm:
 ### Nhóm 2 — Tương tác với tài liệu
 | Tính năng | Mô tả |
 |---|---|
-| **Chat với tài liệu (RAG)** | Hỏi đáp AI về nội dung tài liệu cụ thể, có nhớ ngữ cảnh hội thoại |
+| **Chat với tài liệu** | Hỏi đáp AI về nội dung tài liệu cụ thể, có nhớ ngữ cảnh hội thoại (Context Injection) |
 | **Tạo quiz tự động** | Sinh 5 câu hỏi trắc nghiệm từ nội dung tài liệu |
 
 **Mô hình AI sử dụng:**
