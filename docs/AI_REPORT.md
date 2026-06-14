@@ -249,3 +249,24 @@ Lý do lựa chọn: RAG truyền thống dễ bỏ sót ngữ cảnh quan trọ
 | Backend | Node.js + Express | REST API |
 | Frontend | Next.js 14 (App Router) | UI |
 | Rate Limiting | express-rate-limit | Bảo vệ chi phí API |
+
+---
+
+### 2.11 Tổng Hợp Thuật Toán Sử Dụng
+
+| Tính năng | Thuật toán | Mô tả ngắn |
+|---|---|---|
+| **Gợi ý cá nhân hóa** | Weighted Average Embedding | Tính vector sở thích = trung bình có trọng số của embedding các tài liệu đã tương tác |
+| **Gợi ý cá nhân hóa** | Cosine Similarity | Đo độ tương đồng giữa vector sở thích và embedding tài liệu trong DB |
+| **Tìm kiếm ngữ nghĩa** | Query Expansion | GPT mở rộng từ khóa trước khi embed để tăng recall |
+| **Tìm kiếm ngữ nghĩa** | Dense Vector Search | Embed query → tìm tài liệu gần nhất bằng cosine similarity |
+| **Tìm kiếm ngữ nghĩa** | Hybrid Filter | Kết hợp vector score + keyword overlap để loại kết quả nhiễu |
+| **Tài liệu tương tự** | Cosine Similarity | Dùng embedding tài liệu hiện tại làm query, tìm tài liệu gần nhất |
+| **Chat với tài liệu** | Context Injection | Nhúng toàn bộ nội dung tài liệu vào system prompt |
+| **Chat với tài liệu** | Sliding Window History | Giữ 3 exchanges (6 messages) gần nhất làm ngữ cảnh hội thoại |
+| **Quiz tự động** | Prompt Engineering | Thiết kế prompt buộc GPT sinh đúng cấu trúc JSON 5 câu trắc nghiệm |
+| **Nhãn lý do gợi ý** | Rule-based Classification | If/else dựa trên `isColdStart`, `basedOn`, `category` — không dùng ML |
+
+**Thuật toán cốt lõi của hệ thống: Weighted Average Embedding + Cosine Similarity**
+
+Đây là nền tảng của toàn bộ tính năng recommendation. Ý tưởng: thay vì profile người dùng bằng danh sách tag hay category (như hệ thống truyền thống), hệ thống biểu diễn sở thích học tập bằng **một vector trong không gian ngữ nghĩa 1536 chiều** — vector này nắm bắt được ý nghĩa nội dung, không chỉ metadata bề mặt.
