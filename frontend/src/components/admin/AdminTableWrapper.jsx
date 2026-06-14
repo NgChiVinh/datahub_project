@@ -1,7 +1,7 @@
 "use client";
 import { useRef, useEffect, useState } from "react";
 
-export default function AdminTableWrapper({ children }) {
+export default function AdminTableWrapper({ children, bare = false }) {
   const containerRef = useRef(null);
   const [isOverflowing, setIsOverflowing] = useState(false);
 
@@ -14,8 +14,8 @@ export default function AdminTableWrapper({ children }) {
     return () => window.removeEventListener("resize", check);
   }, []);
 
-  return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+  const inner = (
+    <>
       {isOverflowing && (
         <div className="md:hidden px-4 py-2 bg-slate-50 border-b border-slate-100 flex items-center gap-1.5 text-[11px] text-slate-400 font-medium">
           <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
@@ -29,6 +29,14 @@ export default function AdminTableWrapper({ children }) {
           {children}
         </div>
       </div>
+    </>
+  );
+
+  if (bare) return inner;
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+      {inner}
     </div>
   );
 }

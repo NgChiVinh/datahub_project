@@ -173,7 +173,7 @@ export default function CategoryAdmin() {
           </div>
         </div>
 
-        <AdminTableWrapper>
+        <AdminTableWrapper bare>
           <table className="w-full">
             <thead>
               <tr className="bg-white border-b border-slate-50">
