@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
+import AdminTableWrapper from "@/components/admin/AdminTableWrapper";
 
 const STATUS_CONFIG = {
   approved: { label: "Đã duyệt",  cls: "bg-emerald-50 text-emerald-700 border-emerald-100" },
@@ -148,7 +149,7 @@ export default function MaterialAdmin() {
           <p className="text-sm text-slate-400 font-medium mt-1">Hệ thống quản lý nội dung học tập</p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-3">
           {/* Search */}
           <div className="relative group">
             <input
@@ -164,7 +165,7 @@ export default function MaterialAdmin() {
           </div>
 
           {/* Status filter */}
-          <div className="flex p-1 bg-slate-100 rounded-2xl">
+          <div className="flex p-1 bg-slate-100 rounded-2xl overflow-x-auto">
             {statusTabs.map((s) => (
               <button
                 key={s.value}
@@ -196,8 +197,7 @@ export default function MaterialAdmin() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-        <div className="overflow-x-auto">
+      <AdminTableWrapper>
           <table className="w-full text-left">
             <thead>
               <tr className="bg-slate-50/50 border-b border-slate-100">
@@ -327,27 +327,26 @@ export default function MaterialAdmin() {
               )}
             </tbody>
           </table>
-        </div>
+      </AdminTableWrapper>
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="px-6 py-5 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-              Trang {currentPage} / {totalPages}
-            </p>
-            <div className="flex gap-2">
-              <button disabled={currentPage === 1} onClick={() => fetchMaterials(currentPage - 1)}
-                className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-50 disabled:opacity-40 transition-all shadow-sm">
-                Trước
-              </button>
-              <button disabled={currentPage === totalPages} onClick={() => fetchMaterials(currentPage + 1)}
-                className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-50 disabled:opacity-40 transition-all shadow-sm">
-                Sau
-              </button>
-            </div>
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between px-4 sm:px-6 py-4 border-t border-slate-50 gap-3">
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+            Trang {currentPage} / {totalPages}
+          </p>
+          <div className="flex gap-2">
+            <button disabled={currentPage === 1} onClick={() => fetchMaterials(currentPage - 1)}
+              className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-50 disabled:opacity-40 transition-all shadow-sm">
+              Trước
+            </button>
+            <button disabled={currentPage === totalPages} onClick={() => fetchMaterials(currentPage + 1)}
+              className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-50 disabled:opacity-40 transition-all shadow-sm">
+              Sau
+            </button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Edit Modal */}
       {isEditModalOpen && (
