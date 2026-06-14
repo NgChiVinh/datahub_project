@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
+import AdminTableWrapper from "@/components/admin/AdminTableWrapper";
 
 const STATUS_CONFIG = {
   resolved:  { label: "Đã xử lý",  cls: "bg-emerald-50 text-emerald-700 border-emerald-100" },
@@ -84,7 +85,7 @@ export default function ReportAdmin() {
           <p className="text-sm text-slate-400 font-medium mt-1">{reports.length} báo cáo</p>
         </div>
 
-        <div className="flex p-1 bg-slate-100 rounded-2xl w-fit">
+        <div className="flex p-1 bg-slate-100 rounded-2xl overflow-x-auto max-w-full">
           {tabs.map((t) => (
             <button
               key={t.value}
@@ -99,8 +100,7 @@ export default function ReportAdmin() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-        <div className="overflow-x-auto">
+      <AdminTableWrapper>
           <table className="w-full text-left">
             <thead>
               <tr className="bg-slate-50/50 border-b border-slate-100">
@@ -195,8 +195,7 @@ export default function ReportAdmin() {
               )}
             </tbody>
           </table>
-        </div>
-      </div>
+      </AdminTableWrapper>
     </div>
   );
 }
