@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import AdminTableWrapper from "@/components/admin/AdminTableWrapper";
 
 export default function CategoryAdmin() {
   const [categories, setCategories] = useState([]);
@@ -172,7 +173,7 @@ export default function CategoryAdmin() {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
+        <AdminTableWrapper>
           <table className="w-full">
             <thead>
               <tr className="bg-white border-b border-slate-50">
@@ -248,7 +249,7 @@ export default function CategoryAdmin() {
               )}
             </tbody>
           </table>
-        </div>
+        </AdminTableWrapper>
 
         {!loading && categories.length > 0 && (
           <div className="p-5 bg-slate-50/50 border-t border-slate-50 text-center">

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import AdminTableWrapper from "@/components/admin/AdminTableWrapper";
 
 export default function MajorAdmin() {
   const [majors, setMajors] = useState([]);
@@ -182,7 +183,7 @@ export default function MajorAdmin() {
 
       {/* TABLE */}
       <div className="bg-white rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.02)] border border-slate-100 overflow-hidden">
-        <div className="overflow-x-auto">
+        <AdminTableWrapper>
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50/50">
@@ -238,7 +239,7 @@ export default function MajorAdmin() {
               )}
             </tbody>
           </table>
-        </div>
+        </AdminTableWrapper>
       </div>
     </div>
   );
