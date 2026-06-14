@@ -5,10 +5,12 @@ export default function DocumentChat({ materialId, hasContent }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const bottomRef = useRef(null);
+  const scrollContainerRef = useRef(null);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+    }
   }, [messages, isLoading]);
 
   if (!hasContent) return null;
@@ -77,7 +79,7 @@ export default function DocumentChat({ materialId, hasContent }) {
 
       {/* Message list */}
       {(messages.length > 0 || isLoading) && (
-        <div className="space-y-3 mb-4 max-h-96 overflow-y-auto pr-1">
+        <div ref={scrollContainerRef} className="space-y-3 mb-4 max-h-96 overflow-y-auto pr-1">
           {messages.map((msg, i) => (
             <div
               key={i}
@@ -118,7 +120,6 @@ export default function DocumentChat({ materialId, hasContent }) {
             </div>
           )}
 
-          <div ref={bottomRef} />
         </div>
       )}
 
