@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useAuth } from "@/context/AuthContext";
+import AdminTableWrapper from "@/components/admin/AdminTableWrapper";
 
 export default function UserAdmin() {
   const [users, setUsers] = useState([]);
@@ -73,14 +74,13 @@ export default function UserAdmin() {
         <p className="text-sm text-slate-400 font-medium mt-1">Danh sách tất cả sinh viên & admin trong hệ thống</p>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+      <AdminTableWrapper>
         {/* Table header bar */}
         <div className="px-6 py-4 border-b border-slate-50 flex items-center justify-between bg-slate-50/50">
           <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{users.length} thành viên</p>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
+        <table className="w-full text-left">
             <thead>
               <tr className="border-b border-slate-100">
                 <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Họ và tên</th>
@@ -152,8 +152,7 @@ export default function UserAdmin() {
               )}
             </tbody>
           </table>
-        </div>
-      </div>
+      </AdminTableWrapper>
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import AdminTableWrapper from "@/components/admin/AdminTableWrapper";
 
 export default function CommentAdmin() {
   const [comments, setComments] = useState([]);
@@ -50,13 +51,12 @@ export default function CommentAdmin() {
         <p className="text-sm text-slate-400 font-medium mt-1">Kiểm soát nội dung thảo luận trên hệ thống</p>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+      <AdminTableWrapper>
         <div className="px-6 py-4 border-b border-slate-50 bg-slate-50/50">
           <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{comments.length} bình luận</p>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
+        <table className="w-full text-left">
             <thead>
               <tr className="border-b border-slate-100">
                 <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Nội dung bình luận</th>
@@ -120,8 +120,7 @@ export default function CommentAdmin() {
               )}
             </tbody>
           </table>
-        </div>
-      </div>
+      </AdminTableWrapper>
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import AdminTableWrapper from "@/components/admin/AdminTableWrapper";
 
 export default function ReviewAdmin() {
   const [reviews, setReviews] = useState([]);
@@ -78,9 +79,8 @@ export default function ReviewAdmin() {
         </p>
       </div>
 
-      <div className="bg-white rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.02)] border border-slate-100 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+      <AdminTableWrapper>
+        <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50/50">
                 <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Đánh giá</th>
@@ -132,8 +132,7 @@ export default function ReviewAdmin() {
               )}
             </tbody>
           </table>
-        </div>
-      </div>
+      </AdminTableWrapper>
     </div>
   );
 }
