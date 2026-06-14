@@ -10,12 +10,17 @@ export default function AdminLayout({ children }) {
   const pathname = usePathname();
   const { user, loading, logout } = useAuth();
   const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && (!user || user.role !== "admin")) {
       router.push("/");
     }
   }, [user, loading, router]);
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   const menu = [
     { name: "Dashboard",    path: "/admin",          icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h2" },
@@ -42,10 +47,14 @@ export default function AdminLayout({ children }) {
   return (
     <div className="flex min-h-screen bg-[#f1f5f9]">
       {/* Sidebar */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-30 md:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
       <aside
-        className={`${
-          isSidebarOpen ? "w-64" : "w-[72px]"
-        } bg-slate-900 text-slate-300 transition-all duration-300 ease-in-out flex flex-col fixed h-full z-40`}
+        className={`bg-slate-900 text-slate-300 flex flex-col fixed h-full z-40 transition-all duration-300 ease-in-out w-64 ${!isSidebarOpen ? "md:w-[72px]" : ""} ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
       >
         {/* Logo */}
         <div className="h-16 px-5 flex items-center border-b border-white/5 flex-shrink-0">
@@ -137,10 +146,18 @@ export default function AdminLayout({ children }) {
       </aside>
 
       {/* Main */}
-      <main className={`flex-1 flex flex-col transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-[72px]"}`}>
+      <main className={`flex-1 flex flex-col transition-all duration-300 ease-in-out ml-0 ${isSidebarOpen ? "md:ml-64" : "md:ml-[72px]"}`}>
         {/* Header */}
-        <header className="h-16 bg-white border-b border-slate-200 px-8 flex justify-between items-center sticky top-0 z-30 shadow-sm">
+        <header className="h-16 bg-white border-b border-slate-200 px-4 md:px-8 flex justify-between items-center sticky top-0 z-30 shadow-sm">
           <div className="flex items-center gap-2">
+            <button
+              className="md:hidden p-2 -ml-1 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
+              onClick={() => setMobileOpen(true)}
+            >
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+              </svg>
+            </button>
             <div className="w-1 h-4 bg-primary rounded-full"></div>
             <span className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.25em]">
               {currentPage?.name || "Admin"}
@@ -162,7 +179,7 @@ export default function AdminLayout({ children }) {
         </header>
 
         {/* Body */}
-        <div className="p-8 max-w-[1400px] mx-auto w-full">
+        <div className="p-4 md:p-8 max-w-[1400px] mx-auto w-full">
           {children}
         </div>
       </main>
