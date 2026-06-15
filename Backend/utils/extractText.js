@@ -5,8 +5,8 @@ const pdfParse = require("pdf-parse/lib/pdf-parse.js");
 const mammoth = require("mammoth");
 const officeParser = require("officeparser");
 
-// Giới hạn số ký tự đưa vào embedding. Gemini embedding có giới hạn token đầu vào;
-// ~8000 ký tự là đủ đại diện nội dung mà không vượt giới hạn / tốn quota.
+// Giới hạn số ký tự đưa vào embedding. OpenAI text-embedding-3-small xử lý tốt
+// ~8000 ký tự — đủ đại diện nội dung mà không tốn quá nhiều token.
 const MAX_CHARS = 8000;
 
 // Chuẩn hóa khoảng trắng và cắt về giới hạn.

@@ -155,23 +155,23 @@ export default function DocumentDetailPage() {
     if (params.id) fetchDocData();
   }, [params.id]);
 
-  const handleDownload = async () => {
-    if (doc?.fileUrl) {
-      window.open(doc.fileUrl, "_blank");
-      // Gọi API tăng lượt tải
-      try {
-        await api.post(`/api/materials/${params.id}/download`);
-        setDoc((prev) => ({
-          ...prev,
-          metrics: {
-            ...prev.metrics,
-            downloadCount: (prev.metrics?.downloadCount || 0) + 1,
-          },
-        }));
-      } catch (err) {
-        console.error("Lỗi tăng lượt tải:", err);
-      }
-    }
+  const handleDownload = () => {
+    if (!doc?.fileUrl) return;
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+    const a = document.createElement("a");
+    a.href = `${apiBase}/api/materials/${params.id}/download`;
+    a.download = "";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    // Cập nhật UI count (backend đã tự tăng trong proxyDownload)
+    setDoc((prev) => ({
+      ...prev,
+      metrics: {
+        ...prev.metrics,
+        downloadCount: (prev.metrics?.downloadCount || 0) + 1,
+      },
+    }));
   };
 
   const handleSubmitReview = async () => {
@@ -419,12 +419,12 @@ export default function DocumentDetailPage() {
     }
 
     if (["pdf", "docx", "pptx"].includes(doc.materialType)) {
-      // Ưu tiên Microsoft Office Online Viewer cho các định dạng Word/PPT vì độ ổn định cao hơn.
-      // PDF vẫn sử dụng Google Docs Viewer do Microsoft không hỗ trợ định dạng này.
       const isOfficeFile = doc.fileUrl.match(/\.(docx|doc|pptx|ppt)$/i);
+      // PDF: dùng trực tiếp (browser native renderer, không qua Google Docs Viewer vì Google cần fetch file từ R2 gây lỗi)
+      // DOCX/PPTX: Microsoft Office Online Viewer
       const viewerUrl = isOfficeFile
         ? `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(doc.fileUrl)}`
-        : `https://docs.google.com/viewer?url=${encodeURIComponent(doc.fileUrl)}&embedded=true`;
+        : doc.fileUrl;
       
       return (
         <div className="space-y-8 animate-in fade-in duration-500">

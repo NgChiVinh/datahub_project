@@ -13,7 +13,7 @@ export default function Home() {
   const [totalDocs, setTotalDocs] = useState(null);
   const router = useRouter();
 
-  const logClick = async (materialId, materialTitle) => {
+  const logClick = async (materialId) => {
     if (!searchQuery.trim()) return; // Chỉ log khi người dùng có thực hiện tìm kiếm
 
     try {
@@ -83,38 +83,60 @@ export default function Home() {
     { id: "zip", label: "Bài tập & Code", href: "/documents?type=zip" },
   ];
 
+  const trustItems = [
+    { l: "Bảo mật thông tin", i: "M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm-1-11v6h2v-6h-2zm0-4v2h2V7h-2z" },
+    { l: "Kiểm duyệt nhanh", i: "M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" },
+    { l: "Bản quyền VLU", i: "M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z" },
+  ];
+
   return (
     <div className="bg-white font-sans text-slate-900 overflow-x-hidden">
       <main>
         {/* --- HERO SECTION --- */}
         <section className="relative min-h-[810px] w-full flex items-center justify-center overflow-hidden py-40">
-          <div className="absolute inset-0 z-0">
-            <Image 
-              src="/images/banner_datahub.jpg" 
-              alt="Banner DataHub" 
-              fill
-              className="object-cover"
-              priority
-            />
-            <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-[0.5px]"></div>
-            <div className="absolute inset-0 bg-gradient-to-tr from-primary/30 via-transparent to-transparent"></div>
+          <div className="absolute inset-0 z-0 bg-slate-50">
+            {/* Dot grid */}
+            <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(rgba(100,116,139,0.3) 1px, transparent 1px)', backgroundSize: '24px 24px' }}></div>
+            {/* Mask trung tâm — làm mờ dots sau vùng chữ */}
+            <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 65% 55% at 50% 45%, rgba(248,250,252,0.95) 0%, rgba(248,250,252,0.6) 45%, transparent 100%)' }}></div>
+            {/* Center glow màu nhẹ */}
+            <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 80% 60% at 50% 45%, rgba(16,185,129,0.05) 0%, rgba(59,130,246,0.04) 50%, transparent 100%)' }}></div>
+            {/* Fade cạnh trên/dưới */}
+            <div className="absolute inset-0 bg-gradient-to-b from-slate-50/60 via-transparent to-slate-50/70"></div>
           </div>
 
-          <div className="absolute bottom-8 right-8 z-20 hidden lg:block">
-            <a href="https://www.vlu.edu.vn/" target="_blank" rel="noopener noreferrer" className="block relative h-10 w-32 hover:scale-105 transition-transform">
-              <Image src="/images/logo_vlu.png" alt="Logo Văn Lang" fill className="object-contain" />
-            </a>
+          {/* Logo khoa — góc trái trên, bị cắt */}
+          <div className="absolute top-8 -left-10 z-10 hidden lg:block group/logo cursor-pointer">
+            <div className="relative w-72 h-72 opacity-[0.22] group-hover/logo:opacity-[0.6] group-hover/logo:scale-105 transition-all duration-500">
+              <Image src="/images/logo_khoa.png" alt="" fill className="object-contain" />
+            </div>
           </div>
-          
+
+          <div className="absolute bottom-0 -right-20 z-20 hidden lg:block cursor-pointer transition-transform duration-700 ease-in-out hover:-translate-x-16">
+            {/* Glow phía sau Ungi */}
+            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-72 h-40 bg-blue-300/30 rounded-full blur-3xl pointer-events-none"></div>
+            {/* animate-bounce-slow tách riêng để không conflict với hover translate */}
+            <div className="relative w-[480px] h-[480px] animate-bounce-slow">
+              <Image
+                src="/images/ungi.png"
+                alt="Ungi"
+                fill
+                quality={100}
+                className="object-contain"
+                style={{ filter: 'drop-shadow(0 12px 40px rgba(0,0,0,0.2)) drop-shadow(0 4px 12px rgba(59,130,246,0.3)) saturate(1.1)' }}
+              />
+            </div>
+          </div>
+
           <div className="container relative z-10 mx-auto px-4 lg:px-8">
             <div className="mx-auto max-w-4xl text-center">
-              <h1 className="text-5xl font-bold leading-[1.1] tracking-normal lg:text-7xl mb-8 drop-shadow-2xl">
-                <span className="text-white">TRẠM TRI THỨC</span> <br />
-                <span className="inline-block py-2 bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent">
+              <h1 className="text-5xl font-bold leading-[1.1] tracking-normal lg:text-7xl mb-8">
+                <span className="text-slate-900">TRẠM TRI THỨC</span> <br />
+                <span className="inline-block py-2 bg-gradient-to-r from-emerald-500 to-blue-500 bg-clip-text text-transparent">
                   Cộng Đồng IT
                 </span>
               </h1>
-              <p className="mt-6 text-lg leading-relaxed text-slate-100 font-medium px-4 max-w-2xl mx-auto drop-shadow-lg">
+              <p className="mt-6 text-lg leading-relaxed text-slate-500 font-medium px-4 max-w-2xl mx-auto">
                 Kho tàng tri thức số, kết hợp AI thông minh giúp định hướng tài liệu chuẩn xác cho sinh viên IT Văn Lang.
               </p>
 
@@ -122,9 +144,9 @@ export default function Home() {
                 <div className="relative flex items-center rounded-2xl bg-white p-1.5 shadow-2xl transition-all duration-300">
                   <div className="flex flex-1 items-center gap-4 px-4">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                    <input 
-                      type="text" 
-                      placeholder="Tìm kiếm tài liệu, bài giảng..." 
+                    <input
+                      type="text"
+                      placeholder="Tìm kiếm tài liệu, bài giảng..."
                       className="w-full bg-transparent py-3 text-base font-semibold text-slate-800 outline-none placeholder:text-slate-400"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
@@ -137,30 +159,30 @@ export default function Home() {
               </form>
 
               <div className="mt-10 flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
-                <div className="flex items-center gap-2.5 text-white/70">
-                  <span className="text-2xl font-black text-emerald-300 tabular-nums">
+                <div className="flex items-center gap-2.5">
+                  <span className="text-2xl font-black text-emerald-600 tabular-nums">
                     {totalDocs !== null ? `${totalDocs}+` : "100+"}
                   </span>
-                  <span className="text-[11px] font-bold uppercase tracking-[0.2em]">Tài liệu</span>
+                  <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">Tài liệu</span>
                 </div>
-                <span className="w-px h-5 bg-white/20 hidden sm:block"></span>
-                <div className="flex items-center gap-2.5 text-white/70">
-                  <span className="text-2xl font-black text-emerald-300 tabular-nums">{majors.length || "4"}</span>
-                  <span className="text-[11px] font-bold uppercase tracking-[0.2em]">Chuyên ngành IT</span>
+                <span className="w-px h-5 bg-slate-300 hidden sm:block"></span>
+                <div className="flex items-center gap-2.5">
+                  <span className="text-2xl font-black text-emerald-600 tabular-nums">{majors.length || "4"}</span>
+                  <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">Chuyên ngành IT</span>
                 </div>
-                <span className="w-px h-5 bg-white/20 hidden sm:block"></span>
-                <div className="flex items-center gap-2.5 text-emerald-300/90">
+                <span className="w-px h-5 bg-slate-300 hidden sm:block"></span>
+                <div className="flex items-center gap-2.5 text-emerald-600">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
-                  <span className="text-[11px] font-bold uppercase tracking-[0.2em]">AI gợi ý</span>
+                  <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">AI gợi ý</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 opacity-50 hover:opacity-80 transition-opacity">
-            <span className="text-[9px] font-black text-white uppercase tracking-[0.4em]">Khám phá</span>
-            <div className="w-5 h-8 rounded-full border border-white/40 flex items-start justify-center pt-1.5">
-              <div className="w-1 h-1.5 rounded-full bg-white/80 animate-bounce"></div>
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 opacity-40 hover:opacity-70 transition-opacity">
+            <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em]">Khám phá</span>
+            <div className="w-5 h-8 rounded-full border border-slate-400/50 flex items-start justify-center pt-1.5">
+              <div className="w-1 h-1.5 rounded-full bg-slate-400 animate-bounce"></div>
             </div>
           </div>
         </section>
@@ -184,7 +206,11 @@ export default function Home() {
                   <Link
                     key={f.id}
                     href={f.href}
-                    className="px-5 py-2 text-[12px] font-bold rounded-xl transition-all text-slate-400 hover:text-emerald-600 hover:bg-white"
+                    className={`px-5 py-2 text-[12px] font-bold rounded-xl transition-all ${
+                      f.id === "all"
+                        ? "bg-white text-emerald-600 shadow-sm border border-slate-100"
+                        : "text-slate-400 hover:text-emerald-600 hover:bg-white"
+                    }`}
                   >
                     {f.label}
                   </Link>
@@ -214,7 +240,7 @@ export default function Home() {
                       href={`/documents/${item._id}`} 
                       key={item._id} 
                       className="group flex flex-col bg-white rounded-[2rem] border border-slate-100 hover:border-emerald-500/30 hover:shadow-[0_20px_40px_-15px_rgba(16,185,129,0.1)] transition-all duration-500 hover:-translate-y-1.5 overflow-hidden relative"
-                      onClick={() => logClick(item._id, item.title)}
+                      onClick={() => logClick(item._id)}
                     >
                       <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-full blur-2xl -mr-10 -mt-10 z-0"></div>
                       
@@ -281,7 +307,7 @@ export default function Home() {
             )}
             
             <div className="mt-16 text-center">
-              <Link href="/documents" className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-slate-900 text-white text-xs font-bold uppercase tracking-widest hover:bg-primary transition-all active:scale-95 group">
+              <Link href="/documents" className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-emerald-600 text-white text-xs font-bold uppercase tracking-widest hover:bg-emerald-700 transition-all active:scale-95 group">
                 Xem tất cả tài liệu
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-1 transition-transform"><line x1="5" x2="19" y1="12" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
               </Link>
@@ -292,16 +318,16 @@ export default function Home() {
         {/* --- SECTION 2: WHY DATAHUB --- */}
         <section className="py-32 bg-slate-50 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-1/3 h-full bg-emerald-600/5 -skew-x-12 translate-x-1/2"></div>
-          
+
           <div className="container relative z-10 mx-auto px-4 lg:px-8">
             <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-24">
               <div className="lg:w-1/2 relative group w-full">
                 <div className="absolute -inset-4 bg-emerald-500/10 rounded-[3rem] blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
                 <div className="relative aspect-[4/3] rounded-[2.5rem] overflow-hidden shadow-2xl border-8 border-white">
-                  <Image 
-                    src="/images/vlu.jpg" 
-                    alt="DataHub Platform" 
-                    fill 
+                  <Image
+                    src="/images/vlu.jpg"
+                    alt="DataHub Platform"
+                    fill
                     className="object-cover transition-transform duration-1000 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent"></div>
@@ -324,12 +350,12 @@ export default function Home() {
                     Tại sao chọn DataHub?
                   </div>
                   <h2 className="text-4xl lg:text-5xl font-black text-slate-900 leading-[1.1] tracking-tight uppercase italic">
-                    Nền tảng tối ưu cho <br/>
-                    <span className="text-emerald-600">sinh viên IT </span>
-                    <span className="text-red-500">VLU</span>
+                    Tài liệu đúng môn,<br/>
+                    <span className="text-emerald-600">đúng ngành </span>
+                    <span className="text-red-500">— IT VLU</span>
                   </h2>
                   <p className="text-slate-500 text-lg leading-relaxed font-medium max-w-lg">
-                    Không chỉ là nơi lưu trữ, chúng tôi xây dựng một môi trường chia sẻ tri thức chủ động, hiện đại và chuẩn hóa, hỗ trợ bạn trên mỗi bước đường học tập.
+                    Không còn mất thời gian lục tìm trong group chat hay drive của ai đó. DataHub tổ chức tài liệu rõ ràng theo môn học, chuyên ngành — tìm là có.
                   </p>
                 </div>
 
@@ -337,27 +363,27 @@ export default function Home() {
                   {[
                     {
                       num: totalDocs !== null ? `${totalDocs}+` : "100+",
-                      label: "Tài liệu được kiểm duyệt",
-                      sub: "Nội dung chất lượng từ sinh viên và giảng viên VLU",
+                      label: "Tài liệu có kiểm duyệt",
+                      sub: "Slide, đề cương, bài tập từ sinh viên VLU",
                       color: "text-emerald-600",
                     },
                     {
                       num: `${majors.length || 4}`,
                       label: "Chuyên ngành IT",
-                      sub: "SE · AI · IS · CS — tài liệu phân loại theo ngành",
-                      color: "text-blue-600",
+                      sub: "Tài liệu phân loại rõ theo từng ngành: SE, AI, IS, CS",
+                      color: "text-emerald-600",
                     },
                     {
                       num: "AI",
-                      label: "Gợi ý thông minh",
-                      sub: "Vector similarity search tìm tài liệu liên quan",
-                      color: "text-violet-600",
+                      label: "Gợi ý bằng AI",
+                      sub: "Nhập từ khóa, AI tự tìm tài liệu liên quan cho bạn",
+                      color: "text-emerald-600",
                     },
                     {
                       num: "0đ",
                       label: "Hoàn toàn miễn phí",
-                      sub: "Không giới hạn tải về cho sinh viên Văn Lang",
-                      color: "text-amber-600",
+                      sub: "Tải về không giới hạn, không cần tài khoản trả phí",
+                      color: "text-emerald-600",
                     },
                   ].map((item, i) => (
                     <div key={i} className="group flex items-center gap-6 px-6 py-5 rounded-2xl hover:bg-white transition-all duration-300 border border-transparent hover:border-slate-100 hover:shadow-sm cursor-default">
@@ -500,11 +526,7 @@ export default function Home() {
               </div>
 
               <div className="mt-32 flex flex-wrap justify-center gap-x-16 gap-y-8">
-                {[
-                  { l: "Bảo mật thông tin", i: "M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm-1-11v6h2v-6h-2zm0-4v2h2V7h-2z" },
-                  { l: "Kiểm duyệt nhanh", i: "M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" },
-                  { l: "Bản quyền VLU", i: "M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z" }
-                ].map((item, idx) => (
+                {trustItems.map((item, idx) => (
                   <div key={idx} className="flex items-center gap-3 group/item cursor-default">
                     <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover/item:bg-emerald-50 group-hover/item:text-emerald-600 transition-colors">
                       <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d={item.i}/></svg>

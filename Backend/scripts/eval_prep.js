@@ -1,6 +1,6 @@
 // eval_prep.js — sinh embedding BASELINE chỉ từ tiêu đề + mô tả (embeddingTitleOnly),
 // để so sánh với embedding hiện tại (đã gồm nội dung file). Chỉ xử lý tài liệu approved.
-// Chạy chậm để tránh rate limit Gemini.
+// Chạy chậm để tránh rate limit OpenAI.
 const mongoose = require("mongoose");
 const Material = require("../models/Material");
 const { generateEmbedding } = require("../services/aiService");

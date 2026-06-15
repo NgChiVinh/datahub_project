@@ -76,7 +76,7 @@ const migrateEmbeddings = async () => {
 
     console.log("\n--- AI REPAIR & GENERATION TOOL ---");
     console.log(
-      `Chế độ:     ${CONTENT_ONLY ? "CONTENT_ONLY (không gọi Gemini)" : PROCESS_ALL ? "RE-EMBED ALL" : "ONLY MISSING"}`,
+      `Chế độ:     ${CONTENT_ONLY ? "CONTENT_ONLY (không gọi OpenAI)" : PROCESS_ALL ? "RE-EMBED ALL" : "ONLY MISSING"}`,
     );
     console.log(`Giới hạn:   ${LIMIT > 0 ? LIMIT : "Không"}`);
     console.log(`Tìm thấy:   ${total} tài liệu cần xử lý.`);
@@ -116,7 +116,7 @@ const migrateEmbeddings = async () => {
               }
             }
 
-            // CONTENT_ONLY: chỉ điền contentText (không gọi Gemini, không tốn quota).
+            // CONTENT_ONLY: chỉ điền contentText (không gọi OpenAI, không tốn quota).
             // Dùng để bổ sung contentText cho tài liệu đã embedding từ trước.
             if (CONTENT_ONLY) {
               if (content) {

@@ -1,3 +1,4 @@
+const { Readable } = require("stream");
 const Material = require("../models/Material");
 const Tag = require("../models/Tag");
 const Category = require("../models/Category");
@@ -75,7 +76,8 @@ const createMaterial = async (req, res) => {
         });
       }
 
-      if (!materialType || materialType === "other") {
+      // Luôn detect từ extension — extension là nguồn tin cậy hơn mimetype
+      {
         const ext = req.file.originalname.split(".").pop().toLowerCase();
 
         if (["pdf"].includes(ext)) finalMaterialType = "pdf";
@@ -83,7 +85,7 @@ const createMaterial = async (req, res) => {
         else if (["zip", "rar", "7z", "tar", "gz"].includes(ext)) finalMaterialType = "zip";
         else if (["mp4", "mov", "avi", "mkv", "webm", "flv", "wmv"].includes(ext)) finalMaterialType = "video";
         else if (["ppt", "pptx"].includes(ext)) finalMaterialType = "pptx";
-        else finalMaterialType = "other";
+        else finalMaterialType = materialType || "other";
       }
     } else if (link) {
       finalFileUrl = link;
@@ -454,8 +456,8 @@ const updateMaterial = async (req, res) => {
         material.fileUrl = uploadResult.url;
         material.sourceType = "upload";
 
-        // Cập nhật materialType nếu chưa có hoặc là 'other'
-        if (!materialType || materialType === "other") {
+        // Luôn detect từ extension khi re-upload file
+        {
           const ext = req.file.originalname.split(".").pop().toLowerCase();
           if (["pdf"].includes(ext)) material.materialType = "pdf";
           else if (["doc", "docx", "odt", "txt"].includes(ext)) material.materialType = "docx";
@@ -594,6 +596,38 @@ const incrementDownload = async (req, res) => {
       message: "Lỗi",
       error: error.message,
     });
+  }
+};
+
+// Proxy download — fetch file từ R2 rồi stream về client với Content-Disposition: attachment
+// Không cần CORS trên R2, frontend chỉ cần gọi endpoint này.
+const proxyDownload = async (req, res) => {
+  try {
+    const material = await Material.findById(req.params.id);
+    if (!material) return res.status(404).json({ message: "Không tìm thấy tài liệu" });
+    if (!material.fileUrl) return res.status(404).json({ message: "File không tồn tại" });
+
+    const fileRes = await fetch(material.fileUrl);
+    if (!fileRes.ok) return res.status(502).json({ message: "Không thể tải file từ máy chủ lưu trữ" });
+
+    const ext = material.fileUrl.split("?")[0].split(".").pop();
+    const safeName = (material.title || "download").replace(/[^a-zA-Z0-9À-ỹ\s._-]/g, "_");
+    const filename = `${safeName}.${ext}`;
+
+    res.setHeader("Content-Disposition", `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`);
+    res.setHeader("Content-Type", fileRes.headers.get("content-type") || "application/octet-stream");
+
+    const contentLength = fileRes.headers.get("content-length");
+    if (contentLength) res.setHeader("Content-Length", contentLength);
+
+    // Tăng lượt tải
+    material.metrics.downloadCount += 1;
+    material.save().catch(() => {});
+    recordInteraction(req.user?._id, material._id, "download", 3);
+
+    Readable.fromWeb(fileRes.body).pipe(res);
+  } catch (error) {
+    return res.status(500).json({ message: "Lỗi", error: error.message });
   }
 };
 
@@ -745,6 +779,7 @@ module.exports = {
   updateMaterial,
   deleteMaterial,
   incrementDownload,
+  proxyDownload,
   toggleLike,
   getMaterialStats,
 };

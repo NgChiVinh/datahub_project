@@ -8,6 +8,7 @@ const {
   updateMaterial,
   deleteMaterial,
   incrementDownload,
+  proxyDownload,
   toggleLike,
   getMaterialStats,
 } = require("../controllers/materialController");
@@ -20,6 +21,7 @@ router.get("/", getMaterials);
 router.get("/stats", authMiddleware, isAdmin, getMaterialStats);
 router.get("/:id", optionalAuth, getMaterialById);
 router.post("/:id/download", optionalAuth, incrementDownload);
+router.get("/:id/download", optionalAuth, proxyDownload);
 
 // AUTH REQUIRED
 router.post("/:id/like", authMiddleware, toggleLike);

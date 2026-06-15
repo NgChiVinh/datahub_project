@@ -24,6 +24,9 @@ export const metadata = {
   title: "DataHub - Khoa CNTT Văn Lang",
   description: "Hệ thống chia sẻ tri thức số hóa dành riêng cho sinh viên IT Văn Lang. Khám phá kho tài liệu, bài giảng và đồ án chất lượng cao.",
   keywords: ["DataHub", "VLU", "IT Văn Lang", "Tài liệu CNTT", "Đại học Văn Lang"],
+  icons: {
+    icon: "/images/favicon.png",
+  },
   openGraph: {
     title: "DataHub - Trạm Tri Thức IT Văn Lang",
     description: "Nền tảng chia sẻ tài liệu và video bài giảng hàng đầu cho sinh viên IT VLU.",

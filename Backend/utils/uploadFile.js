@@ -65,6 +65,7 @@ const uploadFile = async (file) => {
     Key: `materials/${fileName}`,
     Body: file.buffer,
     ContentType: file.mimetype,
+    ContentDisposition: "inline",
   });
 
   await r2.send(command);

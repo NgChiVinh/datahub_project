@@ -214,13 +214,13 @@ export default function AISuggestPage() {
 
               <h1 className="font-black text-slate-900 tracking-tight leading-none mb-3"
                 style={{ fontSize: "clamp(2.4rem,5vw,3.75rem)" }}>
-                Tài liệu{" "}
+                AI chọn tài liệu{" "}
                 <span className="text-transparent bg-clip-text bg-gradient-to-br from-emerald-500 to-teal-600">
-                  riêng cho bạn
+                  phù hợp với bạn
                 </span>
               </h1>
               <p className="text-sm text-slate-500 leading-relaxed max-w-lg mt-4">
-                AI phân tích lịch sử tương tác và tìm kiếm những tài liệu tương đồng nhất với sở thích học tập của bạn.
+                Dựa trên những gì bạn đã xem và tìm kiếm, AI chọn ra tài liệu sát nhất với nhu cầu học tập của bạn lúc này.
               </p>
 
               {isColdStart && (
@@ -402,7 +402,7 @@ export default function AISuggestPage() {
                           }}>
                           {/* Thumbnail */}
                           <div className="relative flex items-center justify-center h-[172px] overflow-hidden"
-                            style={{ background: "linear-gradient(160deg, #ffffff 0%, #f1f5f9 100%)" }}>
+                            style={{ background: `linear-gradient(160deg, ${type.thumbA} 0%, ${type.thumbB} 100%)` }}>
                             <span className="absolute font-black select-none pointer-events-none tracking-tighter"
                               style={{ fontSize: 88, color: type.barColor, opacity: 0.06, lineHeight: 1 }}>
                               {type.label}
@@ -492,7 +492,7 @@ export default function AISuggestPage() {
                         }}>
                         {/* Thumbnail */}
                         <div className="relative flex items-center justify-center h-[128px] overflow-hidden"
-                          style={{ background: "linear-gradient(160deg, #ffffff 0%, #f1f5f9 100%)" }}>
+                          style={{ background: `linear-gradient(160deg, ${type.thumbA} 0%, ${type.thumbB} 100%)` }}>
                           <span className="absolute font-black select-none pointer-events-none tracking-tighter"
                             style={{ fontSize: 64, color: type.barColor, opacity: 0.05, lineHeight: 1 }}>
                             {type.label}

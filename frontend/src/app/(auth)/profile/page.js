@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
@@ -11,6 +11,14 @@ import CreateCollectionModal from "@/components/CreateCollectionModal";
 import toast from "react-hot-toast";
 
 export default function ProfilePage() {
+  return (
+    <Suspense>
+      <ProfileContent />
+    </Suspense>
+  );
+}
+
+function ProfileContent() {
   const searchParams = useSearchParams();
   const initialTab = searchParams.get("tab") || "uploads";
   
