@@ -37,11 +37,17 @@ Nginx (HTTPS: vlu.datahub.id.vn)
 ## Bước 1 — Thuê máy chủ VPS tại Atlantic.net
 
 1. Truy cập **atlantic.net** → Đăng ký tài khoản
-2. Chọn **Create Server** → Chọn OS: **Ubuntu 22.04 LTS**
-3. Chọn gói server phù hợp (khuyến nghị: 2 vCPU, 4GB RAM, 80GB SSD)
-4. Chọn datacenter gần Việt Nam (Singapore hoặc tương đương)
-5. Tạo SSH Key hoặc dùng mật khẩu root
-6. Sau khi tạo xong → nhận **IP public** (ví dụ: `103.47.226.171`)
+2. Chọn **Create Server** → Điền thông tin:
+   - **Server Name:** `dieplai-dev`
+   - **OS:** Ubuntu 22.04 LTS
+   - **Location:** Southeast 1
+   - **Gói:** phù hợp với nhu cầu (khuyến nghị tối thiểu 2 vCPU, 4GB RAM)
+3. Tạo SSH Key hoặc dùng mật khẩu root
+4. Nhấn **Create** → Chờ server khởi động (1–2 phút)
+5. Sau khi tạo xong → server hiển thị trạng thái **Active** (màu xanh lá)
+6. Nhận **IP public:** `103.47.226.171`
+
+> Server ID: `234686` — dùng để liên hệ support nếu cần.
 
 ---
 
