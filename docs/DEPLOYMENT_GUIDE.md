@@ -45,20 +45,37 @@ Nginx (HTTPS: vlu.datahub.id.vn)
 
 ---
 
-## Bước 2 — Trỏ domain về VPS
+## Bước 2 — Mua tên miền và trỏ về VPS
 
-1. Mua domain tại nhà cung cấp (ví dụ: `datahub.id.vn`)
-2. Vào DNS Management → Thêm record:
+### 2.1 Mua tên miền tại Tenten.vn
+
+1. Truy cập **tenten.vn** → Đăng ký tài khoản
+2. Tìm kiếm tên miền mong muốn (ví dụ: `datahub.id.vn`)
+3. Thêm vào giỏ hàng → Thanh toán
+4. Sau khi thanh toán → tên miền xuất hiện trong mục **Quản lý tên miền**
+
+### 2.2 Cấu hình DNS trỏ về VPS
+
+1. Đăng nhập **tenten.vn** → **Quản lý dịch vụ** → **Tên miền**
+2. Chọn tên miền `datahub.id.vn` → **Quản lý DNS**
+3. Thêm bản ghi DNS loại **A record**:
 
 ```
-Type:  A
-Name:  vlu
-Value: 103.47.226.171
-TTL:   3600
+Loại:      A
+Tên máy:   vlu
+Địa chỉ:   103.47.226.171
+TTL:       3600
 ```
 
-3. Chờ DNS propagate (~5–15 phút)
-4. Kiểm tra: `ping vlu.datahub.id.vn` → thấy IP đúng là thành công
+4. Lưu lại → Chờ DNS propagate (~5–30 phút)
+5. Kiểm tra:
+
+```bash
+ping vlu.datahub.id.vn
+# Kết quả mong muốn: thấy IP 103.47.226.171
+```
+
+> **Lưu ý:** Subdomain `vlu.datahub.id.vn` dùng prefix `vlu` để phân biệt với các môi trường khác (dev, staging...) nếu có sau này.
 
 ---
 
