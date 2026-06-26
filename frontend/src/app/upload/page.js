@@ -18,7 +18,7 @@ export default function UploadPage() {
   const [youtubePreview, setYoutubePreview] = useState(null);
   const [categoryId, setCategoryId] = useState("");
   const [majorId, setMajorId] = useState("");
-  const [academicYear, setAcademicYear] = useState("Nam 1");
+  const [academicYear, setAcademicYear] = useState("Năm 1");
   const [categories, setCategories] = useState([]);
   const [majors, setMajors] = useState([]);
   const [description, setDescription] = useState("");
@@ -306,11 +306,11 @@ export default function UploadPage() {
                         <div className="relative">
                           <select value={academicYear} onChange={(e) => setAcademicYear(e.target.value)}
                             className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-800 appearance-none cursor-pointer focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 outline-none transition-all">
-                            <option value="Nam 1">Năm 1</option>
-                            <option value="Nam 2">Năm 2</option>
-                            <option value="Nam 3">Năm 3</option>
-                            <option value="Nam 4">Năm 4</option>
-                            <option value="Khac">Khác</option>
+                            <option value="Năm 1">Năm 1</option>
+                            <option value="Năm 2">Năm 2</option>
+                            <option value="Năm 3">Năm 3</option>
+                            <option value="Năm 4">Năm 4</option>
+                            <option value="Khác">Khác</option>
                           </select>
                           <ChevronDown />
                         </div>
