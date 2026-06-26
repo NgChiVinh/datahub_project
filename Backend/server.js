@@ -10,6 +10,11 @@ dotenv.config();
 connectDB();
 
 const app = express();
+
+// Trust Nginx reverse proxy — cần thiết để express-rate-limit đọc đúng IP thực
+// từ header X-Forwarded-For thay vì IP của proxy (127.0.0.1).
+app.set("trust proxy", 1);
+
 app.use(express.json());
 app.use(cors());
 
@@ -44,6 +49,15 @@ app.use("/api/recommendations", recommendationRoutes);
 // Default route
 app.get("/", (req, res) => {
   res.send("API DataHub Running...");
+});
+
+// Global error handler — bắt lỗi từ multer, middleware, controller chưa được xử lý
+app.use((err, req, res, next) => {
+  console.error("[ERROR]", err.message, err.stack);
+  if (err.code === "LIMIT_FILE_SIZE") {
+    return res.status(400).json({ message: "File quá lớn, tối đa 100MB" });
+  }
+  res.status(500).json({ message: err.message || "Lỗi server" });
 });
 
 // Lắng nghe server

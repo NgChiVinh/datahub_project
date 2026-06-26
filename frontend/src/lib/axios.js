@@ -2,8 +2,11 @@ import axios from 'axios';
 
 // Tạo một instance của axios
 const api = axios.create({
-  // NEXT_PUBLIC_API_URL sẽ được dùng khi deploy, localhost:5000 dùng cho máy cá nhân
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000',
+  // Server-side (SSR/Server Actions): gọi thẳng Express qua localhost
+  // Client-side (browser): dùng relative URL để Nginx proxy đúng
+  baseURL: typeof window === 'undefined'
+    ? (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000')
+    : '',
   headers: {
     'Content-Type': 'application/json',
   },
