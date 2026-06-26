@@ -99,7 +99,7 @@ export default function UploadPage() {
         fd.append("tags", JSON.stringify(tagIds));
         res = await axios.post(
           `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/materials`, fd,
-          { headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" } }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
       } else {
         res = await axios.post(
