@@ -179,6 +179,9 @@ const createMaterial = async (req, res) => {
       material: savedMaterial,
     });
   } catch (error) {
+    if (error.name === "ValidationError") {
+      return res.status(400).json({ message: error.message });
+    }
     return res.status(500).json({
       message: "Lỗi upload",
       error: error.message,
@@ -510,6 +513,9 @@ const updateMaterial = async (req, res) => {
       material,
     });
   } catch (error) {
+    if (error.name === "ValidationError") {
+      return res.status(400).json({ message: error.message });
+    }
     return res.status(500).json({
       message: "Lỗi",
       error: error.message,
