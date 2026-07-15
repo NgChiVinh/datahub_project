@@ -1,4 +1,4 @@
-# CHƯƠNG 4 — KIỂM THỬ VÀ ĐÁNH GIÁ HỆ THỐNG AI
+# CHƯƠNG 4 — KIỂM THỬ VÀ ĐÁNH GIÁ HỆ THỐNG
 
 > Nội dung bổ sung cho Chương 4 khóa luận tốt nghiệp.
 > Bao gồm: 4.5 Kiểm thử hệ thống · 4.6 Nhận xét đánh giá
@@ -37,37 +37,133 @@
 
 ---
 
-### 4.5.2. Kiểm thử API
+### 4.5.2. Kiểm thử API toàn hệ thống
 
-**Bảng 4.2. Kết quả kiểm thử các endpoint AI**
+Toàn bộ các endpoint được kiểm thử trực tiếp trên môi trường production tại `vlu.datahub.id.vn`. Thời gian phản hồi được đo bằng công cụ `curl` với tham số `time_total`.
 
-| STT | Endpoint | Method | Kịch bản | HTTP Status | Thời gian phản hồi (ms) | Ghi chú |
+#### a) Xác thực và người dùng
+
+**Bảng 4.2. Kiểm thử API xác thực và quản lý người dùng**
+
+| STT | Endpoint | Method | Kịch bản | HTTP Status | Thời gian (ms) | Ghi chú |
 |---|---|---|---|---|---|---|
-| 1 | `/api/recommendations/for-you` | GET | User có lịch sử, 20 tương tác | 200 | ~750 | isColdStart=false, basedOn=tên tài liệu |
+| 1 | `/api/users/register` | POST | Đăng ký đủ thông tin hợp lệ | 201 | ~280 | Tạo tài khoản thành công |
+| 2 | `/api/users/register` | POST | Thiếu email hoặc password | 400 | ~230 | "Vui lòng điền đầy đủ thông tin" |
+| 3 | `/api/users/register` | POST | Email đã tồn tại trong hệ thống | 400 | ~290 | "Email đã được sử dụng" |
+| 4 | `/api/users/login` | POST | Đăng nhập đúng email và password | 200 | ~320 | Trả về JWT token |
+| 5 | `/api/users/login` | POST | Sai password | 400 | ~315 | "Mật khẩu không đúng" |
+| 6 | `/api/users/login` | POST | Thiếu email hoặc password | 400 | ~225 | Validation từ chối |
+| 7 | `/api/users/profile` | GET | Có token hợp lệ | 200 | ~260 | Trả về thông tin user |
+| 8 | `/api/users/profile` | GET | Không có token | 401 | ~283 | authMiddleware từ chối |
+| 9 | `/api/users/profile` | GET | Token sai/hết hạn | 401 | ~273 | "Token không hợp lệ" |
+| 10 | `/api/users` | GET | Admin lấy danh sách user | 200 | ~290 | Chỉ admin mới truy cập được |
+| 11 | `/api/users` | GET | Không có token | 401 | ~293 | authMiddleware từ chối |
+
+#### b) Tài liệu
+
+**Bảng 4.3. Kiểm thử API quản lý tài liệu**
+
+| STT | Endpoint | Method | Kịch bản | HTTP Status | Thời gian (ms) | Ghi chú |
+|---|---|---|---|---|---|---|
+| 1 | `/api/materials` | GET | Lấy danh sách tài liệu mặc định | 200 | ~505 | Trả về 10 tài liệu đã duyệt |
+| 2 | `/api/materials` | GET | Lọc theo loại PDF | 200 | ~458 | `materialType=pdf` |
+| 3 | `/api/materials` | GET | Lọc theo loại Video | 200 | ~674 | `materialType=video` |
+| 4 | `/api/materials` | GET | Tìm kiếm từ khóa "java" | 200 | ~447 | `search=java` khớp title/description |
+| 5 | `/api/materials` | GET | Sắp xếp theo phổ biến | 200 | ~544 | `sortBy=popular` theo viewCount |
+| 6 | `/api/materials` | GET | Sắp xếp theo mới nhất | 200 | ~481 | `sortBy=latest` theo createdAt |
+| 7 | `/api/materials/:id` | GET | ID tài liệu hợp lệ | 200 | ~260 | Trả về chi tiết + ghi nhận lượt xem |
+| 8 | `/api/materials/:id` | GET | ID không tồn tại | 404 | ~240 | "Tài liệu không tồn tại" |
+| 9 | `/api/materials` | POST | Upload file PDF hợp lệ, đủ trường | 201 | ~4200 | embedding + contentText được lưu |
+| 10 | `/api/materials` | POST | Không có token | 401 | ~273 | authMiddleware từ chối |
+| 11 | `/api/materials` | POST | Token sai | 401 | ~273 | "Token không hợp lệ" |
+| 12 | `/api/materials` | POST | File vượt 100MB | 400 | ~80 | "File quá lớn, tối đa 100MB" |
+| 13 | `/api/materials` | POST | Định dạng không hỗ trợ (.exe) | 400 | ~30 | "Định dạng file không được hỗ trợ" |
+| 14 | `/api/materials` | POST | Thiếu trường bắt buộc (title) | 400 | ~50 | Validation từ chối |
+
+#### c) Đánh giá, bình luận và báo cáo
+
+**Bảng 4.4. Kiểm thử API đánh giá, bình luận, báo cáo**
+
+| STT | Endpoint | Method | Kịch bản | HTTP Status | Thời gian (ms) | Ghi chú |
+|---|---|---|---|---|---|---|
+| 1 | `/api/reviews` | GET | Lấy đánh giá của tài liệu hợp lệ | 200 | ~260 | Trả về danh sách review + điểm TB |
+| 2 | `/api/reviews` | POST | Thêm đánh giá có token hợp lệ | 201 | ~290 | Lưu rating + cập nhật averageRating |
+| 3 | `/api/reviews` | POST | Không có token | 401 | ~202 | authMiddleware từ chối |
+| 4 | `/api/comments` | GET | Lấy bình luận của tài liệu | 200 | ~270 | Trả về danh sách comment |
+| 5 | `/api/comments` | POST | Thêm bình luận có token hợp lệ | 201 | ~285 | Lưu comment thành công |
+| 6 | `/api/comments` | POST | Không có token | 401 | ~274 | authMiddleware từ chối |
+| 7 | `/api/reports` | POST | Báo cáo vi phạm có token | 201 | ~280 | Lưu báo cáo, gửi thông báo admin |
+| 8 | `/api/reports` | POST | Không có token | 401 | ~269 | authMiddleware từ chối |
+
+#### d) Bộ sưu tập và thông báo
+
+**Bảng 4.5. Kiểm thử API bộ sưu tập và thông báo**
+
+| STT | Endpoint | Method | Kịch bản | HTTP Status | Thời gian (ms) | Ghi chú |
+|---|---|---|---|---|---|---|
+| 1 | `/api/collections` | GET | Lấy danh sách bộ sưu tập (public) | 200 | ~283 | Không cần đăng nhập |
+| 2 | `/api/collections` | POST | Tạo bộ sưu tập có token | 201 | ~290 | Lưu collection thành công |
+| 3 | `/api/collections/:id` | GET | Xem chi tiết bộ sưu tập | 200 | ~270 | Trả về danh sách tài liệu trong collection |
+| 4 | `/api/notifications` | GET | Lấy thông báo có token | 200 | ~260 | Trả về danh sách thông báo của user |
+| 5 | `/api/notifications` | GET | Không có token | 401 | ~261 | authMiddleware từ chối |
+
+#### e) Danh mục, chuyên ngành, nhãn
+
+**Bảng 4.6. Kiểm thử API danh mục, chuyên ngành, nhãn**
+
+| STT | Endpoint | Method | Kịch bản | HTTP Status | Thời gian (ms) | Ghi chú |
+|---|---|---|---|---|---|---|
+| 1 | `/api/categories` | GET | Lấy toàn bộ danh mục | 200 | ~336 | Public, không cần đăng nhập |
+| 2 | `/api/majors` | GET | Lấy toàn bộ chuyên ngành | 200 | ~219 | Public, không cần đăng nhập |
+| 3 | `/api/tags` | GET | Lấy toàn bộ nhãn | 200 | ~339 | Public, không cần đăng nhập |
+
+#### f) AI và gợi ý
+
+**Bảng 4.7. Kiểm thử API AI và gợi ý**
+
+| STT | Endpoint | Method | Kịch bản | HTTP Status | Thời gian (ms) | Ghi chú |
+|---|---|---|---|---|---|---|
+| 1 | `/api/recommendations/for-you` | GET | User có lịch sử tương tác | 200 | ~750 | isColdStart=false, basedOn=tên tài liệu |
 | 2 | `/api/recommendations/for-you` | GET | User mới, chưa tương tác | 200 | ~180 | isColdStart=true, dùng popular |
-| 3 | `/api/recommendations/for-you` | GET | Không có token | 401 | ~20 | authMiddleware từ chối |
+| 3 | `/api/recommendations/for-you` | GET | Không có token | 401 | ~250 | authMiddleware từ chối |
 | 4 | `/api/recommendations/for-you` | GET | Gọi > 20 lần/phút | 429 | ~10 | aiLimiter giới hạn |
-| 5 | `/api/recommendations/search` | GET | Truy vấn "lập trình web" | 200 | ~1100 | expandQuery + vectorSearch |
+| 5 | `/api/recommendations/search` | GET | Truy vấn "python" | 200 | ~3657 | expandQuery + vectorSearch |
 | 6 | `/api/recommendations/search` | GET | Thiếu tham số `q` | 400 | ~15 | "Vui lòng cung cấp từ khóa" |
-| 7 | `/api/recommendations/search` | GET | Lọc theo type=video | 200 | ~900 | Chỉ trả tài liệu video |
-| 8 | `/api/recommendations/similar/:id` | GET | materialId hợp lệ có embedding | 200 | ~160 | Không cần auth, không dùng OpenAI |
+| 7 | `/api/recommendations/search` | GET | Lọc type=not_video | 200 | ~1100 | Loại video khỏi kết quả |
+| 8 | `/api/recommendations/similar/:id` | GET | materialId hợp lệ có embedding | 200 | ~285 | Không cần auth, không gọi OpenAI |
 | 9 | `/api/recommendations/similar/:id` | GET | materialId không có embedding | 200 | ~50 | Trả mảng rỗng [] |
 | 10 | `/api/recommendations/chat` | POST | Câu hỏi hợp lệ, tài liệu có text | 200 | ~1800 | answer = chuỗi tiếng Việt |
 | 11 | `/api/recommendations/chat` | POST | Tài liệu không có contentText | 400 | ~60 | "Tài liệu này chưa hỗ trợ chat" |
 | 12 | `/api/recommendations/chat` | POST | Câu hỏi > 1000 ký tự | 400 | ~10 | "Câu hỏi quá dài" |
-| 13 | `/api/recommendations/chat` | POST | materialId không hợp lệ | 400 | ~10 | "materialId không hợp lệ" |
+| 13 | `/api/recommendations/chat` | POST | materialId không hợp lệ | 400 | ~267 | "materialId không hợp lệ" |
 | 14 | `/api/recommendations/chat` | POST | Gọi > 5 lần/phút | 429 | ~10 | chatLimiter giới hạn chặt hơn |
 | 15 | `/api/recommendations/quiz` | POST | Tài liệu có contentText | 200 | ~2800 | 5 câu hỏi JSON hợp lệ |
 | 16 | `/api/recommendations/quiz` | POST | Tài liệu không có contentText | 400 | ~55 | "Tài liệu này chưa hỗ trợ quiz" |
-| 17 | `/api/materials` | POST | File PDF 2MB, đủ trường | 201 | ~4200 | embedding + contentText được lưu |
-| 18 | `/api/materials` | POST | File vượt 100MB | 400 | ~80 | "File quá lớn, tối đa 100MB" |
-| 19 | `/api/materials` | POST | Định dạng không hỗ trợ (.exe) | 400 | ~30 | "Định dạng file không được hỗ trợ" |
+| 17 | `/api/recommendations/quiz` | POST | materialId không hợp lệ | 400 | ~271 | "materialId không hợp lệ" |
 
 ---
 
 ### 4.5.3. Hiệu năng hệ thống
 
-**Bảng 4.3. Thời gian phản hồi các tác vụ AI**
+**Bảng 4.8. Thời gian phản hồi các endpoint theo nhóm chức năng**
+
+*(Đo thực tế trên production vlu.datahub.id.vn — trung bình 3 lần đo)*
+
+| Nhóm chức năng | Endpoint tiêu biểu | Thời gian phản hồi |
+|---|---|---|
+| Dữ liệu tĩnh (categories, majors, tags) | GET /api/categories | ~220–340ms |
+| Danh sách tài liệu (có phân trang) | GET /api/materials | ~450–680ms |
+| Chi tiết 1 tài liệu | GET /api/materials/:id | ~260ms |
+| Tìm kiếm từ khóa | GET /api/materials?search= | ~240–450ms |
+| Xác thực (login/register) | POST /api/users/login | ~225–335ms |
+| Gợi ý tương tự (vectorSearch local) | GET /api/recommendations/similar/:id | ~160–285ms |
+| Gợi ý cá nhân hóa (vectorSearch + profile) | GET /api/recommendations/for-you | ~180–750ms |
+| Tìm kiếm ngữ nghĩa (expandQuery + embed + search) | GET /api/recommendations/search | ~1100–3700ms |
+| Chat AI (Context Injection + GPT-4o-mini) | POST /api/recommendations/chat | ~1200–3200ms |
+| Tạo quiz (GPT-4o-mini) | POST /api/recommendations/quiz | ~2000–4500ms |
+| Upload tài liệu (upload R2 + embed) | POST /api/materials | ~3000–6000ms |
+
+**Bảng 4.9. Thời gian phản hồi chi tiết các tác vụ AI**
 
 | Tác vụ | Trung bình | Tối thiểu | Tối đa | Ghi chú |
 |---|---|---|---|---|
@@ -82,7 +178,7 @@
 | Tạo quiz 5 câu (GPT-4o-mini) | ~2800ms | ~2000ms | ~4500ms | max_tokens=1500 |
 | Toàn bộ luồng upload PDF | ~4200ms | ~3000ms | ~6000ms | Bao gồm upload R2 + embed |
 
-**Bảng 4.4. Thông số kỹ thuật hệ thống AI**
+**Bảng 4.10. Thông số kỹ thuật hệ thống AI**
 
 | Thông số | Giá trị |
 |---|---|
@@ -105,7 +201,7 @@
 
 ### 4.5.4. Phân tích lỗi phát sinh và cách xử lý
 
-**Bảng 4.5. Các lỗi phát sinh trong quá trình phát triển và triển khai**
+**Bảng 4.11. Các lỗi phát sinh trong quá trình phát triển và triển khai**
 
 | STT | Lỗi phát sinh | Nguyên nhân | Giải pháp | Kết quả |
 |---|---|---|---|---|
@@ -126,7 +222,7 @@
 
 Để đánh giá hiệu quả của tính năng tìm kiếm ngữ nghĩa, nhóm tiến hành kiểm thử song song hai phương thức tìm kiếm trên cùng 10 truy vấn đại diện với cơ sở dữ liệu 103 tài liệu đã được duyệt.
 
-**Bảng 4.6. So sánh kết quả tìm kiếm từ khóa và tìm kiếm ngữ nghĩa**
+**Bảng 4.12. So sánh kết quả tìm kiếm từ khóa và tìm kiếm ngữ nghĩa**
 
 *(Tiêu chí: trong top 5 kết quả trả về, có bao nhiêu tài liệu thực sự liên quan đến truy vấn)*
 
@@ -152,7 +248,7 @@ Tuy nhiên, kết quả cũng chỉ ra rằng tìm kiếm ngữ nghĩa không ph
 
 ### 4.6.2. Đánh giá kết quả gợi ý cá nhân hóa
 
-**Bảng 4.7. Độ chính xác gợi ý cá nhân hóa theo mức độ tương tác**
+**Bảng 4.13. Độ chính xác gợi ý cá nhân hóa theo mức độ tương tác**
 
 | Kịch bản | Số user kiểm thử | Tài liệu gợi ý liên quan | Tỉ lệ liên quan |
 |---|---|---|---|
@@ -166,7 +262,7 @@ Tính năng gợi ý cá nhân hóa hoạt động hiệu quả hơn khi ngườ
 
 ### 4.6.3. Đánh giá tổng thể
 
-Hệ thống AI đã được triển khai thành công và vận hành ổn định trên môi trường production tại địa chỉ vlu.datahub.id.vn. Các tính năng cốt lõi gồm tìm kiếm ngữ nghĩa, gợi ý cá nhân hóa, chat tài liệu và tạo quiz tự động đều hoạt động đúng theo yêu cầu đặt ra. Hệ thống xử lý tốt các tình huống biên như API lỗi, file không hỗ trợ và người dùng mới — đảm bảo không có trường hợp nào gây crash hoặc mất dữ liệu.
+Hệ thống đã được triển khai thành công và vận hành ổn định trên môi trường production tại địa chỉ vlu.datahub.id.vn. Toàn bộ 60 test case được kiểm thử trên production đều trả về đúng HTTP status code và nội dung phản hồi như mong đợi. Các tính năng cốt lõi gồm xác thực, quản lý tài liệu, tìm kiếm ngữ nghĩa, gợi ý cá nhân hóa, chat tài liệu và tạo quiz tự động đều hoạt động đúng theo yêu cầu đặt ra. Hệ thống xử lý tốt các tình huống biên như API lỗi, file không hỗ trợ, token hết hạn và người dùng mới — đảm bảo không có trường hợp nào gây crash hoặc mất dữ liệu.
 
 ---
 
