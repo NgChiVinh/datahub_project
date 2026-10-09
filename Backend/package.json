@@ -1,32 +1,33 @@
 {
-  "name": "backend",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
-  "dependencies": {
-    "@aws-sdk/client-s3": "^3.1057.0",
-    "bcryptjs": "^3.0.3",
-    "cloudinary": "^2.10.0",
-    "cors": "^2.8.6",
-    "dotenv": "^17.4.1",
-    "express": "^5.2.1",
-    "express-rate-limit": "^8.4.0",
-    "jsonwebtoken": "^9.0.3",
-    "mammoth": "^1.8.0",
-    "mongoose": "^9.4.1",
-    "multer": "^2.1.1",
-    "multer-storage-cloudinary": "^4.0.0",
-    "nodemailer": "^8.0.5",
-    "officeparser": "^5.1.1",
-    "openai": "^6.42.0",
-    "pdf-parse": "^1.1.1",
-    "slugify": "^1.6.9"
-  }
+"name": "backend",
+"version": "1.0.0",
+"description": "",
+"main": "server.js",
+"scripts": {
+"start": "node server.js",
+"test": "echo "Error: no test specified" && exit 1"
+},
+"keywords": [],
+"author": "",
+"license": "ISC",
+"type": "commonjs",
+"dependencies": {
+"@aws-sdk/client-s3": "^3.1057.0",
+"bcryptjs": "^3.0.3",
+"cloudinary": "^2.10.0",
+"cors": "^2.8.6",
+"dotenv": "^17.4.1",
+"express": "^5.2.1",
+"express-rate-limit": "^8.4.0",
+"jsonwebtoken": "^9.0.3",
+"mammoth": "^1.8.0",
+"mongoose": "^9.4.1",
+"multer": "^2.1.1",
+"multer-storage-cloudinary": "^4.0.0",
+"nodemailer": "^8.0.5",
+"officeparser": "^5.1.1",
+"openai": "^6.42.0",
+"pdf-parse": "^1.1.1",
+"slugify": "^1.6.9"
+}
 }
